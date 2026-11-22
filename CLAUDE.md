@@ -1,4 +1,6 @@
-# 「초 한 자루」(가제) / One Candle Deep
+# One Candle Deep (원 캔들 딥)
+
+기획서 본문에 남은 이전 가제 「초 한 자루」 대신 원 캔들 딥으로 불러요.
 
 1인 개발(정해성) 인디 게임 프로젝트예요. 지뢰찾기 숫자 추리 + 채굴 로그라이트이고, 탑다운 2D 픽셀이에요. 지금은 기획 2차(v2.1)와 웹 프로토타입 단계이고, 본 개발은 Godot 4로 할 예정이에요.
 
@@ -8,7 +10,10 @@
 
 | 경로 | 내용 |
 |---|---|
+| README.md | 저장소 소개(GitHub 첫 화면) |
 | docs/ | 기획서 원본(마크다운). 숫자가 붙은 문서가 본문이에요 |
+| docs/handoff.md | 인수인계 문서: 지금 상태, 스택, 작업 규칙, 다음 할 일. 사람이 처음 읽는 문서예요 |
+| docs/00_overview.md, 08_feedback_status.md, 09_prototype_guide.md | Word 기획서에만 있던 기획 요약, 부록 B(피드백·검수 처리), 부록 C(프로토타입 안내)를 옮긴 것 |
 | docs/decisions.md | 팀장 결정 기록(R1~R61). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
 | docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
@@ -18,10 +23,12 @@
 | prototype/bot/ | bot.js 봇 정책과 한 판 진행, cli.ts 경제 측정 보고서 |
 | prototype/tests/ | Vitest 테스트: 광맥 생성기, 규칙 단위 검사, 봇 연기 검사 |
 | tools/_archive/ | 작업 중에 쓴 측정·점검 스크립트. 옛 구조(require, index.html 잘라 읽기) 기준이라 쓰려면 고쳐야 해요 |
-| 기획서_2차_v2.1.docx | Word로 묶은 기획서(docs/ 의 마크다운을 합친 것) |
+| docs/export/기획서_2차_v2.1.docx | Word로 묶은 기획서(docs/ 의 마크다운을 합친 것). 원본은 마크다운이에요 |
+| .github/workflows/ci.yml | 푸시마다 타입 검사, 테스트, 빌드 |
 
 ## 문서 읽는 순서
 
+0. docs/handoff.md, docs/00_overview.md: 인수인계와 기획 요약
 1. docs/06_play_scenes.md: 첫 판을 13개 장면으로 따라가요. 이것부터 읽으면 게임이 그려져요
 2. docs/01_system.md: 규칙 전부(조작, 판 생성, 광맥, 기믹, 진행, 저장, 상태 전이, 옵션)
 3. docs/05_items_economy.md: 값, 시세, 납부액, 도구 32종, 봇 측정
