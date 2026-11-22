@@ -1,5 +1,4 @@
-// ==CORE BEGIN==
-// 순수 로직. DOM을 쓰지 않는다. node(bot.js, test_core.js)가 이 구간만 잘라 실행한다.
+// 순수 로직. DOM을 쓰지 않는다. 화면(ui.js), 봇(bot/), 테스트(tests/)가 같은 모듈을 import 한다.
 // 규칙 기준: 00d_round2_decisions.md(R1~R23), 11_fun_redesign.md 3장. 문구: 02_narrative.md 2차본 6~7장.
 // 경제 수치(납부액, 보물 값, 도구 가격, 주문 보상)는 전부 임시값이다. 경제 담당이 CONFIG만 바꾸면 되게 모았다.
 var CONFIG = {
@@ -1839,5 +1838,5 @@ var Core = (function () {
     TOOL_BY_ID: TOOL_BY_ID, ORDER_BY_ID: ORDER_BY_ID, debugFillCandle: debugFillCandle, debugEndDay: debugEndDay, debugSkipDay: debugSkipDay
   };
 })();
-if (typeof module !== 'undefined' && module.exports) module.exports = { Core: Core, CONFIG: CONFIG, TOOLS: TOOLS, RULES: RULES, RULE_IDS: RULE_IDS, GANG: GANG, ORDERS: ORDERS, MUTATIONS: MUTATIONS, TEXT: TEXT, TUTORIAL: TUTORIAL };
-// ==CORE END==
+
+export { Core, CONFIG, TOOLS, RULES, RULE_IDS, CHUNK_RULES, GANG, ORDERS, MUTATIONS, MUTATION_IDS, TUTORIAL_MUT8, TEXT, TUTORIAL, TREASURE_NAMES };

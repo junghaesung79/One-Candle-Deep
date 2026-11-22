@@ -1,22 +1,16 @@
-// 2차 프로토타입 봇. index.html의 ==CORE BEGIN== ~ ==CORE END== 구간을 읽어 node에서 Core를 만든다.
-// 경제 담당 재사용: const { load, Bot, playRun, POLICY } = require('./bot.js');
+// 2차 프로토타입 봇. 규칙 모듈(src/core.js)을 그대로 import 해서 node에서 한 판을 끝까지 돌려요.
+// 경제 담당 재사용: import { load, Bot, playRun, POLICY } from './bot/bot.js';
 //   const env = load();                              // { Core, CONFIG, TOOLS, ... } (CONFIG를 고친 뒤 playRun을 돌리면 된다)
 //   const r = playRun(env, seed, { policy: 'normal' }); // 한 판(15일)을 끝까지 진행하고 기록을 돌려준다
+//   주의: env는 모듈 하나를 같이 쓴다. CONFIG를 고치면 같은 프로세스의 다음 판에도 그대로 남는다.
 // 정책 셋: cautious(신중, 처음 하는 사람), normal(보통), greedy(욕심). 05 문서 6장.
 // 봇이 보는 정보는 화면에 보이는 것뿐이다: 열린 칸의 숫자, 분필, 두드려 보기 결과, 캔 보물 자리, 표지판, 눈금, 밑줄.
 // 덮인 칸의 정체(c.haz)는 읽지 않는다. 추리는 Core.deduce(숫자 + 광맥 규칙)를 쓴다.
 // 예외: 층을 떠날 때 '남긴 보물' 기록, 시뮬 통계(측정용)는 정답을 읽는다. 행동 결정에는 쓰지 않는다.
-'use strict';
-const fs = require('fs'), vm = require('vm'), path = require('path');
+import * as CoreModule from '../src/core.js';
 
-function load(htmlPath) {
-  const html = fs.readFileSync(htmlPath || path.join(__dirname, 'index.html'), 'utf8');
-  const m = /\/\/ ==CORE BEGIN==([\s\S]*?)\/\/ ==CORE END==/.exec(html);
-  if (!m) throw new Error('core section not found');
-  const sb = { module: { exports: {} }, console };
-  vm.createContext(sb);
-  vm.runInContext(m[1], sb, { filename: 'core.js' });
-  return sb.module.exports;
+function load() {
+  return CoreModule;
 }
 
 // 정책. thr: 걸기 문턱(보물일 확률). s0 줄 0단계, s 줄 1단계 이상, hp2 체력 2, hp1 체력 1(9면 안 건다)
@@ -489,4 +483,4 @@ function playRun(env, seed, opts) {
   return { final: run.final, days, run, bot: bot.m, buys: bot.buys, pays };
 }
 
-module.exports = { load, Bot, playRun, POLICY, TOOL_PREF };
+export { load, Bot, playRun, POLICY, TOOL_PREF };

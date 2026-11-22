@@ -1,3 +1,6 @@
+import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL } from './core.js';
+import { SPR, iconHtml, moonCanvas } from './sprites.js';
+
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
 var settings = { shake: true, flash: true, legend: true, bubbles: true, tutorialDone: false, best: 0, quickDig: false, keys: true, openingSeen: false };   // R53·R54: 바로 캐기(기본 꺼짐), 키보드 단축키(기본 켜짐)

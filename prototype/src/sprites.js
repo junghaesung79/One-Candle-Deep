@@ -1,3 +1,5 @@
+import { Core, CONFIG } from './core.js';
+
 // ================= 스프라이트 (문자열 + 팔레트, 3배 표시). 1차 시안 A 스프라이트를 그대로 쓰고 2차 요소를 같은 톤으로 더했다 =================
 var SPR = {};
 function mkSprite(rows, pal, w, h) {
@@ -139,3 +141,5 @@ function moonCanvas(day) {
   }
   return cv;
 }
+
+export { SPR, mkSprite, sprUrl, iconHtml, moonCanvas };

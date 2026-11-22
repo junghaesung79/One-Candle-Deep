@@ -1,0 +1,7 @@
+{
+  // 테스트는 옛 test_core.js 를 옮긴 코드라 '칸이 있다고 보고' 바로 쓰는 곳이 많아요.
+  // 그래서 null 검사와 암시적 any 만 느슨하게 두고, 나머지는 본 설정을 따라요.
+  "extends": "../tsconfig.json",
+  "compilerOptions": { "strictNullChecks": false, "noImplicitAny": false },
+  "include": ["."]
+}

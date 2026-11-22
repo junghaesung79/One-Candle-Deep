@@ -12,10 +12,12 @@
 | docs/decisions.md | 팀장 결정 기록(R1~R61). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
 | docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
-| prototype/src/ | 프로토타입 소스 조각(core.js 규칙, ui.js 화면, sprites.js 그림, head/tail.html) |
-| prototype/index.html | 조각을 합친 단일 파일. 브라우저로 바로 열어서 플레이 |
-| prototype/bot.js, test_core.js | 봇 플레이와 자동 테스트(Node.js) |
-| tools/_archive/ | 작업 중에 쓴 측정·점검 스크립트. 경로가 원래 작업 공간 기준이라 쓰려면 경로를 고쳐야 해요 |
+| prototype/ | 웹 프로토타입. Vite + TypeScript 프로젝트예요(package.json) |
+| prototype/src/ | ES 모듈: core.js 규칙(DOM 없음), ui.js 화면, sprites.js 그림, main.js 진입점. core.d.ts 는 규칙 모듈의 타입 선언 |
+| prototype/index.html | Vite 진입 HTML(스타일과 화면 틀). 직접 열지 말고 dev 서버나 빌드 결과로 봐요 |
+| prototype/bot/ | bot.js 봇 정책과 한 판 진행, cli.ts 경제 측정 보고서 |
+| prototype/tests/ | Vitest 테스트: 광맥 생성기, 규칙 단위 검사, 봇 연기 검사 |
+| tools/_archive/ | 작업 중에 쓴 측정·점검 스크립트. 옛 구조(require, index.html 잘라 읽기) 기준이라 쓰려면 고쳐야 해요 |
 | 기획서_2차_v2.1.docx | Word로 묶은 기획서(docs/ 의 마크다운을 합친 것) |
 
 ## 문서 읽는 순서
@@ -51,13 +53,18 @@
 
 ```
 cd prototype
-sh build.sh          # src/ 조각을 합쳐 index.html 생성
-node test_core.js    # 규칙 검사 + 봇 플레이(몇 분 걸릴 수 있어요)
+npm install          # 처음 한 번
+npm run dev          # 개발 서버(http://localhost:5173). 고치면 바로 반영돼요
+npm test             # Vitest: 생성기 7종 × 1,000층, 규칙 단위 검사, 봇 연기 검사(30초 안팎)
+npm run typecheck    # TypeScript 검사
+npm run bot          # 경제 측정 보고서(보통 100판 + 신중·욕심 각 50판, 1~2분). npm run bot -- 300 처럼 판 수를 줄 수 있어요
+npm run build        # dist/index.html 파일 하나로 빌드. 더블클릭으로 열거나 정적 호스팅에 올려요
 ```
 
-- 플레이: prototype/index.html 을 브라우저로 열어요
 - 디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김
-- 봇 재사용: `const { load, playRun, POLICY } = require('./bot.js')` (정책: 신중, 보통, 욕심)
+- 봇 재사용: `import { load, playRun, POLICY } from './bot/bot.js'` (정책: cautious 신중, normal 보통, greedy 욕심). `load()` 는 규칙 모듈 하나를 같이 써서, CONFIG를 고치면 같은 프로세스의 다음 판에도 남아요
+- 규칙은 src/core.js 한 곳에만 있어요. 화면, 봇, 테스트가 모두 같은 모듈을 import 해요
+- 기존 코드(src/, bot/bot.js)는 아직 JavaScript예요. 새 코드는 TypeScript로 쓰고, 규칙 모듈의 타입은 src/core.d.ts 를 좁혀 가며 채워요
 
 ## 다음 할 일
 
