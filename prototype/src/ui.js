@@ -732,7 +732,7 @@ function updateHUD() {
     $('signName').innerHTML = esc(R.name) + (f.chunk && !f.chunk.done ? ' <span class="badge gold">' + (CONFIG.features.chunkShown ? '큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ') · 금빛 테두리' : '이 층 어딘가에 큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ')') + '</span>' : '') + (f.chunk && f.chunk.done ? ' <span class="badge gold">덩이 캠</span>' : '');
     $('signText').textContent = R.sign;
     var rem = CONFIG.countsShown ? Core.remaining(f) : null;   // 재미 보고서 1주차: 이 층에 남은 보물·지뢰 수
-    $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24));
+    $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> ' + (CONFIG.stairShown ? '계단 열림' : '계단 찾음') + '</span>') : iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> ' + (CONFIG.stairShown ? '계단 닫힘' : '계단 못 찾음') + '</span>');   // 그림만으로는 뜻을 알 수 없어 늘 글자를 붙여요
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
   // 판: 날짜(달력·설정 단추는 같은 줄)
@@ -839,6 +839,8 @@ function updateHUD() {
   var o = run.order, ol = '';
   if (o) { var def = Core.ORDER_BY_ID[o.id]; ol = '주문: ' + esc(def.text) + ' (' + Math.min(o.prog, def.goal) + '/' + def.goal + ')' + (o.done ? ' <span class="acc">달성</span>' : o.failed ? ' <span class="muted">못 이룸</span>' : ''); }
   $('orderLine').innerHTML = ol;
+  $('orderLine').style.display = ol ? 'block' : 'none';
+  var tall = !ol; if ($('log')._tall !== tall) { $('log')._tall = tall; $('log').classList.toggle('tall', tall); $('log')._k = null; }
   renderLog();
 }
 function bindSlotEvents() {
@@ -879,7 +881,7 @@ function hintText() {
   return '누르면 그 칸으로 걸어가요';
 }
 function renderLog() {
-  var L = run.log.filter(function (m) { return m.id > ui.logFrom; }).slice(-2), el = $('log');
+  var el = $('log'), L = run.log.filter(function (m) { return m.id > ui.logFrom; }).slice(el._tall ? -3 : -2);
   var key = L.map(function (m) { return m.id; }).join(',');
   if (el._k === key) return; el._k = key;
   el.innerHTML = L.map(function (m, i) { return '<div style="color:' + (i === L.length - 1 ? (m.kind === 'bad' ? '#ff9a4d' : m.kind === 'good' ? '#f1ece2' : '#f1ece2') : '#a59fb3') + '">' + esc(m.text) + '</div>'; }).join('');
@@ -963,11 +965,13 @@ function renderOverlay() {
 function boardHtml() {
   var np = Core.nextPayment(run), pay = Core.paymentFor(run.day), G = Core.goalInfo(run);
   var futMut = np ? (run.mutationPlan[np.day] || []) : [];
-  var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1040px;background:#2a2018;border:3px solid #5a3d28;padding:16px 20px">';
+  var sparse = !run.gang && !run.orders.length && !(run.mutationPlan[run.day] || []).length;   // 갱 상태·주문·변덕이 없으면 쪽지 하나뿐이라 좁게
+  var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:' + (sparse ? 480 : 1040) + 'px;background:#2a2018;border:3px solid #5a3d28;padding:16px 20px">';
+  var colW = sparse ? '' : 'width:360px;';
   h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0">' + run.day + '일째 아침 · 갱 입구 게시판</h2><span class="muted">' + (CONFIG.days - run.day + 1) + '일 남음</span></div>';
-  h += '<div style="display:flex;gap:16px">';
+  h += '<div style="display:flex;gap:16px' + (sparse ? ';flex-direction:column' : '') + '">';   // 쪽지가 하나뿐이면 권리증 아래로 한 줄로 쌓아요
   // 왼쪽: 권리증 칸
-  h += '<div class="panel" style="width:360px;padding:12px 14px;' + (pay ? 'border-color:#c4432b' : '') + '">';
+  h += '<div class="panel" style="' + colW + 'padding:12px 14px;' + (pay ? 'border-color:#c4432b' : '') + '">';
   h += '<div class="lbl" style="font-size:14px;color:' + (pay ? '#e5484d' : '#a59fb3') + '">' + (pay ? '오늘 도장 찍는 날 · ' + stampNm(run.day) : '권리증') + '</div>';
   h = h.replace(/<div class="lbl" style="font-size:14px;color:([^"]*)">([^<]*)<\/div>$/, '<div class="lbl" style="font-size:14px;color:$1" data-term="도장">$2</div>');
   var stamps = ''; for (var i = 0; i < Core.payments(run).length; i++) stamps += '<div class="stampSlot" style="width:34px;height:34px;border-color:#5d5868">' + (i < run.stamps ? '<div class="stamp" style="width:32px;height:32px;font-size:11px">도장</div>' : '') + '</div>';
@@ -1035,7 +1039,7 @@ function forkHtml() {
     }
     h += '</div>';
   });
-  h += '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span class="sub">지금: 줄 ' + multTxt(Core.streakMult(run)) + ' · 체력 ' + d.hp + '/' + d.hpMax + ' · 주머니 ' + fmt(d.pocket) + '</span>' +
+  h += '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span class="sub">지금: 콤보 ' + multTxt(Core.streakMult(run)) + ' · 체력 ' + d.hp + '/' + d.hpMax + ' · 주머니 ' + fmt(d.pocket) + '</span>' +
     '<span><button id="oStay">더 파기</button> <button class="primary" id="oGo">내려가기</button></span></div></div>';
   return h;
 }
@@ -1071,7 +1075,7 @@ function settleHtml() {
   var o = run.order;
   if (o) { var def = Core.ORDER_BY_ID[o.id]; h += '<div class="fadein note" style="animation-delay:' + (delay + 900) + 'ms;font-size:14px">주문 ' + esc(def.text) + ': ' + (o.done ? '<span class="acc">달성</span>' : Math.min(o.prog, def.goal) + '/' + def.goal + ' · 못 이룸') + '</div>'; }
   var np = Core.nextPayment(run);
-  if (np) h += '<div class="fadein" style="animation-delay:' + (delay + 900) + 'ms;margin-top:8px;font-size:15px">' + goalLine(run) + '</div>';
+  if (np && !(S.line && /도장/.test(S.line))) h += '<div class="fadein" style="animation-delay:' + (delay + 900) + 'ms;margin-top:8px;font-size:15px">' + goalLine(run) + '</div>';   // 구 실장 말에 이미 있으면 되풀이하지 않아요
   h += '<div class="fadein" style="animation-delay:' + (delay + 1000) + 'ms;margin-top:14px;text-align:right"><button class="primary" id="oNext">' + (S.payDay ? '도장 찍으러 가기' : '상점으로') + '</button></div></div>';
   return h;
 }
@@ -1101,7 +1105,7 @@ function paymentHtml() {
       P.next.mutations.forEach(function (m, i) { h += '<div class="panel fadein" style="animation-delay:' + (2400 + i * 200) + 'ms;padding:6px 10px;margin-top:4px;font-size:14px">' + iconHtml('muts.' + m, 20) + ' <b>' + MUTATIONS[m].name + '</b> · <span class="muted">구 실장:</span> "' + esc(MUTATIONS[m].warn) + '"</div>'; });
     }
   }
-  h += '<div style="margin-top:14px;text-align:right"><button class="primary" id="oPay">' + (P.ok ? (run.day >= CONFIG.days ? '권리증 받기' : '상점으로') : '다음') + '</button></div></div>';
+  h += '<div style="margin-top:14px;text-align:right"><button class="primary" id="oPay">' + (P.ok ? (run.day >= CONFIG.days ? '권리증 받기' : CONFIG.features.stampReward ? '도장 선물 고르기' : '상점으로') : '다음') + '</button></div></div>';
   return h;
 }
 function finalHtml() {
@@ -1156,7 +1160,7 @@ function shopHtml(merchant) {
     var warn = np && np.day === run.day + (merchant ? 0 : 1) && left < np.amount;
     h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '"><div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + t.name +
       ' <span class="muted" style="font-size:12px;font-weight:400">' + axisName(t) + '</span></div><div class="d">' + esc(t.desc) + '</div>' +
-      '<div class="note">' + (can ? '사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자라요</span>' : '') : '') : '금고가 ' + fmt(pr - run.cash) + ' 모자라요') + '</div></div><div class="p">' + fmt(pr) + '</div>' +
+      (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자라요</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
   });
   if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 세 자리만 바뀌어요</span></div>';
@@ -1174,18 +1178,17 @@ function shopHtml(merchant) {
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
   return h;
 }
-function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추)
-  function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
-  return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
+function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추). 화면 → 이번 판 → 기록 순으로 묶어요
+  function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left"><span>' + label + (note ? '<br><span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span style="flex:none" class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
+  return '<div class="dim"></div><div class="dlg" style="width:540px"><h2>설정</h2>' +
+    '<h3>조작과 화면</h3><div style="display:flex;flex-direction:column;gap:6px">' +
     tg('oAim', '조준', settings.aim, '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨려요. 끄면 한 번에 걸어가서 해요') + tg('oShake', '화면 흔들림', settings.shake) +
     tg('oFlash', '지뢰 플래시', settings.flash) +
-    '<div class="note" style="margin-top:2px">키보드: Esc 설정 · Tab 가방 · R 올라가기 · Enter·Space 다음 화면 · 숫자 키로 카드 고르기</div>' +
-    '<button id="oOpening">오프닝 만화 다시 보기</button>' +
-    '<div class="note" style="margin-top:2px">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '</div>' +
-    '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
-    '<div style="display:flex;gap:8px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button></div>' +
-    '<button id="oRestart">새 판 시작</button><button id="oRestartTut">첫 판 안내로 다시</button><button id="oGiveUp">판 포기</button>' +
-    '<button class="primary" id="oClose">계속하기</button></div><div class="note" style="margin-top:10px">시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</div></div>';
+    '<div class="note">키보드: Esc 설정 · Tab 가방 · R 올라가기 · Enter·Space 다음 화면 · 숫자 키로 카드 고르기</div></div>' +
+    '<h3 style="margin-top:14px">이번 판</h3><div style="display:flex;gap:6px"><button id="oRestart" style="flex:1">새 판 시작</button><button id="oRestartTut" style="flex:1">첫 판 안내로 다시</button><button id="oGiveUp" style="flex:1">판 포기</button></div>' +
+    '<h3 style="margin-top:14px">기록</h3><div class="note">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '<br>' + esc(playlogSummary()) + '</div>' +
+    '<div style="display:flex;gap:6px;margin-top:6px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button><button id="oOpening" style="flex:1">오프닝 만화 다시 보기</button></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
 function openingHtml() {
