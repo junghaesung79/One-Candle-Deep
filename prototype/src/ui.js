@@ -55,8 +55,27 @@ function flushAll() {
 
 // ---------- 새 판 ----------
 function todayStr() { var t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); }
+// ---------- 통계(R91): 판 수, 완납, 연속 완납. 판이 끝나거나 진행 중인 판을 버리면 한 판 ----------
+function countRun(won) {
+  if (!run || run.statDone) return;
+  run.statDone = true;
+  var S = settings.stats || (settings.stats = { plays: 0, clears: 0, streak: 0, bestStreak: 0 });
+  S.plays++;
+  if (won) { S.clears++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); } else S.streak = 0;
+  saveSettings();
+}
+function statsLine() {
+  var S = settings.stats; if (!S || !S.plays) return '아직 끝낸 판이 없어요';
+  return '판 ' + S.plays + ' · 완납 ' + S.clears + '(' + Math.round(S.clears / S.plays * 100) + '%) · 연속 완납 ' + S.streak + '(최고 ' + S.bestStreak + ')';
+}
+function bestLine() {
+  var B = settings.bestBy || {}, out = [];
+  for (var g = 1; g <= 3; g++) { var v = B['grade:' + g] || (g === 1 ? settings.best || 0 : 0); if (v) out.push(gradeName(g) + ' ' + fmt(v)); }
+  return out.length ? '최고 점수 ' + out.join(' · ') : '';
+}
 function startNewRun(tutorial, o) {
   o = o || {};
+  if (run && run.phase !== 'final' && (run.d || run.day > 1)) countRun(false);   // 진행 중인 판을 버리면 진 판으로 세요
   var grade = tutorial ? 1 : Math.max(1, Math.min(settings.gradeOpen || 1, o.grade || settings.grade || 1));
   var daily = !tutorial && o.daily ? todayStr() : null;
   var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : (Date.now() & 0x7fffffff);
@@ -429,6 +448,7 @@ function drawBoard(now) {
     var on = Math.floor((now - anim.blame.t0) / 250) % 2 === 0;
     if (on) anim.blame.cells.forEach(function (q) { g.strokeStyle = '#f1ece2'; g.lineWidth = 3; g.strokeRect(q.x * T + 3, q.y * T + 3, T - 6, T - 6); });
   }
+  drawSweep(g, f, now);
   // 조준 꺾쇠(R54: 클릭으로 조준한 바위에만)와 마우스 테두리, 고르기 상태의 대상 칸(R53)
   var keyLabels = [];
   if (run.phase === 'mine' && !ui.sub) {
@@ -473,6 +493,8 @@ function drawBoard(now) {
       if (k < 280) { g.strokeStyle = '#fff4c2'; g.globalAlpha = 1 - k / 280; g.lineWidth = 3; g.strokeRect(PX - k / 20, PY - k / 20, T + k / 10, T + k / 10); g.globalAlpha = 1; }
     } else if (p.kind === 'probe') {
       if (k < 200) { g.strokeStyle = '#e6e1d6'; g.globalAlpha = 1 - k / 200; g.lineWidth = 2; g.beginPath(); g.arc(PX + 24, PY + 24, 8 + k / 8, 0, 7); g.stroke(); g.globalAlpha = 1; }
+    } else if (p.kind === 'nope') {   // 숫자 칸이 좌우로 흔들림
+      if (k < 260) { var dx = [3, -3, 2, -2, 1, 0][Math.floor(k / 45)] || 0; g.strokeStyle = 'rgba(241,236,226,0.8)'; g.lineWidth = 2; g.strokeRect(PX + 3 + dx, PY + 3, T - 6, T - 6); }
     } else if (p.kind === 'locked') {
       if (k < 120) { g.strokeStyle = '#e5484d'; g.lineWidth = 2; g.strokeRect(PX + 2 + (Math.floor(k / 30) % 2 ? 2 : -2), PY + 2, T - 4, T - 4); }
     }
@@ -528,6 +550,29 @@ function drawStairHint(g, X, Y) {   // 숫자 아래 밑줄 + 칸 왼쪽 아래 
 function drawProbe(g, X, Y, r) {
   if (r === 'mine') { g.fillStyle = '#3a0f14'; g.fillRect(X + 10, Y + 34, 28, 10); g.fillStyle = '#e5484d'; [14, 21, 28].forEach(function (dx) { g.fillRect(X + dx + 1, Y + 36, 6, 6); }); }
   else { g.strokeStyle = '#f2c14e'; g.lineWidth = 3; g.beginPath(); g.arc(X + 24, Y + 24, 11, 0, 7); g.stroke(); }
+}
+// ---------- 층을 떠날 때 답 공개(R90): 왼쪽 줄부터 오른쪽으로 한 줄씩 ----------
+var SWEEP = { col: 55, hold: 350 };   // 줄마다 55 ms(16줄이면 약 0.9초) + 다 열린 뒤 0.35초
+function startSweep(then, delay) {
+  var f = run.d && run.d.floor;
+  if (!f || !f.cells.some(function (c) { return c.cover !== 'open' && (c.haz || c.mark); })) { then(); return; }
+  ui.sweep = { t0: performance.now() + (delay || 0), f: f, then: then };
+  ui.mode = null; ui.aim = null; ui.hudDirty = true;
+}
+function sweepTotal() { return BW * SWEEP.col + SWEEP.hold; }
+function endSweep() { var s = ui.sweep; if (!s) return; ui.sweep = null; s.then(); }
+function drawSweep(g, f, now) {
+  var s = ui.sweep; if (!s || s.f !== f) return;
+  var col = Math.floor((now - s.t0) / SWEEP.col);
+  if (col < 0) return;
+  for (var y = 0; y < BH; y++) for (var x = 0; x <= Math.min(col, BW - 1); x++) {
+    var c = f.cells[y * BW + x], X = x * T, Y = y * T;
+    if (c.cover === 'open') continue;
+    if (c.haz === 'mine' || c.haz === 'treasure' || c.haz === 'chunk') drawDebug(g, X, Y, c);
+    var wrong = (c.mark === 1 && c.haz !== 'mine') || (c.mark === 2 && c.haz !== 'treasure' && c.haz !== 'chunk');
+    if (wrong) { g.strokeStyle = '#e5484d'; g.lineWidth = 3; g.strokeRect(X + 3, Y + 3, T - 6, T - 6); }
+  }
+  if (col < BW) { g.fillStyle = 'rgba(255,210,90,0.22)'; g.fillRect(col * T, 0, T, BH * T); }
 }
 function drawDebug(g, X, Y, c) {
   g.globalAlpha = 0.85;
@@ -1040,6 +1085,7 @@ function paymentHtml() {
 }
 function finalHtml() {
   var F = run.final, h;
+  countRun(!!F.success);
   var hist = run.history, mx = Math.max.apply(null, hist.map(function (x) { return x.income; }).concat([1]));
   var chart = '<div class="chart">';
   for (var i = 0; i < CONFIG.days; i++) { var hi = hist[i], pay = !!Core.paymentFor(i + 1); chart += hi ? '<i class="' + (hi.collapsed ? 'col ' : '') + (pay ? 'pay' : '') + '" title="' + hi.day + '일째: ' + hi.income + '" style="height:' + Math.max(4, hi.income / mx * 86) + 'px"></i>' : '<i style="background:transparent' + (pay ? ';outline:1px dashed #5d5868' : '') + '"></i>'; }
@@ -1114,6 +1160,7 @@ function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
     tg('oFlash', '지뢰 플래시', settings.flash) +
     '<div class="note" style="margin-top:2px">키보드로도 할 수 있어요: WASD·방향키 이동 · QEZC 대각 · Space 캐기 · F 분필 · B 발파 · 1 두드려 보기 · 2~4 한 번 쓰는 물건 · R 올라가기 · Tab 가방 · Esc 설정</div>' +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
+    '<div class="note" style="margin-top:2px">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '</div>' +
     '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:8px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button></div>' +
     '<button id="oRestart">새 판 시작</button><button id="oRestartTut">첫 판 안내로 다시</button><button id="oGiveUp">판 포기</button>' +
@@ -1272,8 +1319,12 @@ function forkGo(i) {
     if (r.ok) { ui.sub = null; anim.pend = {}; if (o.kind === 'floor') ui.rulesSeen[o.rule] = true; }
     afterAction(); renderOverlay();
   };
-  if (f.chunk && !f.chunk.done && f.chunk.dug > 0) askConfirm(TEXT.chunk.leave.replace('{n}', f.chunk.total - f.chunk.dug), go);
-  else go();
+  var leave = function () {   // 촛불이 모자라면 공개 없이 안내만
+    if (d.candle < Core.travelCost(run, o.depth)) { go(); return; }
+    ui.sub = null; renderOverlay(); startSweep(go);
+  };
+  if (f.chunk && !f.chunk.done && f.chunk.dug > 0) askConfirm(TEXT.chunk.leave.replace('{n}', f.chunk.total - f.chunk.dug), leave);
+  else leave();
 }
 function buyTool(i) { var r = Core.buy(run, i); if (r.ok) { ui.hudDirty = true; } else if (r.poor) blinkEl('ov', 'x', 1); renderOverlay(); }
 function settleNext() {
@@ -1307,6 +1358,11 @@ function afterAction() {
   drainFx();
   var ph = run.phase;
   if (ph !== 'mine') { ui.sub = null; ui.mode = null; }
+  if (afterAction.lastPhase === 'mine' && ph === 'settle' && run.d && run.d.endReason !== 'return' && !ui.sweep) {   // 촛불이 다 타거나 쓰러짐: 공개 뒤에 정산 창
+    afterAction.lastPhase = ph; ui.hudDirty = true;
+    startSweep(function () { ui.shownAt = performance.now(); renderOverlay(); }, 300);
+    if (ui.sweep) return;
+  }
   if (ph !== afterAction.lastPhase || ph !== 'mine' || ui.sub) { if (ph === 'settle' || ph === 'room') ui.shownAt = performance.now(); renderOverlay(); }
   afterAction.lastPhase = ph;
   if (ph === 'mine' && run.tutorial) {   // 말풍선 6: X 칸이 처음 둘레 8칸에 들어온 순간(첫 판 끝까지 유효). 낙서 7은 Day 1~3
@@ -1333,7 +1389,7 @@ function say(text, p) {   // 칸 위 짧은 안내 + 기록 창
 }
 function noPath(p) { say(TEXT.ops.noPath, p); }
 function openFork() {
-  if (run.phase !== 'mine') return;
+  if (run.phase !== 'mine' || ui.sweep) return;
   var fs = run.d.floor.stair;
   if (fs && fs.blocked && fs.found) { say('계단이 막혀 있어요. 오늘은 여기까지예요. 촛불을 다 쓰거나 올라가기를 누르세요.'); return; }
   if (!Core.onStair(run)) { say('계단 위에 올라서서 계단을 한 번 더 클릭하세요.'); return; }
@@ -1342,10 +1398,10 @@ function openFork() {
 }
 // 올라가기(R53): 버튼 → 확인 창
 function askReturn() {
-  if (!run || (run.phase !== 'mine' && run.phase !== 'room')) return;
+  if (ui.sweep || !run || (run.phase !== 'mine' && run.phase !== 'room')) return;
   var d = run.d;
   var msg = d.embersOn ? '버리는 불씨 ' + d.embers + ' · 금고로 가는 주머니 ' + fmt(d.pocket) : TEXT.ops.returnAsk.replace('{c}', d.candle).replace('{p}', fmt(d.pocket));
-  askConfirm(msg, function () { if (run.phase === 'mine' || run.phase === 'room') { Core.returnUp(run); afterAction(); } }, { yes: '올라가기', no: '계속 파기' });
+  askConfirm(msg, function () { var up = function () { if (run.phase === 'mine' || run.phase === 'room') { Core.returnUp(run); afterAction(); } }; if (run.phase === 'mine') startSweep(up); else up(); }, { yes: '올라가기', no: '계속 파기' });
 }
 // 고르기 상태(R53): 두드려 보기·발파·소모품
 function modeOk(kind) {
@@ -1355,7 +1411,7 @@ function modeOk(kind) {
   return true;
 }
 function toggleMode(kind, slot) {
-  if (!run || run.phase !== 'mine' || ui.sub) return;
+  if (!run || run.phase !== 'mine' || ui.sub || ui.sweep) return;
   if (ui.mode && ui.mode.kind === kind && ui.mode.slot === slot) { ui.mode = null; ui.hudDirty = true; return; }
   var d = run.d;
   if (kind === 'cons') {
@@ -1394,7 +1450,7 @@ function clickCell(p) {
   if (p.x === d.px && p.y === d.py) {
     if (f.stair && f.stair.found && f.stair.x === p.x && f.stair.y === p.y) { openFork(); return; }
     var ci = Core.chordInfo(run, p.x, p.y);
-    if (ci && ci.marked > 0) { if (ci.ready) { Core.chord(run, p.x, p.y); afterAction(); } else say(TEXT.chord.need, p); }
+    if (ci) { if (ci.ready) { Core.chord(run, p.x, p.y); afterAction(); } else anim.pops.push({ x: p.x, y: p.y, t0: performance.now(), kind: 'nope' }); }   // 안 열리면 글 없이 칸만 흔들려요(R89)
     return;
   }
   if (!Core.walkable(f, c)) { noPath(p); return; }
@@ -1411,6 +1467,7 @@ var MOVE_KEYS = {
 };
 function keyAim() { var d = run.d; return { x: d.px + d.face.dx, y: d.py + d.face.dy }; }
 document.addEventListener('keydown', function (e) {
+  if (ui.sweep) { e.preventDefault(); if (!e.repeat) endSweep(); return; }
   if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
   var code = e.code;
   if (['F2', 'F3', 'F4', 'F8', 'F9', 'Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].indexOf(code) >= 0) e.preventDefault();
@@ -1478,6 +1535,7 @@ document.addEventListener('keydown', function (e) {
   if (code === 'KeyR' && !e.repeat) askReturn();
 });
 OV.addEventListener('click', function (e) {
+  if (ui.sweep) { endSweep(); return; }
   if (!run || e.target.closest('button') || e.target.closest('[data-order]') || e.target.closest('[data-fork]') || e.target.closest('[data-buy]') || e.target.closest('[data-gift]')) return;
   flushAll();
   if (ui.opening != null) { openingNext(); return; }
@@ -1493,6 +1551,7 @@ board.addEventListener('mousemove', function (e) { var h = boardCell(e); if (!ui
 board.addEventListener('mouseleave', function () { ui.hover = null; ui.hudDirty = true; });
 board.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 board.addEventListener('mousedown', function (e) {
+  if (ui.sweep) { endSweep(); return; }   // 답 공개 중: 누르면 건너뛰어요
   if (!run || run.phase !== 'mine' || ui.sub || ui.opening != null) return;
   flushAll(); bubbleOnAction();
   var p = boardCell(e); if (!p) return;
@@ -1510,6 +1569,7 @@ board.addEventListener('mousedown', function (e) {
 function frame(now) {
   if (run) {
     runSched(now);
+    if (ui.sweep && now - ui.sweep.t0 > sweepTotal()) endSweep();
     if (run.fx.length) drainFx();
     if (ui.bubble && now - ui.bubble.t0 > 7000) hideBubble();
     if (ui.hudDirty || ui.flys.length || (ui.streakFx && now - ui.streakFx.t0 < 600) || Object.keys(ui.slotPop).some(function (k) { return now - ui.slotPop[k] < 200; })) { ui.hudDirty = false; if (run.d || run.phase === 'deed' || run.phase === 'board') updateHUDSafe(); }
