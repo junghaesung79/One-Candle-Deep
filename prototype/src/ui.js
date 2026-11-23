@@ -3,7 +3,7 @@ import { SPR, iconHtml, moonCanvas } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
-var settings = { shake: true, flash: true, legend: true, bubbles: true, tutorialDone: false, best: 0, quickDig: false, keys: true, openingSeen: false, chord: true, gradeOpen: 1, grade: 1, bestBy: {} };   // R53·R54: 바로 캐기(기본 꺼짐), 키보드 단축키(기본 켜짐)
+var settings = { shake: true, flash: true, tutorialDone: false, best: 0, quickDig: false, openingSeen: false, chord: true, gradeOpen: 1, grade: 1, bestBy: {}, bubblesOnce: {} };   // R54: 바로 캐기(기본 꺼짐). R87: 키보드 단축키·범례·말풍선은 늘 켜짐
 try { var sv = JSON.parse(localStorage.getItem('ocd2_settings') || 'null'); if (sv) settings = Object.assign(settings, sv); } catch (e) {}
 // 주소 뒤에 ?preset=v21 을 붙이면 2차 기획 v2.1 규칙으로 해 볼 수 있어요(플레이테스트 비교용)
 try { var qpreset = new URLSearchParams(location.search).get('preset'); if (qpreset) Core.applyPreset(qpreset); } catch (e) {}
@@ -256,8 +256,10 @@ function candleFloat(delta) {
 
 // ---------- 강조 말풍선(6개, 첫 판) ----------
 function bubble(key, text, anchor) {
-  if (!settings.bubbles || ui.bubblesSeen[key]) return;
-  if (key !== 'ember' && key !== 'gold' && !(run && run.tutorial)) return;
+  if (ui.bubblesSeen[key]) return;
+  var anyRun = key === 'ember' || key === 'gold';   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
+  if (!anyRun && !(run && run.tutorial)) return;
+  if (anyRun && !run.tutorial) { if (!settings.bubblesOnce) settings.bubblesOnce = {}; if (settings.bubblesOnce[key]) return; settings.bubblesOnce[key] = true; saveSettings(); }
   ui.bubblesSeen[key] = true;
   ui.bubbleQ.push({ key: key, text: text, anchor: anchor, at: performance.now() });
   if (!ui.bubble) nextBubble();
@@ -776,7 +778,7 @@ function updateHUD() {
   if (ui.mode) lg.innerHTML = '<span class="acc" style="font-weight:700">' + esc(ui.mode.kind === 'probe' ? TEXT.ops.probe : ui.mode.kind === 'blast' ? TEXT.ops.blast : TEXT.ops.powder) + '</span>';   // 고르기 상태 안내(화면 아래 한 줄)
   else if (ui.judge && d && run.phase === 'mine') lg.innerHTML = iconHtml('mine', 20) + ' <b class="' + (ui.judge.kind === 'known' ? 'warnTxt' : 'acc') + '">' + esc(ui.judge.text) + '</b>';
   else if (d && d.embersOn) lg.innerHTML = '<span class="warnTxt" style="font-weight:700">불씨 다섯 번이에요. 지뢰를 터뜨리면 쓰러져요</span><span class="sep">|</span><span class="muted">' + TEXT.ember.bar + '</span>';
-  else lg.innerHTML = settings.legend ? '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 주변 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>' : '';
+  else lg.innerHTML = '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 주변 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>';
   var o = run.order, ol = '';
   if (o) { var def = Core.ORDER_BY_ID[o.id]; ol = '주문: ' + esc(def.text) + ' (' + Math.min(o.prog, def.goal) + '/' + def.goal + ')' + (o.done ? ' <span class="acc">달성</span>' : o.failed ? ' <span class="muted">못 이룸</span>' : ''); }
   $('orderLine').innerHTML = ol;
@@ -1110,9 +1112,10 @@ function shopHtml(merchant) {
 function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
-    tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oKeys', '키보드 단축키', settings.keys) + tg('oShake', '화면 흔들림', settings.shake) +
+    tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oShake', '화면 흔들림', settings.shake) +
     (CONFIG.preset === 'v22' ? tg('oChord', '주변 한꺼번에 열기', settings.chord !== false, '숫자 위에 서서 한 번 더 누르면 열어요') : '') +
-    tg('oFlash', '지뢰 플래시', settings.flash) + tg('oLegend', '판 아래 범례', settings.legend) + tg('oBub', '강조 말풍선', settings.bubbles) +
+    tg('oFlash', '지뢰 플래시', settings.flash) +
+    '<div class="note" style="margin-top:2px">키보드로도 할 수 있어요: WASD·방향키 이동 · QEZC 대각 · Space 캐기 · F 분필 · B 발파 · 1 두드려 보기 · 2~4 한 번 쓰는 물건 · R 올라가기 · Tab 가방 · Esc 설정</div>' +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
     '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:8px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button></div>' +
@@ -1201,15 +1204,12 @@ function bindOverlay() {
   on('oChord', function () { settings.chord = settings.chord === false; saveSettings(); applySettingsToRules(); renderOverlay(); });
   OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
   on('oQuick', function () { settings.quickDig = !settings.quickDig; saveSettings(); renderOverlay(); });
-  on('oKeys', function () { settings.keys = !settings.keys; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
   on('oLogGet', playlogDownload);
   on('oLogClear', function () { askConfirm('기록된 하루 ' + playlogLoad().length + '개를 지울까요? 되돌릴 수 없어요', function () { playlogSave([]); ui.sub = 'pause'; renderOverlay(); }, { yes: '지우기', no: '그대로 두기' }); });
   on('oOpSkip', function () { openingEnd(); }); on('oOpNext', function () { openingNext(); });
   on('oShake', function () { settings.shake = !settings.shake; saveSettings(); renderOverlay(); });
   on('oFlash', function () { settings.flash = !settings.flash; saveSettings(); renderOverlay(); });
-  on('oLegend', function () { settings.legend = !settings.legend; saveSettings(); renderOverlay(); ui.hudDirty = true; });
-  on('oBub', function () { settings.bubbles = !settings.bubbles; saveSettings(); renderOverlay(); });
   on('oRestart', function () { askConfirm('지금 판을 버리고 새 판을 시작할까요?', function () { startNewRun(false); }); });
   on('oRestartTut', function () { askConfirm('첫 판 안내(정해진 층)로 새로 시작할까요?', function () { startNewRun(true); }); });
   on('oGiveUp', function () { askConfirm('판을 포기할까요? 계약 해지가 돼요.', function () { ui.sub = null; run.payment = { short: Math.max(0, (Core.nextPayment(run) || { amount: 0 }).amount - run.cash) }; run.final = { success: false, score: 0, stamps: run.stamps, day: run.day, short: run.payment.short, body: ['판을 포기했어요. 갱구는 잠겼고 다음 보름에 다시 열려요.'] }; run.phase = 'final'; renderOverlay(); }); });
@@ -1407,7 +1407,7 @@ function clickCell(p) {
 }
 
 // ---------- 입력 ----------
-// 키보드 단축키(설정 '키보드 단축키', 기본 켜짐). 화면에는 표시하지 않는다(R53)
+// 키보드 단축키(늘 켜짐, R87). 판 화면에는 표시하지 않고 설정 창에만 적는다(R53)
 var MOVE_KEYS = {
   ArrowUp: [0, -1], KeyW: [0, -1], Numpad8: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], Numpad2: [0, 1],
   ArrowLeft: [-1, 0], KeyA: [-1, 0], Numpad4: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0], Numpad6: [1, 0],
@@ -1415,7 +1415,7 @@ var MOVE_KEYS = {
 };
 function keyAim() { var d = run.d; return { x: d.px + d.face.dx, y: d.py + d.face.dy }; }
 document.addEventListener('keydown', function (e) {
-  if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (settings.keys && e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
+  if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
   var code = e.code;
   if (['F2', 'F3', 'F4', 'F8', 'F9', 'Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].indexOf(code) >= 0) e.preventDefault();
   if (!run) return;
@@ -1427,13 +1427,12 @@ document.addEventListener('keydown', function (e) {
   if (code === 'F8') { Core.debugEndDay(run); afterAction(); return; }
   if (code === 'F9') { Core.debugSkipDay(run); ui.sub = null; ui.opening = null; ui.shownAt = 0; run.fx = []; hideBubble(); renderOverlay(); ui.hudDirty = true; return; }
   var p = run.phase;
-  if (code === 'Escape') {   // 설정은 단축키 설정과 상관없이 Esc로 연다
+  if (code === 'Escape') {   // 설정은 Esc로 연다
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
     if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag') { ui.sub = null; renderOverlay(); return; }
     if (p === 'mine') { ui.sub = 'pause'; renderOverlay(); }
     return;
   }
-  if (!settings.keys) return;
   if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); return; }
   if (p === 'deed') { if (code === 'Enter' || code === 'Space') deedGo(); return; }
   if (p === 'gift') {
