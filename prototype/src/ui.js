@@ -807,7 +807,7 @@ function hintText() {
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
-  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변를 한꺼번에 열어요';
+  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변 칸을 한꺼번에 열어요';
   if (h.x === d.px && h.y === d.py && ci && ci.marked > 0) return esc(TEXT.chord.need);
   return '누르면 그 칸으로 걸어가요';
 }
