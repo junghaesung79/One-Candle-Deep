@@ -1,4 +1,4 @@
-import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL } from './core.js';
+import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES } from './core.js';
 import { SPR, iconHtml, moonCanvas } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
@@ -176,8 +176,10 @@ function drainFx() {
         var q = stageXY(e.x, e.y), d0 = gainIdx * 120; gainIdx++; hadGain = true;
         ui.pocketPending += e.total;
         var base = e.scorch ? fmt(e.full || e.base * 2) + ' 반값' : '' + fmt(e.base);   // 01 7.2 "20 반값 ×2 = 20"
-        var ic = e.order ? '' : iconHtml(e.chunk ? 'chunk' : e.label === '정제기' ? 'nugget' : 'tier.' + (e.tier || 1), e.chunk ? 32 : 24);
-        var s1 = ic + base, s2 = s1 + (e.mult > 1 ? ' ' + multTxt(e.mult) : '') + (e.bonus ? ' +' + Math.round(e.bonus * 100) + '%' : '');
+        var plainT = !e.order && !e.chunk && !e.scorch && e.label !== '정제기';   // 바로 캔 보물: 무엇을 캤는지 크게 보여 준다
+        var ic = e.order ? '' : iconHtml(e.chunk ? 'chunk' : e.label === '정제기' ? 'nugget' : 'tier.' + (e.tier || 1), e.chunk ? 40 : plainT ? 44 : 24);
+        if (plainT) anim.pops.push({ x: e.x, y: e.y, t0: now + gainIdx * 120 - 120, kind: 'lift', tier: e.tier || 1 });
+        var s1 = ic + (plainT ? '<span class="tname t' + (e.tier || 1) + '">' + TREASURE_NAMES[e.tier || 1] + '</span> ' : '') + base, s2 = s1 + (e.mult > 1 ? ' ' + multTxt(e.mult) : '') + (e.bonus ? ' +' + Math.round(e.bonus * 100) + '%' : '');
         var s3 = s2 + ((e.mult > 1 || e.bonus || e.scorch) ? ' = ' + fmt(e.total) : '');
         if (e.order) { s1 = s2 = s3 = '주문 +' + fmt(e.total); }
         var gi = gainIdx - 1;
@@ -188,8 +190,8 @@ function drainFx() {
         }
         if (!gainAnchor) { gainAnchor = { x: Math.max(110, Math.min(700, q.x)), y: q.y - 16, down: q.y - 16 - 3 * 24 < 84, n: 0 }; }
         var gn = gainAnchor.n++;
-        var gx = gainAnchor.x, gy = gainAnchor.down ? gainAnchor.y + 46 + (gn % 6) * 24 : gainAnchor.y - (gn % 6) * 24;
-        addFly({ x: gx, y: gy, showAt: 120 + d0, flyAt: (e.chunk ? 1200 : 660) + d0, flyDur: e.chunk ? 500 : 350, size: e.chunk ? 22 : 17, pocket: e.total, rise: e.chunk ? 40 : 24,
+        var gx = gainAnchor.x, gy = gainAnchor.down ? gainAnchor.y + 60 + (gn % 6) * 40 : gainAnchor.y - 14 - (gn % 6) * 40;
+        addFly({ x: gx, y: gy, showAt: 120 + d0, flyAt: (e.chunk ? 1300 : 900) + d0, flyDur: e.chunk ? 500 : 350, size: e.chunk ? 22 : 17, pocket: e.total, rise: e.chunk ? 40 : 24,
                  steps: [{ t: 120 + d0, h: s1 }, { t: 240 + d0, h: s2 }, { t: 360 + d0, h: s3 }] });
         if (e.chunk) { addShake(4, 300); }
         if (run.tutorial && run.d.floor.rule === 'pair' && !e.chunk && !e.order && e.label !== '정제기' && ui.pairHints < 3) {
@@ -199,7 +201,7 @@ function drainFx() {
         break;
       }
       case 'streak':
-        ui.streakFx = { t0: now + 1010, kind: 'up' };
+        ui.streakFx = { t0: now + 1250, kind: 'up' };   // 보물 팝업이 주머니에 닿는 때(900 + 350)
         if (e.to >= 1 && run.tutorial) after(1100, function () { bubble('streak', TEXT.bubbles.streak, { el: 'streakBox', below: true }); });
         break;
       case 'streakBreak':
@@ -495,6 +497,12 @@ function drawBoard(now) {
       if (k < 200) { g.strokeStyle = '#e6e1d6'; g.globalAlpha = 1 - k / 200; g.lineWidth = 2; g.beginPath(); g.arc(PX + 24, PY + 24, 8 + k / 8, 0, 7); g.stroke(); g.globalAlpha = 1; }
     } else if (p.kind === 'nope') {   // 숫자 칸이 좌우로 흔들림
       if (k < 260) { var dx = [3, -3, 2, -2, 1, 0][Math.floor(k / 45)] || 0; g.strokeStyle = 'rgba(241,236,226,0.8)'; g.lineWidth = 2; g.strokeRect(PX + 3 + dx, PY + 3, T - 6, T - 6); }
+    } else if (p.kind === 'lift') {   // 캔 보물이 칸에서 크게 솟아올라 무엇을 캤는지 보여 준다
+      if (k < 850) {
+        var up = Math.min(1, k / 160), sz = 44 + 40 * up, cy = PY + 24 - 18 * up, al = k < 650 ? 1 : 1 - (k - 650) / 200;
+        g.globalAlpha = al * 0.35; g.fillStyle = p.tier === 2 ? '#5fe0e8' : '#ffd25a'; g.beginPath(); g.arc(PX + 24, cy, sz * 0.42, 0, 7); g.fill();
+        g.globalAlpha = al; g.drawImage(SPR.tier[p.tier], PX + 24 - sz / 2, cy - sz / 2, sz, sz); g.globalAlpha = 1;
+      }
     } else if (p.kind === 'locked') {
       if (k < 120) { g.strokeStyle = '#e5484d'; g.lineWidth = 2; g.strokeRect(PX + 2 + (Math.floor(k / 30) % 2 ? 2 : -2), PY + 2, T - 4, T - 4); }
     }
