@@ -63,7 +63,6 @@ npm run dev        # http://localhost:5173
 ```
 docs/          기획서 원본(마크다운)
 prototype/     웹 프로토타입(Vite + TypeScript)
-tools/_archive 옛 측정 스크립트(참고용)
 CLAUDE.md      Claude Code 작업 안내
 ```
 

@@ -75,12 +75,11 @@ Node.js 20 이상이 필요해요.
 │   ├── reviews/           첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서
 │   ├── v1/                1차 기획안(참고용, 현재 규칙 아님)
 │   └── export/            Word로 묶은 기획서
-├── prototype/             웹 프로토타입(Vite + TypeScript)
-│   ├── index.html         진입 HTML(스타일과 화면 틀)
-│   ├── src/               core.js 규칙, ui.js 화면, sprites.js 그림, main.js 진입점, core.d.ts 타입
-│   ├── bot/               bot.js 봇 정책과 한 판 진행, cli.ts 경제 측정 보고서
-│   └── tests/             Vitest 테스트
-└── tools/_archive/        옛 구조 기준 측정·점검 스크립트(그대로는 안 돌아가요)
+└── prototype/             웹 프로토타입(Vite + TypeScript)
+    ├── index.html         진입 HTML(스타일과 화면 틀)
+    ├── src/               core.js 규칙, ui.js 화면, sprites.js 그림, main.js 진입점, core.d.ts 타입
+    ├── bot/               bot.js 봇 정책과 한 판 진행, cli.ts 경제 측정 보고서
+    └── tests/             Vitest 테스트
 ```
 
 ## 5. 코드 구조
@@ -155,7 +154,6 @@ GitHub에 올리면 `.github/workflows/ci.yml`이 푸시마다 타입 검사, �
 - `prototype/index.html`의 페이지 제목에는 아직 이전 가제가 남아 있어요.
 - `src/core.d.ts`는 자주 쓰는 모양만 적고 나머지는 느슨하게 열어 뒀어요.
 - `tests/`는 옛 테스트를 옮긴 것이라 null 검사를 느슨하게 두었어요(`tests/tsconfig.json`).
-- `tools/_archive/`의 스크립트는 옛 구조 기준이에요. 고치는 방법은 그 폴더의 README에 있어요.
 - 저장소에 라이선스 파일이 없어요. 라이선스가 없으면 코드와 문서의 모든 권리는 작성자에게 있어요.
 
 ## 10. 작업 이력

@@ -667,9 +667,8 @@ function drawFlameIc(lvl) {
 (function initHud() {
   $('pouchIc').innerHTML = iconHtml('pouch', 24);
   $('coinsIc').innerHTML = iconHtml('coins', 18);
-  $('help').innerHTML = '<div style="display:flex;gap:8px;align-items:center"><button id="bGear" title="설정">⚙ 설정</button><button id="bDown" class="primary" style="display:none"></button></div><div id="hint" style="margin-top:6px;font-size:13px;line-height:18px;color:#c9c3d6"></div>';
+  $('help').innerHTML = '<div style="display:flex;gap:8px;align-items:center"><button id="bGear" title="설정">⚙ 설정</button></div><div id="hint" style="margin-top:6px;font-size:13px;line-height:18px;color:#c9c3d6"></div>';
   $('bGear').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); } };
-  $('bDown').onclick = function () { openFork(); };
   $('bReturn').onclick = function () { askReturn(); };   // R53: 버튼 → 확인 창
   $('sign').addEventListener('click', function () { var f = run && run.d && run.d.floor; if (f) setDesc('<b>' + RULES[f.rule].name + '</b><br>' + esc(RULES[f.rule].sign) + '<br><span class="muted">' + esc(RULES[f.rule].help) + '</span><br>' + veinDiagram(f.rule)); });
 })();
@@ -786,11 +785,10 @@ function updateHUD() {
     else os += '<div class="slot empty"></div>';
   }
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; bindSlotEvents(); }
-  // R53 버튼: 두드려 보기·발파·소모품 → 고르기 상태
+  // R53 버튼: 두드려 보기·소모품 → 고르기 상태. 발파는 X 칸을 누르면 돼서 버튼이 없어요(R94)
   var md = ui.mode || {};
   var us = d && !d.probesMax && !CONFIG.features.probeBase ? '<div class="uslot off"><span class="muted">빈 칸</span></div>' :   // v22: 두드려 보기는 청진 망치가 있을 때만
     '<div class="uslot' + (modeOk('probe') ? '' : ' off') + (md.kind === 'probe' ? ' on' : '') + '" data-use="probe" data-tip="probe"><span>두드려 보기<br>' + (d ? d.probes + '/' + d.probesMax : '') + ' · −2</span></div>';
-  us += '<div class="uslot' + (modeOk('blast') ? '' : ' off') + (md.kind === 'blast' ? ' on' : '') + '" data-use="blast" data-tip="blast">' + iconHtml('icons.fuse', 18) + '<span>발파<br>촛불 −' + (d ? Core.igniteCost(run) : 4) + '</span></div>';
   for (var u = 0; u < CONFIG.shop.consSlots; u++) {
     var a = run.cons[u];
     us += a ? '<div class="uslot' + (md.kind === 'cons' && md.slot === u ? ' on' : '') + '" data-use="' + u + '" data-tool="' + a.id + '">' + iconHtml('icons.' + Core.TOOL_BY_ID[a.id].icon, 18) + '<span>' + Core.TOOL_BY_ID[a.id].short + '<br>×' + a.n + '</span></div>' : '<div class="uslot off"><span class="muted">빈 칸</span></div>';
@@ -811,14 +809,11 @@ function updateHUD() {
   $('bReturn').classList.toggle('hot', !!danger);
   $('bReturn').disabled = !inMine;
   var rl = $('bReturn').lastChild; if (rl._t !== 'r') { rl.innerHTML = '올라가기'; rl._t = 'r'; }
-  var bd = $('bDown'), onSt = d && run.phase === 'mine' && Core.onStair(run) && !d.embersOn;
-  bd.style.display = onSt ? 'inline-block' : 'none';
-  if (onSt) bd.textContent = '내려가기 · 촛불 −' + Core.travelCost(run, f.depth + 1);
   $('hint').innerHTML = hintText();
   board.style.cursor = ui.mode ? 'crosshair' : 'pointer';
   // 범례·주문·로그
   var lg = $('legend');
-  if (ui.mode) lg.innerHTML = '<span class="acc" style="font-weight:700">' + esc(ui.mode.kind === 'probe' ? TEXT.ops.probe : ui.mode.kind === 'blast' ? TEXT.ops.blast : TEXT.ops.powder) + '</span>';   // 고르기 상태 안내(화면 아래 한 줄)
+  if (ui.mode) lg.innerHTML = '<span class="acc" style="font-weight:700">' + esc(ui.mode.kind === 'probe' ? TEXT.ops.probe : TEXT.ops.powder) + '</span>';   // 고르기 상태 안내(화면 아래 한 줄)
   else if (ui.judge && d && run.phase === 'mine') lg.innerHTML = iconHtml('mine', 20) + ' <b class="' + (ui.judge.kind === 'known' ? 'warnTxt' : 'acc') + '">' + esc(ui.judge.text) + '</b>';
   else if (d && d.embersOn) lg.innerHTML = '<span class="warnTxt" style="font-weight:700">불씨 다섯 번이에요. 지뢰를 터뜨리면 쓰러져요</span><span class="sep">|</span><span class="muted">' + TEXT.ember.bar + '</span>';
   else lg.innerHTML = '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 주변 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>';
@@ -835,8 +830,8 @@ function bindSlotEvents() {
   }
   var us = $('toolsBox').querySelectorAll('[data-use]');
   for (i = 0; i < us.length; i++) {
-    us[i].onclick = function () { var u = this.dataset.use; if (u === 'probe' || u === 'blast') toggleMode(u); else toggleMode('cons', +u); };
-    if (us[i].dataset.tip) { us[i].onmouseenter = function () { ui.desc = this.dataset.tip === 'blast' ? '<b>발파</b><br>' + esc(TEXT.ops.blastTip) : '<b>두드려 보기</b><br>옆 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요'; ui.hudDirty = true; }; us[i].onmouseleave = function () { ui.desc = null; ui.hudDirty = true; }; }
+    us[i].onclick = function () { var u = this.dataset.use; if (u === 'probe') toggleMode(u); else toggleMode('cons', +u); };
+    if (us[i].dataset.tip) { us[i].onmouseenter = function () { ui.desc = '<b>두드려 보기</b><br>옆 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요'; ui.hudDirty = true; }; us[i].onmouseleave = function () { ui.desc = null; ui.hudDirty = true; }; }
   }
 }
 // 버튼 줄 아래 한 줄: 마우스를 올린 칸 설명(01 2.5)
@@ -855,7 +850,9 @@ function hintText() {
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
-  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변 칸을 한꺼번에 열어요';
+  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : !settings.aim ? '누르면 걸어가서 주변 칸을 한꺼번에 열어요 · 촛불 −' + Core.hitCost(run) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변 칸을 한꺼번에 열어요';
+  var fs0 = d.floor.stair;
+  if (fs0 && fs0.found && fs0.x === h.x && fs0.y === h.y && !settings.aim) return '누르면 걸어가서 내려갈 층을 골라요 · 깊을수록 보물이 많고 비싸요';
   if (h.x === d.px && h.y === d.py && ci && ci.marked > 0) return esc(TEXT.chord.need);
   return '누르면 그 칸으로 걸어가요';
 }
@@ -1148,7 +1145,7 @@ function shopHtml(merchant) {
       (merchant || !CONFIG.features.sellBack ? '' : '<button data-sell="' + id + '">되팔기 +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없어요</div>';
-  h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기 · ' : '') + '발파' + (run.cons.length ? ' · ' + run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; }).join(' · ') : ' · 한 번 쓰는 물건은 없어요') + '</div>';
+  h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + [(CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기' : '')].concat(run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; })).filter(Boolean).join(' · ') + (run.cons.length ? '' : (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? ' · ' : '') + '한 번 쓰는 물건은 없어요') + '</div>';
   h += '<div class="panel" id="shopDesc" style="padding:8px 10px;margin-top:auto;min-height:80px;font-size:13px;line-height:18px"><span class="muted">물건에 마우스를 올리면 설명과 엮이는 도구가 보여요.</span></div></div></div>';
   h += '<div style="display:flex;justify-content:flex-end;gap:10px;align-items:center;margin-top:8px">' +
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
@@ -1404,11 +1401,10 @@ function askReturn() {
   var msg = d.embersOn ? '버리는 불씨 ' + d.embers + ' · 금고로 가는 주머니 ' + fmt(d.pocket) : TEXT.ops.returnAsk.replace('{c}', d.candle).replace('{p}', fmt(d.pocket));
   askConfirm(msg, function () { var up = function () { if (run.phase === 'mine' || run.phase === 'room') { Core.returnUp(run); afterAction(); } }; if (run.phase === 'mine') startSweep(up); else up(); }, { yes: '올라가기', no: '계속 파기' });
 }
-// 고르기 상태(R53): 두드려 보기·발파·소모품
+// 고르기 상태(R53): 두드려 보기·소모품
 function modeOk(kind) {
   var d = run.d; if (!d || run.phase !== 'mine') return false;
   if (kind === 'probe') return d.probes > 0 && d.candle >= CONFIG.probeCost && !d.embersOn;
-  if (kind === 'blast') return d.candle >= Core.igniteCost(run) && !d.embersOn;
   return true;
 }
 function toggleMode(kind, slot) {
@@ -1419,8 +1415,8 @@ function toggleMode(kind, slot) {
     var a = run.cons[slot]; if (!a) return;
     if (a.id === 'match') { Core.useCons(run, slot); afterAction(); return; }   // 성냥은 칸 없이 바로
     if (d.embersOn) { say(TEXT.ember.noFire); return; }
-  } else if (!modeOk(kind)) { say(kind === 'probe' ? (d.embersOn ? '불씨로는 두드려 볼 수 없어요.' : d.probes <= 0 ? '오늘은 더 두드려 볼 수 없어요.' : '촛불이 모자라요. 두드려 보기는 촛불 2.') : (d.embersOn ? TEXT.ember.noFire : '촛불이 모자라요. 발파는 촛불 ' + Core.igniteCost(run) + '.')); return; }
-  if ((kind === 'blast' || kind === 'cons') && !d.floor.cells.some(function (c) { return c.cover !== 'open' && c.mark === 1; })) { say(TEXT.ops.noX); return; }
+  } else if (!modeOk(kind)) { say(d.embersOn ? '불씨로는 두드려 볼 수 없어요.' : d.probes <= 0 ? '오늘은 더 두드려 볼 수 없어요.' : '촛불이 모자라요. 두드려 보기는 촛불 2.'); return; }
+  if (kind === 'cons' && !d.floor.cells.some(function (c) { return c.cover !== 'open' && c.mark === 1; })) { say(TEXT.ops.noX); return; }
   ui.mode = { kind: kind, slot: slot }; ui.aim = null; ui.hudDirty = true;
 }
 function modeClick(p) {
@@ -1428,7 +1424,7 @@ function modeClick(p) {
   if (c.cover === 'open') { say(m.kind === 'probe' ? '덮인 칸을 클릭하세요.' : TEXT.ops.needX, p); return; }
   if (m.kind !== 'probe' && c.mark !== 1) { say(TEXT.ops.needX, p); return; }
   if (Core.cheb(d.px, d.py, p.x, p.y) !== 1) { var ra = Core.approach(run, p.x, p.y); if (!ra.ok) { noPath(p); return; } }   // 떨어진 칸이면 옆까지 걸어가서 쓴다(01 2.4)
-  var r = m.kind === 'probe' ? Core.probe(run, p.x, p.y) : m.kind === 'blast' ? Core.ignite(run, p.x, p.y) : Core.useCons(run, m.slot, p.x, p.y);
+  var r = m.kind === 'probe' ? Core.probe(run, p.x, p.y) : Core.useCons(run, m.slot, p.x, p.y);
   if (r.ok) ui.mode = null;
   afterAction();
 }
@@ -1455,7 +1451,12 @@ function clickCell(p) {
     return;
   }
   if (!Core.walkable(f, c)) { noPath(p); return; }
-  var rt = Core.travelTo(run, p.x, p.y); if (!rt.ok) noPath(p);
+  var isStair = f.stair && f.stair.found && f.stair.x === p.x && f.stair.y === p.y, ci2 = Core.chordInfo(run, p.x, p.y);
+  var rt = Core.travelTo(run, p.x, p.y); if (!rt.ok) { noPath(p); return; }
+  if (!settings.aim && d.px === p.x && d.py === p.y) {   // R94: 조준이 꺼져 있으면 걸어간 김에 바로
+    if (isStair) { afterAction(); openFork(); return; }
+    if (ci2 && ci2.ready) { Core.chord(run, p.x, p.y); afterAction(); return; }
+  }
   afterAction();
 }
 
