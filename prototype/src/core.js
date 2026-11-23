@@ -229,7 +229,7 @@ var TOOLS = [
     desc: '촛불이 꺼진 뒤에만 켤 수 있어요. 촛불 +10으로 다시 불이 붙어요' }
 ];
 
-var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기). 인물 대사(구 실장·곽 씨·심지)만 인물 말투
+var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기). 인물 대사(구 실장·곽 씨·심 씨)만 인물 말투
   deedTitle: '광산 계약서',
   stampName: ['첫 도장', '두 번째 도장', '마지막 도장'],
   stampName5: ['첫 도장', '두 번째 도장', '세 번째 도장', '네 번째 도장', '마지막 도장'],
@@ -335,7 +335,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   light: { first: '저쪽 바닥에 빛이 번져 있어요. 계단이 가까이 있어요', none: '오늘은 어디에도 빛이 안 새요',
            graffiti: '빛이 새는 쪽에 계단이 있어요.', rock: '빛이 새는 바위 밑이 계단이에요.' },
   // 02 6.11 중개소 선물
-  gift: { title: '중개소 선물', enter: '계약 기념입니다. 셋 중 하나 가져가세요.', enter2: '고르신 건 그믐까지 손님 겁니다. 그 뒤엔 갱에 두고 나오셔야 합니다.', button: '이걸로 받기', after: '나머지 둘은 심지 가게에 나올 수도 있습니다. 그땐 제값입니다.' },
+  gift: { title: '중개소 선물', enter: '계약 기념입니다. 셋 중 하나 가져가세요.', enter2: '고르신 건 그믐까지 손님 겁니다. 그 뒤엔 갱에 두고 나오셔야 합니다.', button: '이걸로 받기', after: '나머지 둘은 심 씨 가게에 나올 수도 있습니다. 그땐 제값입니다.' },
   // 02 6.12 오프닝 3컷
   opening: [
     { cap: '마법 광산을 판대요. 값은 헐값이고, 보름달에만 열린대요.' },
@@ -1825,7 +1825,7 @@ var Core = (function () {
       run.room = { kind: roomKind, next: o.depth, rule: o.kind === 'floor' ? o.rule : 'plain', x: d.px, y: d.py, serviced: false };
       if (roomKind === 'merchant') { run.room.stock = pickStock(run, 3, 1, true); run.room.sold = {}; }
       run.phase = 'room';
-      log(run, roomKind === 'spring' ? '샘이 있는 방이에요.' : '상인 방이에요. 상인 심지가 물건을 펼쳐 놨어요.');
+      log(run, roomKind === 'spring' ? '샘이 있는 방이에요.' : '상인 방이에요. 상인 심 씨가 물건을 펼쳐 놨어요.');
     }
     if (d.candle <= 0 && run.phase === 'mine') { beginAct(run, d.px, d.py); endAct(run); }
     return { ok: true, kind: roomKind || 'floor' };

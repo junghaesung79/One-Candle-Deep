@@ -997,7 +997,7 @@ function boardHtml() {
   var fr = run.firstRule || 'plain', fd = Core.gang(run, 'toss') ? 2 : 1;
   h += '<div class="paper" style="cursor:default;flex:1"><span class="pinI">' + iconHtml('pin', 20) + '</span><div style="font-size:13px;color:#5a3d28;font-weight:700">오늘 첫 층 · 지하 ' + fd + '층</div><div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px">' + iconHtml('rules.' + fr, 20) + esc(RULES[fr].name) + '</div><div style="font-size:14px">' + esc(RULES[fr].sign) + '</div></div>';
   h += '</div>';
-  if (run.orders.length) h += '<div class="lbl" style="font-size:14px">주문 하나 고르기 <span class="muted" style="font-weight:400">상인 심지: "' + esc(TEXT.boardTalk) + '"</span></div>';
+  if (run.orders.length) h += '<div class="lbl" style="font-size:14px">주문 하나 고르기 <span class="muted" style="font-weight:400">상인 심 씨: "' + esc(TEXT.boardTalk) + '"</span></div>';
   h += '<div style="display:flex;gap:14px">';
   run.orders.forEach(function (o, k) {
     var R = o.reward, rt = R.pocket ? '주머니 +' + fmt(Core.orderPocket(run, R.pocket)) : R.candle ? '촛불 +' + R.candle : Core.TOOL_BY_ID[R.cons].name + ' ' + R.n + '개';
@@ -1147,9 +1147,9 @@ function shopHtml(merchant) {
   var S = merchant ? run.room : run.shop, np = Core.nextPayment(run), G = Core.goalInfo(run);
   var eve = !merchant && np && np.day === run.day + 1;
   var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:660px;display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin-bottom:4px">' + (merchant ? '상인 방 · 광산 안 (산 도구는 바로 효과)' : '지상 · ' + run.day + '일째 밤 · 상인 심지') + (eve ? ' <span class="badge">내일 도장 찍는 날</span>' : '') + '</h2><div style="font-size:16px">' + iconHtml('coins', 20) + ' 금고 <b class="px acc">' + fmt(run.cash) + '</b></div></div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin-bottom:4px">' + (merchant ? '상인 방 · 광산 안 (산 도구는 바로 효과)' : '지상 · ' + run.day + '일째 밤 · 상인 심 씨') + (eve ? ' <span class="badge">내일 도장 찍는 날</span>' : '') + '</h2><div style="font-size:16px">' + iconHtml('coins', 20) + ' 금고 <b class="px acc">' + fmt(run.cash) + '</b></div></div>';
   h += '<div style="font-size:15px;margin-bottom:4px">' + goalLine(run) + '</div>';
-  h += '<div class="sub" style="font-size:14px;margin-bottom:8px">상인 심지: "' + esc(merchant ? '금고 돈으로만 받아. 산 도구는 지금부터 효과가 나.' : TEXT.shopTalk[run.day % TEXT.shopTalk.length]) + '"</div>';
+  h += '<div class="sub" style="font-size:14px;margin-bottom:8px">상인 심 씨: "' + esc(merchant ? '금고 돈으로만 받아. 산 도구는 지금부터 효과가 나.' : TEXT.shopTalk[run.day % TEXT.shopTalk.length]) + '"</div>';
   h += '<div style="display:flex;gap:16px;flex:1;min-height:0"><div style="flex:1.6;display:flex;flex-direction:column;gap:6px">';
   S.stock.forEach(function (id, i) {
     if (!id) { h += '<div class="card panel sold"><div class="t muted">빈 자리</div></div>'; return; }
