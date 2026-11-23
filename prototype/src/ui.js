@@ -473,7 +473,7 @@ function drawBoard(now) {
       }
     }
   }
-  // 광부 + 곡괭이 불꽃(노다지 줄 단계)
+  // 광부 + 곡괭이 불꽃(콤보 단계)
   var hurt = anim.hurtT && now > anim.hurtT && now - anim.hurtT < 600;
   if (!(hurt && Math.floor(now / 80) % 2)) g.drawImage(SPR.miner, d.px * T, d.py * T, T, T);
   drawPickFlame(g, d.px * T + 34, d.py * T + 2, d.streak, now);
@@ -769,7 +769,7 @@ function updateHUD() {
     }
     $('awakeBadge').innerHTML = f && f.awake && !(f.chunk && f.chunk.done) ? '<span class="badge" style="margin-left:8px">광산 깨어남</span>' : '';
   }
-  // 노다지 줄
+  // 콤보
   if (d) {
     var cap = Core.streakCapIdx(run), mul = Core.streakMult(run);
     var fxs = ui.streakFx, now = performance.now();
@@ -809,7 +809,7 @@ function updateHUD() {
     dh = '';
     if (run.gang) dh += '<b>오늘 갱 상태</b> ' + esc(run.gang.name) + ' · ' + esc(run.gang.desc) + '<br>';
     if (d && d.mutations.length) dh += d.mutations.map(function (m) { return '<span class="warnTxt">오늘 변덕: ' + esc(MUTATIONS[m].name) + '</span> · ' + esc(MUTATIONS[m].today); }).join('<br>') + '<br>';
-    if (d && d.chunkSpec && !d.chunkDone) dh += '<b>큰 덩이</b> 지하 ' + d.chunkSpec.depth + '층 · ' + d.chunkSpec.w + '×' + d.chunkSpec.h + ' · 값 ' + fmt(d.chunkSpec.value * Core.stage(run).valueMul) + ' × 노다지 줄<br>';
+    if (d && d.chunkSpec && !d.chunkDone) dh += '<b>큰 덩이</b> 지하 ' + d.chunkSpec.depth + '층 · ' + d.chunkSpec.w + '×' + d.chunkSpec.h + ' · 값 ' + fmt(d.chunkSpec.value * Core.stage(run).valueMul) + ' × 콤보<br>';
     if (f && !(d.mutations.length && d.chunkSpec && !d.chunkDone)) dh += '<span class="muted">표지판: ' + esc(RULES[f.rule].help) + '</span>';   // 칸이 모자라면 표지판 보조 줄은 머리 표지판(누르면 보임)에 맡긴다
   }
   $('descBox').innerHTML = dh;
@@ -1026,7 +1026,7 @@ function forkHtml() {
 }
 function bonusText(b) {
   var B = CONFIG.forkBonus;
-  return { value: '덤: 이 층 보물 값 ×' + B.valueMul, candle: '덤: 도착하면 촛불 +' + B.candle, streak: '덤: 노다지 줄 한 단계 올리고 시작',
+  return { value: '덤: 이 층 보물 값 ×' + B.valueMul, candle: '덤: 도착하면 촛불 +' + B.candle, streak: '덤: 콤보 한 단계 올리고 시작',
            more: '덤: 더 묻힌 층 · 지뢰 +' + B.moreMines + ', 보물 +' + B.moreTreasures, merchant: '덤: 가는 길에 상인 방', spring: '덤: 가는 길에 샘' }[b] || '';
 }
 function springHtml() {

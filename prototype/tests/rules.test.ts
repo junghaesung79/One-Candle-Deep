@@ -7,7 +7,7 @@ const { Core, CONFIG, RULE_IDS, RULES } = env;
 // 조건이 거짓이면 실패로 기록하고 다음 검사를 이어 가요(한 번에 실패를 전부 보려고)
 function check(cond: unknown, msg: string) { expect.soft(!!cond, msg).toBe(true); }
 
-// 규칙 단위 검사(1타, 촛불, 통행, 노다지 줄, 발파, 불씨, 쓰러짐, 납부·해지, 첫 판, 갈림길, 빛 번짐, 보이는 계단, 지뢰 판정, 기록 장치)
+// 규칙 단위 검사(1타, 촛불, 통행, 콤보, 발파, 불씨, 쓰러짐, 납부·해지, 첫 판, 갈림길, 빛 번짐, 보이는 계단, 지뢰 판정, 기록 장치)
 describe('규칙 단위 검사', () => {
   it('2차 규칙이 결정 기록대로 동작해요', () => {
   console.log('== 2. 규칙 단위 검사 ==');
@@ -28,7 +28,7 @@ describe('규칙 단위 검사', () => {
       check(r.ok && sc.cover === 'open', 'one hit breaks');
       check(d.candle === c0 - 1, 'hit costs 1');
     }
-    // 노다지 줄 / 지뢰 / 주머니
+    // 콤보 / 지뢰 / 주머니
     const r2 = Core.newRun(99); Core.startDay(r2);
     const d2 = r2.d, f2 = d2.floor;
     const tr = f2.cells.filter(c => c.haz === 'treasure' && c.cover !== 'open');
@@ -64,7 +64,7 @@ describe('규칙 단위 검사', () => {
       const c0 = d2.candle; const rf = Core.ignite(r2, safeC.x, safeC.y);
       check(rf.ok && rf.mines === 0 && d2.candle === c0 - Core.igniteCost(r2) && safeC.fizzle && safeC.cover !== 'open', 'fizzle costs ignite candle only');
     }
-    // 불발(05 확인 필요 1): 불을 붙인 X 칸이 보물이면 녹아 없어진다. 줄은 그대로
+    // 불발(05 확인 필요 1): 불을 붙인 X 칸이 보물이면 녹아 없어진다. 콤보는 그대로
     const trM = f2.cells.find(c => c.haz === 'treasure' && c.cover !== 'open');
     if (trM && CONFIG.fizzle === 'melt') {
       const nb = Core.neighbors(f2, trM.x, trM.y)[0]; nb.cover = 'open'; d2.px = nb.x; d2.py = nb.y;
@@ -315,7 +315,7 @@ describe('규칙 단위 검사', () => {
     { const g = Core.genFloor({ depth: 5, rule: 'border', sx: 7, sy: 5, seed: 4401, chunk: { w: 2, h: 2, value: 100 } });
       const D = Core.deduce(g), ci = g.cells.filter(c => c.chunk).map(c => Core.idx(c));
       check(ci.length === 4 && ci.every(i => D.chunk.includes(i) && !D.tre.includes(i) && !D.mine.includes(i)), 'shown chunk cells are known chunk'); }
-    // 노다지 줄 도구: 모자 ×4, 부적
+    // 콤보 도구: 모자 ×4, 부적
     { const r = Core.newRun(6108); Core.startDay(r);
       check(Core.streakCapIdx(r) === CONFIG.streakCapIdx, 'base cap x3'); r.owned.push('crown');
       check(CONFIG.streakLadder[Core.streakCapIdx(r)] === 4, 'crown raises cap to x4');

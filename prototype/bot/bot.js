@@ -13,7 +13,7 @@ function load() {
   return CoreModule;
 }
 
-// 정책. thr: 걸기 문턱(보물일 확률). s0 줄 0단계, s 줄 1단계 이상, hp2 체력 2, hp1 체력 1(9면 안 건다)
+// 정책. thr: 걸기 문턱(보물일 확률). s0 콤보 0단계, s 콤보 1단계 이상, hp2 체력 2, hp1 체력 1(9면 안 건다)
 // ruleUse: 층마다 표지판 규칙을 추리에 쓰는 확률(처음 하는 사람은 규칙을 놓친다)
 // safeBudget: 계단을 찾은 뒤 한 층에서 정보용 안전 칸을 더 깨는 상한. reserveK: 다음 납부까지 벌 돈을 몇 할 믿고 사는가
 // lastCardThr: 마지막 패를 가졌을 때 체력 1의 문턱. forkSkill: 갈림길에서 좋은 광맥을 고르는 확률
@@ -118,7 +118,7 @@ class Bot {
     const d = run.d, T = this.o.thr, Core = this.Core;
     if (d.hp <= 1) return Core.owns(run, 'lastcard') ? (this.o.lastCardThr || T.hp1 - 0.15) : T.hp1;
     let base = d.streak === 0 ? T.s0 : T.s;
-    // 배짱 장갑이 남아 있으면 줄을 잃을 걱정이 줄어 문턱을 낮춘다
+    // 배짱 장갑이 남아 있으면 콤보를 잃을 걱정이 줄어 문턱을 낮춘다
     if (d.streak >= 2 && Core.owns(run, 'gloves') && run.toolState.gloves && run.toolState.gloves.ready !== false) base -= 0.05;
     return d.hp === 2 ? Math.max(base, T.hp2) : base;
   }
@@ -186,7 +186,7 @@ class Bot {
         this.tried.add(b.c);
       }
     }
-    // 2-2) 불로 걸기: 지뢰일 가능성이 높은 위험 칸에 X를 긋고 불을 붙인다(줄이 높거나 체력이 깎였으면 문턱을 올린다)
+    // 2-2) 불로 걸기: 지뢰일 가능성이 높은 위험 칸에 X를 긋고 불을 붙인다(콤보가 높거나 체력이 깎였으면 문턱을 올린다)
     if (o.fireThr && !rush && unk.length && !chunkFloor && !o.lazy && d.candle >= Core.igniteCost(run) + cost + reserve) {
       const ft = o.fireThr + ((d.streak >= 2 || d.hp <= 2) ? (o.fireUp || 0) : 0);
       let best = null, bp = 1, bv = 0;
@@ -271,7 +271,7 @@ class Bot {
           if (r.ok) return true;
         }
       }
-      // 내려갈 촛불이 없으면 남은 촛불로 이 층에서 건다(줄 0이면 문턱 그대로)
+      // 내려갈 촛불이 없으면 남은 촛불로 이 층에서 건다(콤보 0이면 문턱 그대로)
       g = gamble(this.thr(run));
       if (g) return this.dig(run, g, 'gambles');
       const rest = safe.filter(c => Core.neighbors(f, c.x, c.y).some(n => n.cover !== 'open'));
@@ -414,7 +414,7 @@ class Bot {
     opts.forEach((o, i) => {
       let v = o.kind === 'floor' ? RULE_PREF[o.rule] : o.kind === 'spring' ? (d.hp < d.hpMax ? 7 : 2) : (this.o.spend && this.canSpend(run, 200) ? 3 : 0);
       if (o.chunk) v += 2;
-      // 갈림길 덤(R42): 단순 규칙. 값·촛불·줄은 조금 더, 샘은 체력이 모자랄 때, 상인 방은 쓸 돈이 있을 때
+      // 갈림길 덤(R42): 단순 규칙. 값·촛불·콤보는 조금 더, 샘은 체력이 모자랄 때, 상인 방은 쓸 돈이 있을 때
       const b = o.bonus;
       if (b === 'value') v += 1.5; else if (b === 'candle') v += 1.2; else if (b === 'streak') v += 1;
       else if (b === 'more') v += (d.hp >= 2 ? 0.8 : -1);

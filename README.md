@@ -2,9 +2,9 @@
 
 지뢰찾기 숫자 추리 + 채굴 로그라이트. 탑다운 2D 픽셀 인디 게임이에요.
 
-> 숫자는 둘레 8칸의 지뢰와 보물을 함께 세요. 층마다 바뀌는 광맥 규칙으로 둘을 가려내 노다지 줄을 잇고, X를 그은 지뢰는 터뜨려 길을 열어요. 보름 동안 사흘마다 광산 값을 치르고, 도장 다섯 개를 받으면 광산이 내 것이 돼요.
+> 숫자는 둘레 8칸의 지뢰와 보물을 함께 세요. 층마다 바뀌는 광맥 규칙으로 둘을 가려내 콤보를 잇고, X를 그은 지뢰는 터뜨려 길을 열어요. 보름 동안 사흘마다 광산 값을 치르고, 도장 다섯 개를 받으면 광산이 내 것이 돼요.
 
-A minesweeper mining roguelite where every number counts both mines and treasure. Read each floor's vein rule to tell them apart, chain finds into a Lode Streak, and blast the mines you're sure of. Fifteen days, a payment every third day, five stamps on the deed, and the mine is yours.
+A minesweeper mining roguelite where every number counts both mines and treasure. Read each floor's vein rule to tell them apart, chain finds into a Combo, and blast the mines you're sure of. Fifteen days, a payment every third day, five stamps on the deed, and the mine is yours.
 
 ## 현재 상태
 

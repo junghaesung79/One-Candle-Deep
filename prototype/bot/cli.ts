@@ -58,7 +58,7 @@ function avg(a: number[]) { return a.length ? a.reduce((x, y) => x + y, 0) / a.l
   console.log(`  하루 깨는 칸 ${breaks.toFixed(1)} · 위험 칸 도전 비율 ${pct(haz, brk)} (아는 보물 ${pct(rule, brk)}, 곡괭이로 걸기 ${pct(gam, brk)}, 불로 걸기 ${pct(fire, brk)}) · 하루 발파 ${avg(days.map(x => x.stats.blasts)).toFixed(2)}`);
   console.log(`  첫 보물까지 치기(Day 1) 중앙값 ${firstT.sort((a, b) => a - b)[firstT.length >> 1]} · Day 1 보물 0개 ${pct(d1.length - firstT.length, d1.length)}`);
   console.log(`  하루 수입 평균: Day 1 ${incomeAt(1)} · Day 3 ${incomeAt(3)} · Day 8 ${incomeAt(8)} · Day 15 ${incomeAt(15)} · 쓰러진 날 ${pct(days.filter(x => x.collapsed).length, days.length)}`);
-  console.log(`  도달 깊이 평균 ${avg(days.map(x => x.depth)).toFixed(1)} · 최대 줄 ×3 이상 찍은 날 ${pct(days.filter(x => x.stats.maxStreak >= 4).length, days.length)} · 주문 완료 ${pct(days.filter(x => x.order && x.order.done).length, days.filter(x => x.order).length)}`);
+  console.log(`  도달 깊이 평균 ${avg(days.map(x => x.depth)).toFixed(1)} · 최대 콤보 ×3 이상 찍은 날 ${pct(days.filter(x => x.stats.maxStreak >= 4).length, days.length)} · 주문 완료 ${pct(days.filter(x => x.order && x.order.done).length, days.filter(x => x.order).length)}`);
   if (scores.length) console.log(`  잔금 뒤 남긴 돈(점수) 중앙값 ${scores.sort((a, b) => a - b)[scores.length >> 1]}`);
   module.exports.summary = { pass, reach, n: res.length };
 })();
