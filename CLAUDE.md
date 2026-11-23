@@ -14,7 +14,7 @@
 | docs/ | 기획서 원본(마크다운). 숫자가 붙은 문서가 본문이에요 |
 | docs/handoff.md | 인수인계 문서: 지금 상태, 스택, 작업 규칙, 다음 할 일. 사람이 처음 읽는 문서예요 |
 | docs/00_overview.md, 08_feedback_status.md, 09_prototype_guide.md | Word 기획서에만 있던 기획 요약, 부록 B(피드백·검수 처리), 부록 C(프로토타입 안내)를 옮긴 것 |
-| docs/decisions.md | 팀장 결정 기록(R1~R87). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
+| docs/decisions.md | 팀장 결정 기록(R1~R88). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
 | docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html)(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
 | prototype/ | 웹 프로토타입. Vite + TypeScript 프로젝트예요(package.json) |

@@ -3,12 +3,10 @@ import { SPR, iconHtml, moonCanvas } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
-var settings = { shake: true, flash: true, tutorialDone: false, best: 0, quickDig: false, openingSeen: false, chord: true, gradeOpen: 1, grade: 1, bestBy: {}, bubblesOnce: {} };   // R54: 바로 캐기(기본 꺼짐). R87: 키보드 단축키·범례·말풍선은 늘 켜짐
+var settings = { shake: true, flash: true, tutorialDone: false, best: 0, quickDig: false, openingSeen: false, gradeOpen: 1, grade: 1, bestBy: {}, bubblesOnce: {} };   // R54: 바로 캐기(기본 꺼짐). R87: 키보드 단축키·범례·말풍선은 늘 켜짐
 try { var sv = JSON.parse(localStorage.getItem('ocd2_settings') || 'null'); if (sv) settings = Object.assign(settings, sv); } catch (e) {}
 // 주소 뒤에 ?preset=v21 을 붙이면 2차 기획 v2.1 규칙으로 해 볼 수 있어요(플레이테스트 비교용)
 try { var qpreset = new URLSearchParams(location.search).get('preset'); if (qpreset) Core.applyPreset(qpreset); } catch (e) {}
-function applySettingsToRules() { CONFIG.features.chord = CONFIG.preset === 'v22' && settings.chord !== false; }   // 둘레 한꺼번에 열기는 설정으로 켜고 꺼요(비교용)
-applySettingsToRules();
 function saveSettings() { try { localStorage.setItem('ocd2_settings', JSON.stringify(settings)); } catch (e) {} }
 
 var T = 48, BW = CONFIG.W, BH = CONFIG.H, BOX = 44, BOY = 64;   // 판 왼쪽 위(무대 좌표)
@@ -1113,7 +1111,6 @@ function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
     tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oShake', '화면 흔들림', settings.shake) +
-    (CONFIG.preset === 'v22' ? tg('oChord', '주변 한꺼번에 열기', settings.chord !== false, '숫자 위에 서서 한 번 더 누르면 열어요') : '') +
     tg('oFlash', '지뢰 플래시', settings.flash) +
     '<div class="note" style="margin-top:2px">키보드로도 할 수 있어요: WASD·방향키 이동 · QEZC 대각 · Space 캐기 · F 분필 · B 발파 · 1 두드려 보기 · 2~4 한 번 쓰는 물건 · R 올라가기 · Tab 가방 · Esc 설정</div>' +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
@@ -1201,7 +1198,6 @@ function bindOverlay() {
   on('oDaily', function () { startNewRun(false, { daily: true }); });
   on('oNormal', function () { startNewRun(false); });
   on('oGiftCash', function () { giftGo(-1); });
-  on('oChord', function () { settings.chord = settings.chord === false; saveSettings(); applySettingsToRules(); renderOverlay(); });
   OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
   on('oQuick', function () { settings.quickDig = !settings.quickDig; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
