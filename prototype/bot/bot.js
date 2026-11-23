@@ -4,7 +4,7 @@
 //   const r = playRun(env, seed, { policy: 'normal' }); // 한 판(15일)을 끝까지 진행하고 기록을 돌려준다
 //   주의: env는 모듈 하나를 같이 쓴다. CONFIG를 고치면 같은 프로세스의 다음 판에도 그대로 남는다.
 // 정책 셋: cautious(신중, 처음 하는 사람), normal(보통), greedy(욕심). 05 문서 6장.
-// 봇이 보는 정보는 화면에 보이는 것뿐이다: 열린 칸의 숫자, 분필, 두드려 보기 결과, 캔 보물 자리, 표지판, 눈금, 밑줄.
+// 봇이 보는 정보는 화면에 보이는 것뿐이다: 열린 칸의 숫자, 분필, 두드려 보기 결과, 캔 보물 자리, 표지판, 눈금, 밑줄(계단이 보이면 계단 자리).
 // 덮인 칸의 정체(c.haz)는 읽지 않는다. 추리는 Core.deduce(숫자 + 광맥 규칙)를 쓴다.
 // 예외: 층을 떠날 때 '남긴 보물' 기록, 시뮬 통계(측정용)는 정답을 읽는다. 행동 결정에는 쓰지 않는다.
 import * as CoreModule from '../src/core.js';
@@ -29,7 +29,7 @@ const POLICY = {
 
 const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, plain: 1 };
 // 구매 선호(보통·욕심). 측정으로 정한 순서(05 문서 8.3)
-const TOOL_PREF = ['refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'moonsieve', 'sheet', 'lens', 'gloves', 'lastcard', 'betchalk'];
+const TOOL_PREF = ['refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'gloves', 'tapper', 'lastcard', 'betchalk'];
 const ORDER_PREF = ['reach5', 'deepStreak', 'gems2', 'bigNum', 'chain20', 'streak3', 'floor5', 'noProbe', 'blast4', 'chalkO', 'chain3', 'clean3', 'emberT', 'keep20', 'noMine', 'xRight'];
 
 class Bot {
@@ -129,7 +129,8 @@ class Bot {
     const ok = c => c.cover !== 'open' && !this.tried.has(c);
     const tre = D.tre.map(cell).filter(ok);
     const mines = D.mine.map(cell).filter(ok);
-    const chunkFloor = !!(f.chunk && !f.chunk.done);
+    const chunkHere = !!(f.chunk && !f.chunk.done);
+    const chunkFloor = chunkHere && !CONFIG.features.chunkShown;   // 덩이 자리를 모르면 '지뢰'가 '지뢰 또는 덩이'라 X·발파를 쓰지 않는다
     // 불씨: 아는 보물과 O 칸만 캔다. 성냥이 있으면 캘 것이 남았을 때 켠다
     if (d.embersOn) {
       const ts = tre.concat(f.cells.filter(c => ok(c) && c.mark === 2 && D.st[Core.idx(c)] !== 1 && D.canT[Core.idx(c)]));
@@ -145,9 +146,9 @@ class Bot {
     // 1) 아는 보물
     if (tre.length && d.candle >= cost) return this.dig(run, this.nearest(run, tre), 'ruleDigs');
     // 덩이
-    if (chunkFloor && d.candle > 4) {
+    if (chunkHere && d.candle > 4) {
       const t = this.chunkTarget(run, D);
-      if (t) return this.dig(run, t, 'ruleDigs');
+      if (t && this.dig(run, t, 'ruleDigs')) return true;
     }
     const unk = D.haz.map(cell).filter(c => ok(c) && D.canT[Core.idx(c)] && D.canM[Core.idx(c)]);
     const stairKnown = f.stair && f.stair.found && !f.stair.blocked;   // 첫 판 Day 1 지하 3층은 막힌 계단
@@ -228,6 +229,18 @@ class Bot {
       const cands0 = D.stairCand.map(cell).filter(ok);
       if (cands0.length && d.candle >= cost) return this.dig(run, this.nearest(run, cands0), 'stairDigs');
     }
+    // 3-2) 둘레 한꺼번에 열기: 둘레 위험 칸이 숫자만큼 다 밝혀진 숫자 칸에서 안전 칸 둘 이상을 촛불 한 번에 연다
+    if (CONFIG.features.chord && !o.noChord && !overBudget && d.candle >= cost + reserve) {
+      const ch = this.chordTarget(run, D);
+      if (ch) {
+        for (const q of ch.haz) if (!q.mark) Core.mark(run, q.x, q.y, D.canT[Core.idx(q)] ? 2 : 1);
+        if (Core.travelTo(run, ch.c.x, ch.c.y).ok) {
+          const r = Core.chord(run, ch.c.x, ch.c.y);
+          if (r.ok) { this.m.chords = (this.m.chords || 0) + 1; if (stairKnown) this.safeOnFloor += 1; return true; }
+        }
+        this.tried.add(ch.c);
+      }
+    }
     // 4) 정보가 되는 안전 칸(계단을 찾은 뒤에는 층마다 상한)
     const safe = D.safe.map(cell).filter(ok);
     const informative = safe.filter(c => Core.neighbors(f, c.x, c.y).some(n => n.cover !== 'open' && D.st[Core.idx(n)] !== 1));
@@ -237,7 +250,8 @@ class Bot {
       if (sc.length) return this.dig(run, this.nearest(run, sc), 'safeDigs');
       if (!stairKnown) {   // 계단을 아직 모르면 넓게 여는 칸부터(덮인 칸에 많이 닿은 칸)
         let best = null, bv = -1e9;
-        for (const c of informative) { const v = Core.neighbors(f, c.x, c.y).filter(n => n.cover !== 'open' && D.st[Core.idx(n)] === 0).length * 2 - this.dist(run, c) * 0.25; if (v > bv) { bv = v; best = c; } }
+        const sw = this.CONFIG.stairShown && f.stair && !f.stair.blocked ? 1 : 0;   // 계단이 보이면 계단 쪽으로 여는 칸을 고른다
+        for (const c of informative) { const v = Core.neighbors(f, c.x, c.y).filter(n => n.cover !== 'open' && D.st[Core.idx(n)] === 0).length * 2 - this.dist(run, c) * 0.25 - (sw ? Core.cheb(c.x, c.y, f.stair.x, f.stair.y) * sw : 0); if (v > bv) { bv = v; best = c; } }
         return this.dig(run, best, 'safeDigs');
       }
       return this.dig(run, this.nearest(run, informative), 'safeDigs');
@@ -267,7 +281,8 @@ class Bot {
       if (cands.length && d.candle >= cost) return this.dig(run, this.nearest(run, cands), 'stairDigs');
       const front = this.frontier(run, D).filter(ok);
       if (front.length && d.candle >= cost) {
-        front.sort((a, b) => this.pHaz(run, D, a) - this.pHaz(run, D, b));
+        const sd = c => (this.CONFIG.stairShown && f.stair && !f.stair.blocked ? Core.cheb(c.x, c.y, f.stair.x, f.stair.y) * 0.01 : 0);   // 같은 위험이면 계단에 가까운 칸
+        front.sort((a, b) => (this.pHaz(run, D, a) + sd(a)) - (this.pHaz(run, D, b) + sd(b)));
         const c = front[0], ph = this.pHaz(run, D, c);
         if (d.probes > 0 && d.candle >= 3 && ph > 0.15 && c.probe == null) {
           if (Core.approach(run, c.x, c.y).ok) { const r = Core.probe(run, c.x, c.y); if (r.ok) return true; }
@@ -277,6 +292,20 @@ class Bot {
       }
     }
     return false;
+  }
+  chordTarget(run, D) {
+    const Core = this.Core, f = run.d.floor;
+    let best = null, bv = 0;
+    for (const c of f.cells) {
+      if (c.cover !== 'open' || (c.haz && !c.removed) || this.tried.has(c)) continue;
+      const n = Core.numAt(f, c); if (!n) continue;
+      const cov = Core.neighbors(f, c.x, c.y).filter(q => q.cover !== 'open');
+      const haz = cov.filter(q => D.st[Core.idx(q)] === 2), safe = cov.filter(q => D.st[Core.idx(q)] === 1 && !q.mark && !this.tried.has(q));
+      if (haz.length !== n || safe.length < 2 || haz.some(q => D.isC && D.isC[Core.idx(q)])) continue;
+      const v = safe.length * 2 - this.dist(run, c) * 0.25;
+      if (v > bv) { bv = v; best = { c, haz }; }
+    }
+    return best;
   }
   frontier(run, D) {
     const Core = this.Core, f = run.d.floor;
@@ -375,7 +404,7 @@ class Bot {
     if (!dug.length && run.d.hp < 2) return null;
     fits.sort((a, b) => b.hz - a.hz);
     const R = fits[0];
-    for (let yy = R.y; yy < R.y + C.h; yy++) for (let xx = R.x; xx < R.x + C.w; xx++) { const c = Core.cellAt(f, xx, yy); if (c.cover !== 'open' && !this.tried.has(c)) return c; }
+    for (let yy = R.y; yy < R.y + C.h; yy++) for (let xx = R.x; xx < R.x + C.w; xx++) { const c = Core.cellAt(f, xx, yy); if (c.cover !== 'open' && !this.tried.has(c) && Core.neighbors(f, c.x, c.y).some(n => n.cover === 'open')) return c; }   // 열린 칸과 닿은 덩이 칸만
     return null;
   }
   pickFork(run, opts) {
@@ -454,7 +483,7 @@ function playRun(env, seed, opts) {
   opts = opts || {};
   const Core = env.Core, bot = new Bot(env, Object.assign({ botSeed: seed }, opts));
   const tut = opts.tutorial != null ? !!opts.tutorial : !!bot.o.tutorial;
-  const run = Core.newRun(seed, { tutorial: tut });
+  const run = Core.newRun(seed, { tutorial: tut, grade: opts.grade || 1 });
   if (opts.mutations) run.mutationPlan = Object.assign({}, opts.mutations);
   if (opts.startTools) opts.startTools.forEach(id => { run.owned.push(id); run.paidFor[id] = Core.TOOL_BY_ID[id].price; });
   const days = [], pays = [];
@@ -463,6 +492,17 @@ function playRun(env, seed, opts) {
     if (run.phase === 'deed' && !run.giftDone && run.giftOpts && run.giftOpts.length && !opts.noGift) {   // 중개소 선물(R43): 구매 선호 순서에서 가장 앞
       let gi = 0, gr = 1e9; run.giftOpts.forEach((id, i) => { const r = TOOL_PREF.indexOf(id); if (r >= 0 && r < gr) { gr = r; gi = i; } });
       Core.toGift(run); Core.chooseGift(run, gi); continue;
+    }
+    if (run.phase === 'gift') {   // 도장 선물: 다음 도장까지 여유가 있으면 도구, 모자라면 금고 돈
+      let gi = -1;
+      if (run.owned.length < env.CONFIG.shop.passiveSlots && run.giftOpts.length && (bot.o.buy === 'naive' || bot.canSpend(run, 0))) {
+        if (bot.o.buy === 'naive') gi = Math.floor(bot.rng() * run.giftOpts.length);
+        else { let gr = 1e9; run.giftOpts.forEach((id, i) => { const r = bot.rank(id); if (r < gr) { gr = r; gi = i; } }); }
+      }
+      if (opts.rewardCash) gi = -1;
+      const r = Core.chooseGift(run, gi); if (r.ok && r.id) bot.buys.push({ day: run.day, id: r.id, where: 'reward' });
+      if (!r.ok) Core.chooseGift(run, -1);
+      continue;
     }
     if (run.phase === 'deed' || run.phase === 'board' || run.phase === 'ready') { if (run.orders.length) Core.chooseOrder(run, bot.pickOrder(run)); Core.startDay(run); continue; }
     if (run.phase === 'mine' || run.phase === 'room') {

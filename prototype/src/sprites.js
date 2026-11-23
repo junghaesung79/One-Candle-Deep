@@ -121,6 +121,10 @@ function iconHtml(name, size, cls) {
     spring: mkSprite(["..........", "....b.....", "...bwb....", "...bwb....", "..bwwwb...", "..bwbwb...", "..bwwwb...", "...bbb....", "oooooooooo", "..........".replace(/\./g, '.')], { b: '#4f7590', w: '#c8e6f0', o: '#2f4a60' }),
     merchant: mkSprite(["....oo....", "...o..o...", "..oooooo..", ".offfffo..", ".ofyyyfo..", ".ofyhyfo..", ".ofyyyfo..", ".offfffo..", "..oooooo..", ".........."], { o: '#6b5a3f', f: '#c9a35a', y: '#ffd25a', h: '#fff4c2' })
   };
+  // 재미 보고서 도구 셋(늙은 광부 모자, 곽 씨 부적, 청진 망치)
+  SPR.icons.crown = mkSprite(["..........", "...yyyy...", "..yhhhhy..", ".yhhyhhhy.", ".yhhhhhhy.", "oooooooooo", ".o......o.", "..........", "..........", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a' });
+  SPR.icons.amulet = mkSprite(["....oo....", "...o..o...", "..o....o..", ".wwwwwwww.", ".wrrrrrrw.", ".wwwrrwww.", ".wwrwwrww.", ".wwwrrwww.", ".wwwwwwww.", ".........."], { o: '#9a6532', w: '#efe7d6', r: '#c4432b' });
+  SPR.icons.tapper = mkSprite(["..gggggg..", "..gGGGGg..", "..gggggg..", "....ww....", "....ww....", "....ww....", "....ww....", "....ww....", "...wwww...", ".........."], { g: '#7c8292', G: '#b8c1d6', w: '#9a6532' });
   SPR.icons.nugget = SPR.nugget; SPR.icons.gem = SPR.gem;
 })();
 

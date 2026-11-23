@@ -58,21 +58,45 @@ export interface Run {
   mutationPlan: Record<number, string[]>;
   plan: { gang: (string | null)[]; orders: string[][]; firstRule: (string | null)[]; [k: string]: any };
   order: { id: string; prog: number; done: boolean; failed: boolean; [k: string]: any } | null;
+  history: DayHistory[];
+  record?: boolean;
   [k: string]: any;
 }
 
 export interface ActResult { ok: boolean; [k: string]: any }
 
+/** 기록 장치(newRun의 record)가 하루에 세는 것. 치기·발파 직전 칸을 화면에 보이는 정보로 가른 결과예요 */
+export interface DayRecord {
+  safe: number; knownT: number; knownM: number; bet: number; unknown: number;
+  blastSure: number; blastBet: number; marks: number; probes: number; chords: number;
+}
+
+/** 하루를 마친 기록 한 줄 */
+export interface DayHistory {
+  day: number; income: number; gross: number; collapsed: boolean; depth: number;
+  reason: 'return' | 'collapse' | 'candle' | string; candleLeft: number;
+  rec: DayRecord | null;
+  [k: string]: any;
+}
+
 export interface CoreApi {
   W: number;
   H: number;
-  newRun(seed: number, opts?: { tutorial?: boolean }): Run;
+  newRun(seed: number, opts?: { tutorial?: boolean; record?: boolean; grade?: number; daily?: string | null }): Run;
   startDay(run: Run): void;
   genFloor(spec: { depth: number; rule: RuleId | string; sx: number; sy: number; seed: number; twin?: boolean; chunk?: unknown }): Floor;
   cellAt(f: Floor, x: number, y: number): Cell;
   neighbors(f: Floor, x: number, y: number): Cell[];
   numAt(f: Floor, c: Cell): number;
   deduce(f: Floor, opt?: unknown): { safe: number[]; [k: string]: any };
+  /** 층에 남은(없어지지 않은) 보물·지뢰 수 */
+  remaining(f: Floor): { t: number; m: number };
+  /** 프리셋 바꾸기: 'v21'(2차 기획 v2.1) / 'v22'(재미 보고서, 기본) */
+  applyPreset(name: 'v21' | 'v22' | string): boolean;
+  /** 둘레 한꺼번에 열기: 서 있는 숫자 칸에서 */
+  chord(run: Run, x: number, y: number): ActResult;
+  /** 처음부터 보이는 계단 칸 번호, 없으면 -1 */
+  shownStair(f: Floor): number;
   hashSeed(...parts: number[]): number;
   hit(run: Run, x: number, y: number): ActResult;
   mark(run: Run, x: number, y: number, to: number): unknown;
@@ -82,6 +106,7 @@ export interface CoreApi {
 }
 
 export declare const Core: CoreApi;
+export declare const PRESETS: Record<string, { config: Record<string, any>; text: Record<string, string> }>;
 export declare const CONFIG: any;
 export declare const TOOLS: any[];
 export declare const RULES: Record<string, any>;

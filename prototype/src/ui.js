@@ -3,8 +3,12 @@ import { SPR, iconHtml, moonCanvas } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
-var settings = { shake: true, flash: true, legend: true, bubbles: true, tutorialDone: false, best: 0, quickDig: false, keys: true, openingSeen: false };   // R53·R54: 바로 캐기(기본 꺼짐), 키보드 단축키(기본 켜짐)
+var settings = { shake: true, flash: true, legend: true, bubbles: true, tutorialDone: false, best: 0, quickDig: false, keys: true, openingSeen: false, chord: true, gradeOpen: 1, grade: 1, bestBy: {} };   // R53·R54: 바로 캐기(기본 꺼짐), 키보드 단축키(기본 켜짐)
 try { var sv = JSON.parse(localStorage.getItem('ocd2_settings') || 'null'); if (sv) settings = Object.assign(settings, sv); } catch (e) {}
+// 주소 뒤에 ?preset=v21 을 붙이면 2차 기획 v2.1 규칙으로 해 볼 수 있어요(플레이테스트 비교용)
+try { var qpreset = new URLSearchParams(location.search).get('preset'); if (qpreset) Core.applyPreset(qpreset); } catch (e) {}
+function applySettingsToRules() { CONFIG.features.chord = CONFIG.preset === 'v22' && settings.chord !== false; }   // 둘레 한꺼번에 열기는 설정으로 켜고 꺼요(비교용)
+applySettingsToRules();
 function saveSettings() { try { localStorage.setItem('ocd2_settings', JSON.stringify(settings)); } catch (e) {} }
 
 var T = 48, BW = CONFIG.W, BH = CONFIG.H, BOX = 44, BOY = 64;   // 판 왼쪽 위(무대 좌표)
@@ -52,9 +56,13 @@ function flushAll() {
 }
 
 // ---------- 새 판 ----------
-function startNewRun(tutorial) {
-  var seed = tutorial ? TUTORIAL.seed : (Date.now() & 0x7fffffff);
-  run = Core.newRun(seed, { tutorial: tutorial });
+function todayStr() { var t = new Date(); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); }
+function startNewRun(tutorial, o) {
+  o = o || {};
+  var grade = tutorial ? 1 : Math.max(1, Math.min(settings.gradeOpen || 1, o.grade || settings.grade || 1));
+  var daily = !tutorial && o.daily ? todayStr() : null;
+  var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : (Date.now() & 0x7fffffff);
+  run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
   ui.shownAt = performance.now(); ui.mode = null; ui.aim = null; ui.quickTipNow = false;
@@ -69,6 +77,7 @@ function beginDay() {
   ui.logFrom = before;   // 하루 시작 때 로그를 비움(그날 로그만)
   if (ui.giftLine) { run.log.push({ text: ui.giftLine, id: ++run.logSeq }); ui.giftLine = null; }
   ui.lastCandle = run.d.candle; ui.pocketPending = 0;
+  ui.dayT0 = Date.now(); ui.dayClicks = 0; ui.dayRecorded = false; ui.judge = null;
   ui.sub = null;
   drainFx(); renderOverlay(); ui.hudDirty = true;
 }
@@ -189,6 +198,12 @@ function drainFx() {
         if (run.tutorial) after(600, function () { bubble('mine', TEXT.bubbles.mine, { cell: { x: e.x, y: e.y } }); });
         break;
       case 'blame': anim.blame = { cells: e.cells, t0: now + 200 }; break;
+      case 'judge': {   // 지뢰 판정 한 줄(재미 보고서 1주차): 숫자를 가리지 않게 판 아래 범례 자리에 4초
+        var jk = { text: e.text, kind: e.kind };
+        after(650, function () { ui.judge = jk; ui.hudDirty = true; });
+        after(4650, function () { if (ui.judge === jk) { ui.judge = null; ui.hudDirty = true; } });
+        break;
+      }
       case 'boom': anim.pops.push({ x: e.x, y: e.y, t0: now + 80 + (e.delay || 0), kind: e.blast ? 'dust' : 'boom' }); after(80 + (e.delay || 0), function () { addShake(4, 250); if (settings.flash && !e.delay) anim.flashUntil = performance.now() + 33; }); break;
       case 'fizzle': {
         anim.pops.push({ x: e.x, y: e.y, t0: now + 150, kind: 'fizzle' });
@@ -205,10 +220,11 @@ function drainFx() {
       case 'embers':
         anim.emberT = now;
         if (run.tutorial || !ui.bubblesSeen.ember) after(1500, function () { bubble('ember', TEXT.bubbles.ember, { el: 'candleBox', below: true }); });
-        if (run.tutorial && run.day <= 3) teachHere('ember', TUTORIAL.b3Graffiti.o, { x: run.d.px, y: run.d.py });
+        if (run.tutorial && run.day <= 3 && CONFIG.features.embers) teachHere('ember', TUTORIAL.b3Graffiti.o, { x: run.d.px, y: run.d.py });
         break;
       case 'proc': procs.push(e); break;
       case 'order': blinkEl('orderLine', 'acc', 1200); break;
+      case 'perfect': addFly({ x: 380, y: 250, showAt: 500, flyAt: null, fadeAt: 2200, size: 26, rise: 16, color: '#ffd25a', steps: [{ t: 500, h: '완벽한 층' }] }); break;
     }
   });
   // 계산 연출: 도구 아이콘이 순서대로 튄다(6.7). 원인 연출 포함 1.2초 안
@@ -286,7 +302,7 @@ function cellVisual(c, now) {
   return { covered: c.cover !== 'open', fade: 1, numT: 1 };
 }
 function stairHinted(f, x, y) {
-  if (!f.stair || f.stair.found || Core.mut(run, 'sleepy')) return false;
+  if (CONFIG.stairShown || !f.stair || f.stair.found || Core.mut(run, 'sleepy')) return false;   // 계단이 보이면 밑줄을 쓰지 않아요
   return Core.cheb(f.stair.x, f.stair.y, x, y) === 1;
 }
 function drawBoard(now) {
@@ -301,7 +317,7 @@ function drawBoard(now) {
   if (sum > 0) { sx = (Math.random() * 2 - 1) * sum; sy = (Math.random() * 2 - 1) * sum; }
   g.translate(Math.round(sx), Math.round(sy));
   var embers = d.embersOn && run.phase === 'mine';
-  var low = !embers && d.candle <= CONFIG.lowLight && run.phase === 'mine';
+  var low = CONFIG.features.lowLight && !embers && d.candle <= CONFIG.lowLight && run.phase === 'mine';
   var blur = Core.mut(run, 'blur'), goldSeen = false;
   var x, y, c, X, Y, v, vi;
   // 1) 바닥·바위
@@ -319,8 +335,9 @@ function drawBoard(now) {
       if (v.fade < 1) { g.globalAlpha = 1 - v.fade; g.drawImage(SPR.rock[vi], X, Y, T, T); g.globalAlpha = 1; }
     } else {
       // R40·R49: 열린 땅에 닿은 계단 바위는 틈새 빛 + 지그재그 계단 단면. 잠든 계단 날과 막힌 계단은 그리지 않는다(검수 4번)
-      var stairLit = c.stair && !Core.mut(run, 'sleepy') && !(f.stair && f.stair.blocked) && Core.neighbors(f, x, y).some(function (n) { return n.cover === 'open' && !anim.pend[n.y * BW + n.x]; });
-      if (stairLit) { drawStairRock(g, X, Y, vi, now); if (run.tutorial && run.day <= 3) teachRock(f, x, y); }
+      // 재미 보고서 1주차: 계단은 층에 도착할 때부터 보여요(stairShown)
+      var stairLit = c.stair && !(f.stair && f.stair.blocked) && (CONFIG.stairShown || (!Core.mut(run, 'sleepy') && Core.neighbors(f, x, y).some(function (n) { return n.cover === 'open' && !anim.pend[n.y * BW + n.x]; })));
+      if (stairLit) { drawStairRock(g, X, Y, vi, now); if (!CONFIG.stairShown && run.tutorial && run.day <= 3) teachRock(f, x, y); }
       else g.drawImage(SPR.rock[vi], X, Y, T, T);
       if (f.glow && f.glow.some(function (q) { return q[0] === x && q[1] === y; })) {
         var gl = 0.6 + 0.4 * Math.sin(now / 200);
@@ -336,6 +353,12 @@ function drawBoard(now) {
       var la = (ld === 0 ? 0.22 : ld === 1 ? 0.16 : 0.08) * fl * (le > 2.5 ? 0.6 : 1);
       g.fillStyle = 'rgba(255,200,120,' + la.toFixed(3) + ')'; g.fillRect(x * T, y * T, T, T);
     }
+  }
+  // 1c) 큰 덩이 자리(v22: 층 도착 때부터 금빛 점선 테두리)
+  if (CONFIG.features.chunkShown && f.chunk && !f.chunk.done) {
+    var CK = f.chunk, ga = 0.8 + 0.2 * Math.sin(now / 400);
+    g.save(); g.setLineDash([6, 4]); g.lineWidth = 3; g.strokeStyle = 'rgba(255,210,90,' + ga.toFixed(2) + ')';
+    g.strokeRect(CK.x * T + 2, CK.y * T + 2, CK.w * T - 4, CK.h * T - 4); g.restore();
   }
   // 2) 벽 낙서
   f.graffiti.forEach(function (gr) {
@@ -620,9 +643,10 @@ function updateHUD() {
     $('floorName').innerHTML = '지하 <span class="px">' + f.depth + '</span>층';
     var R = RULES[f.rule];
     $('signIc').innerHTML = iconHtml('rules.' + f.rule, 24);
-    $('signName').innerHTML = esc(R.name) + (f.chunk && !f.chunk.done ? ' <span class="badge gold">이 층 어딘가에 큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ')</span>' : '') + (f.chunk && f.chunk.done ? ' <span class="badge gold">덩이 캠</span>' : '');
+    $('signName').innerHTML = esc(R.name) + (f.chunk && !f.chunk.done ? ' <span class="badge gold">' + (CONFIG.features.chunkShown ? '큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ') · 금빛 테두리' : '이 층 어딘가에 큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ')') + '</span>' : '') + (f.chunk && f.chunk.done ? ' <span class="badge gold">덩이 캠</span>' : '');
     $('signText').textContent = R.sign;
-    $('stairSt').innerHTML = f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24);
+    var rem = CONFIG.countsShown ? Core.remaining(f) : null;   // 재미 보고서 1주차: 이 층에 남은 보물·지뢰 수
+    $('stairSt').innerHTML = (rem ? '<span title="이 층에 남은 보물과 지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24));
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
   $('dayTxt').innerHTML = run.day + '일째 <span class="muted">/ ' + CONFIG.days + '</span><br><span class="muted" style="font-weight:400">' + (CONFIG.days - run.day + 1) + '일 남음</span>';
@@ -657,7 +681,7 @@ function updateHUD() {
       cb.style.display = 'block'; er.style.display = 'none';
       var nextC = f ? (f.stair && f.stair.blocked ? '없음' : Core.travelCost(run, f.depth + 1)) : 0;
       var emLeft = d.embersGiven ? (d.embers > 0 ? ' · <span class="acc">남은 불씨 ' + d.embers + '</span>' : ' · <span class="warnTxt">불씨 없음</span>') : '';
-      $('candleCost').innerHTML = (f && f.awake ? '<span class="badge">캐기 2</span>' : '캐기 1') + ' · 계단 ' + nextC + ' · 두드려 보기 2 · 발파 ' + Core.igniteCost(run) + (d.candle === 1 && !d.embersGiven ? ' · <span class="acc">마지막 1이에요. 다음은 불씨예요</span>' : emLeft);
+      $('candleCost').innerHTML = (f && f.awake ? '<span class="badge">캐기 2</span>' : '캐기 1') + ' · 계단 ' + nextC + (d.probesMax ? ' · 두드려 보기 2' : '') + ' · 발파 ' + Core.igniteCost(run) + (d.candle === 1 && !d.embersGiven && CONFIG.features.embers ? ' · <span class="acc">마지막 1이에요. 다음은 불씨예요</span>' : emLeft);
     }
     $('awakeBadge').innerHTML = f && f.awake && !(f.chunk && f.chunk.done) ? '<span class="badge" style="margin-left:8px">광산 깨어남</span>' : '';
   }
@@ -687,7 +711,8 @@ function updateHUD() {
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; bindSlotEvents(); }
   // R53 버튼: 두드려 보기·발파·소모품 → 고르기 상태
   var md = ui.mode || {};
-  var us = '<div class="uslot' + (modeOk('probe') ? '' : ' off') + (md.kind === 'probe' ? ' on' : '') + '" data-use="probe" data-tip="probe"><span>두드려 보기<br>' + (d ? d.probes + '/' + d.probesMax : '') + ' · −2</span></div>';
+  var us = d && !d.probesMax && !CONFIG.features.probeBase ? '<div class="uslot off"><span class="muted">빈 칸</span></div>' :   // v22: 두드려 보기는 청진 망치가 있을 때만
+    '<div class="uslot' + (modeOk('probe') ? '' : ' off') + (md.kind === 'probe' ? ' on' : '') + '" data-use="probe" data-tip="probe"><span>두드려 보기<br>' + (d ? d.probes + '/' + d.probesMax : '') + ' · −2</span></div>';
   us += '<div class="uslot' + (modeOk('blast') ? '' : ' off') + (md.kind === 'blast' ? ' on' : '') + '" data-use="blast" data-tip="blast">' + iconHtml('icons.fuse', 18) + '<span>발파<br>촛불 −' + (d ? Core.igniteCost(run) : 4) + '</span></div>';
   for (var u = 0; u < CONFIG.shop.consSlots; u++) {
     var a = run.cons[u];
@@ -717,6 +742,7 @@ function updateHUD() {
   // 범례·주문·로그
   var lg = $('legend');
   if (ui.mode) lg.innerHTML = '<span class="acc" style="font-weight:700">' + esc(ui.mode.kind === 'probe' ? TEXT.ops.probe : ui.mode.kind === 'blast' ? TEXT.ops.blast : TEXT.ops.powder) + '</span>';   // 고르기 상태 안내(화면 아래 한 줄)
+  else if (ui.judge && d && run.phase === 'mine') lg.innerHTML = iconHtml('mine', 20) + ' <b class="' + (ui.judge.kind === 'known' ? 'warnTxt' : 'acc') + '">' + esc(ui.judge.text) + '</b>';
   else if (d && d.embersOn) lg.innerHTML = '<span class="warnTxt" style="font-weight:700">불씨 다섯 번이에요. 지뢰를 터뜨리면 쓰러져요</span><span class="sep">|</span><span class="muted">' + TEXT.ember.bar + '</span>';
   else lg.innerHTML = settings.legend ? '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 둘레 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>' : '';
   var o = run.order, ol = '';
@@ -748,6 +774,9 @@ function hintText() {
     return settings.quickDig && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 캐요 · 촛불 −' + Core.hitCost(run) : '누르면 옆으로 가서 조준해요';
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair);
+  var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
+  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 둘레를 한꺼번에 열어요';
+  if (h.x === d.px && h.y === d.py && ci && ci.marked > 0) return esc(TEXT.chord.need);
   return '누르면 그 칸으로 걸어가요';
 }
 function renderLog() {
@@ -759,27 +788,63 @@ function renderLog() {
 
 // ---------- 오버레이 화면 ----------
 var OV = $('ov');
-function stampIdx(day) { for (var i = 0; i < CONFIG.payments.length; i++) if (CONFIG.payments[i].day === day) return i; return -1; }
-function stampNm(day) { var i = stampIdx(day); return i >= 0 ? TEXT.stampName[i] : ''; }
+function stampIdx(day) { var P = Core.payments(run); for (var i = 0; i < P.length; i++) if (P[i].day === day) return i; return -1; }
+function stampNm(day) { var i = stampIdx(day); return i >= 0 ? Core.stampNames(run)[i] : ''; }
+var NUM_KO = ['', '한', '두', '세', '네', '다섯', '여섯'];
+function gradeName(g) { return CONFIG.gradeNames[(g || 1) - 1] || CONFIG.gradeNames[0]; }
+function bestKey() { return run.daily ? 'daily:' + run.daily : 'grade:' + (run.grade || 1); }
 function deedHtml(stampsShown, anim) {
-  var h = '<div class="deedCard"><div class="ttl">달못 1호 갱 권리증 (가)</div><div style="font-size:14px;margin-bottom:6px">광산 값은 세 번에 나눠 내요. 낼 때마다 도장 하나예요.</div>';
-  CONFIG.payments.forEach(function (p, i) {
+  var P = Core.payments(run);
+  var h = '<div class="deedCard"><div class="ttl">' + gradeName(run.grade) + ' 권리증 (가)' + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</div><div style="font-size:14px;margin-bottom:6px">광산 값은 ' + NUM_KO[P.length] + ' 번에 나눠 내요. 낼 때마다 도장 하나예요.</div>';
+  P.forEach(function (p, i) {
     var stamped = i < stampsShown, fall = anim && i === stampsShown - 1;
-    h += '<div class="stampRow"><div class="stampSlot">' + (stamped ? '<div class="stamp' + (fall ? ' fall' : '') + '" style="' + (fall ? 'opacity:0;animation-delay:1400ms' : '') + '">도장</div>' : '') + '</div><b style="width:110px">' + TEXT.stampName[i] + '</b>' + iconHtml('coins', 18) + '<span class="px" style="font-size:15px;width:80px;text-align:right">' + fmt(p.amount) + '</span><span style="margin-left:14px">· ' + p.day + '일째</span>' + iconHtml('', 0) + '</div>';
+    h += '<div class="stampRow"><div class="stampSlot">' + (stamped ? '<div class="stamp' + (fall ? ' fall' : '') + '" style="' + (fall ? 'opacity:0;animation-delay:1400ms' : '') + '">도장</div>' : '') + '</div><b style="width:110px">' + Core.stampNames(run)[i] + '</b>' + iconHtml('coins', 18) + '<span class="px" style="font-size:15px;width:80px;text-align:right">' + fmt(p.amount) + '</span><span style="margin-left:14px">· ' + p.day + '일째</span>' + iconHtml('', 0) + '</div>';
   });
   return h + '</div>';
 }
+// ---------- 기록 장치(재미 보고서 1주차) ----------
+// 하루가 끝날 때 한 줄씩 브라우저에 쌓아요: 걸린 시간, 클릭 수, 결과를 모르고 고른 수, 하루가 끝난 이유. 설정에서 내려받아요
+var PLAYLOG_KEY = 'ocd2_playlog', PLAYLOG_MAX = 600;
+function playlogLoad() { try { return JSON.parse(localStorage.getItem(PLAYLOG_KEY) || '[]') || []; } catch (e) { return []; } }
+function playlogSave(list) { try { localStorage.setItem(PLAYLOG_KEY, JSON.stringify(list.slice(-PLAYLOG_MAX))); } catch (e) {} }
+function uncertainOf(r) { return r ? r.bet + r.unknown + r.blastBet : 0; }
+function recordDay() {
+  if (!ui.dayT0 || ui.dayRecorded || !run.history.length) return;
+  ui.dayRecorded = true;
+  var h = run.history[run.history.length - 1];
+  var list = playlogLoad();
+  list.push({ at: new Date().toISOString(), seed: run.seed, tutorial: !!run.tutorial, day: h.day, ms: Date.now() - ui.dayT0, clicks: ui.dayClicks || 0,
+              reason: h.reason, income: h.income, depth: h.depth, candleLeft: h.candleLeft, hpLeft: run.d ? run.d.hp : null, stamps: run.stamps,
+              uncertain: uncertainOf(h.rec), rec: h.rec });
+  playlogSave(list);
+}
+function playlogSummary() {
+  var L = playlogLoad(); if (!L.length) return '아직 기록된 하루가 없어요';
+  var ms = L.map(function (x) { return x.ms; }).sort(function (a, b) { return a - b; }), med = ms[ms.length >> 1];
+  var mins = L.reduce(function (a, x) { return a + x.ms; }, 0) / 60000, unc = L.reduce(function (a, x) { return a + (x.uncertain || 0); }, 0);
+  return '기록된 하루 ' + L.length + '개 · 하루 중앙값 ' + Math.floor(med / 60000) + '분 ' + Math.round(med / 1000) % 60 + '초 · 1분에 결과를 모르고 고른 수 ' + (mins ? (unc / mins).toFixed(1) : '0') + '번';
+}
+function playlogDownload() {
+  try {
+    var blob = new Blob([JSON.stringify(playlogLoad(), null, 1)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'one-candle-deep-playlog.json';
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  } catch (e) {}
+}
 function renderOverlay() {
+  if (run && run.phase === 'settle') recordDay();
   var p = run.phase, h = '';
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
   if (p === 'deed') {
     h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:620px;border:none;background:transparent;text-align:left">' +
       '<div class="muted" style="font-size:13px;margin-bottom:10px">초 한 자루 (가제) · 2차 프로토타입</div>' + deedHtml(0) +
-      '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>도장이 찍히면 다음 날부터 캔 값이 올라요.<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
+      '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
       '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
       '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:14px">' +
-      (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<button id="oTut">첫 판 안내로 시작</button>') +
-      '<button class="primary" id="oGoDeed">' + '다음' + '</button></div></div>';
+      (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '</span>') +
+      '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
+      (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
+      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>';
   } else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
   else if (p === 'mine' && ui.sub === 'fork') h = forkHtml();
@@ -804,7 +869,7 @@ function boardHtml() {
   // 왼쪽: 권리증 칸
   h += '<div class="panel" style="width:360px;padding:12px 14px;' + (pay ? 'border-color:#c4432b' : '') + '">';
   h += '<div class="lbl" style="font-size:14px;color:' + (pay ? '#e5484d' : '#a59fb3') + '">' + (pay ? '오늘 도장 찍는 날 · ' + stampNm(run.day) : '권리증') + '</div>';
-  var stamps = ''; for (var i = 0; i < 3; i++) stamps += '<div class="stampSlot" style="width:34px;height:34px;border-color:#5d5868">' + (i < run.stamps ? '<div class="stamp" style="width:32px;height:32px;font-size:11px">도장</div>' : '') + '</div>';
+  var stamps = ''; for (var i = 0; i < Core.payments(run).length; i++) stamps += '<div class="stampSlot" style="width:34px;height:34px;border-color:#5d5868">' + (i < run.stamps ? '<div class="stamp" style="width:32px;height:32px;font-size:11px">도장</div>' : '') + '</div>';
   h += '<div style="display:flex;gap:8px;margin:8px 0">' + stamps + '</div>';
   if (G) {
     h += '<div style="font-size:17px;font-weight:700">' + stampNm(G.day) + ' ' + fmt(G.amount) + ' · ' + G.day + '일째 <span class="muted" style="font-size:14px">(' + (G.daysLeft === 0 ? '오늘 밤' : G.daysLeft + '일 뒤') + ')</span></div>';
@@ -813,7 +878,7 @@ function boardHtml() {
     h += '<div id="payBar" style="position:relative;height:10px;background:#1d1a24;border:1px solid #34303f;margin-top:6px"><i style="position:absolute;left:0;top:0;bottom:0;width:' + Math.min(100, run.cash / G.amount * 100) + '%;background:#b87333"></i></div>';
   }
   // 시세(01 5.4, 02 6.1 게시판 시세 표기)
-  h += '<div style="margin-top:10px;font-size:14px;line-height:21px">' + rateLine(run) + '</div>';
+  h += '<div style="margin-top:10px;font-size:14px;line-height:21px">' + esc(Core.rateText(run)) + '</div>';
   if (futMut.length) h += '<div style="margin-top:12px;font-size:14px">' + np.day + '일째 광산 변덕:<br>' + futMut.map(function (m) { return iconHtml('muts.' + m, 20) + ' ' + MUTATIONS[m].name; }).join('<br>') + '</div>';
   h += '</div>';
   // 오른쪽
@@ -823,18 +888,19 @@ function boardHtml() {
   if (pay && CONFIG.chunks[run.day]) { var ch = CONFIG.chunks[run.day]; h += '<div class="panel" style="padding:6px 12px;border-color:#a8781c;font-size:15px">' + iconHtml('chunk', 20) + ' ' + esc((ch.w * ch.h === 4 ? TEXT.chunk.morning4 : TEXT.chunk.morning6).replace('{n}', ch.depth)) + '</div>'; }
   var gg = run.gang;
   h += '<div style="display:flex;gap:10px">';
-  h += '<div class="paper" style="cursor:default;flex:1.4"><span class="pinI">' + iconHtml('pin', 20) + '</span><div style="font-size:13px;color:#5a3d28;font-weight:700">오늘 갱 상태' + (gg.good ? ' · 좋은 날' : '') + '</div><div style="font-size:18px;font-weight:700">' + esc(gg.name) + '</div><div style="font-size:15px">' + esc(gg.desc) + '</div></div>';
+  if (gg) h += '<div class="paper" style="cursor:default;flex:1.4"><span class="pinI">' + iconHtml('pin', 20) + '</span><div style="font-size:13px;color:#5a3d28;font-weight:700">오늘 갱 상태' + (gg.good ? ' · 좋은 날' : '') + '</div><div style="font-size:18px;font-weight:700">' + esc(gg.name) + '</div><div style="font-size:15px">' + esc(gg.desc) + '</div></div>';
   var fr = run.firstRule || 'plain', fd = Core.gang(run, 'toss') ? 2 : 1;
   h += '<div class="paper" style="cursor:default;flex:1"><span class="pinI">' + iconHtml('pin', 20) + '</span><div style="font-size:13px;color:#5a3d28;font-weight:700">오늘 첫 층 · 지하 ' + fd + '층</div><div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px">' + iconHtml('rules.' + fr, 20) + esc(RULES[fr].name) + '</div><div style="font-size:14px">' + esc(RULES[fr].sign) + '</div></div>';
   h += '</div>';
-  h += '<div class="lbl" style="font-size:14px">주문 하나 고르기 <span class="muted" style="font-weight:400">상인 심지: "' + esc(TEXT.boardTalk) + '"</span></div><div style="display:flex;gap:14px">';
+  if (run.orders.length) h += '<div class="lbl" style="font-size:14px">주문 하나 고르기 <span class="muted" style="font-weight:400">상인 심지: "' + esc(TEXT.boardTalk) + '"</span></div>';
+  h += '<div style="display:flex;gap:14px">';
   run.orders.forEach(function (o, k) {
     var R = o.reward, rt = R.pocket ? '주머니 +' + fmt(Core.orderPocket(run, R.pocket)) : R.candle ? '촛불 +' + R.candle : Core.TOOL_BY_ID[R.cons].name + ' ' + R.n + '개';
     var room = R.cons ? consRoom(R.cons) : 99, lack = R.cons && room < R.n ? ' <span class="badge">받을 칸이 ' + (R.n - room) + '개 모자람</span>' : '';
     h += '<div class="paper' + (ui.sel === k ? ' sel' : '') + '" data-order="' + k + '" style="flex:1"><span class="pinI">' + iconHtml('pin', 20) + '</span><div style="font-size:13px;color:#5a3d28;font-weight:700"> 주문서</div><div style="font-size:16px;font-weight:700;margin:4px 0">' + esc(o.text) + '</div><div style="font-size:15px">→ <b>' + rt + '</b>' + lack + '</div></div>';
   });
   h += '</div></div></div>';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">주문서를 클릭해서 골라요</span><button class="primary" id="oGoBoard">이 주문으로 내려가기</button></div></div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">' + (run.orders.length ? '주문서를 클릭해서 골라요' : '') + '</span><button class="primary" id="oGoBoard">' + (run.orders.length ? '이 주문으로 내려가기' : '내려가기') + '</button></div></div>';
   return h;
 }
 function rateLine(run) {   // 02 6.1 게시판 시세 표기: "도장 1개: 캔 값 ×1.5 · 금 알갱이 30 …"
@@ -856,7 +922,7 @@ function forkHtml() {
       var R = RULES[o.rule];
       if (!ui.rulesSeen[o.rule]) h += '<span class="badge gold first">처음</span>';
       h += iconHtml('rules.' + o.rule, 48) + '<div class="nm">' + R.name + '</div><div class="tx">' + esc(R.sign) + '</div><div class="hp2">' + esc(R.help) + '</div>';
-      if (o.est) h += '<div class="tx" style="margin-top:6px;color:#c9c3d6">보물 ' + o.est.t + '개쯤 · 지뢰 ' + o.est.m + '개쯤</div>';   // 02 6.5 갈림길 카드 네 줄
+      if (o.est) h += '<div class="tx" style="margin-top:6px;color:#c9c3d6">' + (CONFIG.countsShown ? '보물 ' + o.est.t + '개 · 지뢰 ' + o.est.m + '개' : '보물 ' + o.est.t + '개쯤 · 지뢰 ' + o.est.m + '개쯤') + '</div>';   // 02 6.5 갈림길 카드 네 줄
       if (o.bonus) h += '<div style="margin-top:6px;font-size:15px;font-weight:700;color:#ffd25a">' + esc(bonusText(o.bonus)) + '</div>';
       if (o.chunk) h += '<div style="margin-top:8px"><span class="badge gold">큰 덩이 있음 (' + d.chunkSpec.w + '×' + d.chunkSpec.h + ')</span></div>';
     } else if (o.kind === 'spring') {
@@ -890,9 +956,9 @@ function settleHtml() {
   var delay = 250;
   S.floors.forEach(function (fl, i) {
     if (i >= 6) return;
-    h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>지하 ' + fl.depth + '층 (' + RULES[fl.rule].name + ')</span><span>' + fmt(fl.value) + '</span></div>'; delay += 120;
+    h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>지하 ' + fl.depth + '층 (' + RULES[fl.rule].name + ')' + (fl.perfect ? ' <span class="badge gold">완벽한 층</span>' : '') + '</span><span>' + fmt(fl.value) + '</span></div>'; delay += 120;
   });
-  if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
+  if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.order) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>주문 보수</span><span>' + fmt(S.lines.order) + '</span></div>'; delay += 120; }
   ui.settleT0 = performance.now(); ui.settleDur = delay + 1100;
   h += '<div style="display:flex;align-items:center;gap:14px;margin:14px 0;font-size:17px">' + iconHtml('pouch', 32) + '<span>오늘 주머니 <b class="px" id="sPocket">' + fmt(S.gross) + '</b></span>' +
@@ -943,18 +1009,24 @@ function finalHtml() {
   var chart = '<div class="chart">';
   for (var i = 0; i < CONFIG.days; i++) { var hi = hist[i], pay = !!Core.paymentFor(i + 1); chart += hi ? '<i class="' + (hi.collapsed ? 'col ' : '') + (pay ? 'pay' : '') + '" title="' + hi.day + '일째: ' + hi.income + '" style="height:' + Math.max(4, hi.income / mx * 86) + 'px"></i>' : '<i style="background:transparent' + (pay ? ';outline:1px dashed #5d5868' : '') + '"></i>'; }
   chart += '</div><div class="note">날마다 수입 (테두리 = 도장 찍는 날, 빗금 = 쓰러진 날)</div>';
-  var st = '가장 깊이 간 층 지하 ' + run.stats.deepest + ' · 보물 ' + run.stats.treasures + ' · 발파 ' + run.stats.blasts + ' · 쓰러진 날 ' + run.stats.collapses;
+  var st = '가장 깊이 간 층 지하 ' + run.stats.deepest + ' · 보물 ' + run.stats.treasures + ' · 발파 ' + run.stats.blasts + ' · 쓰러진 날 ' + run.stats.collapses + (CONFIG.features.perfect ? ' · 완벽한 층 ' + (run.stats.perfect || 0) : '');
   if (F.success) {
-    var best = settings.best || 0, isNew = F.score > best;
-    if (isNew) { settings.best = F.score; saveSettings(); }
-    var mini = '<div class="deedCard" style="display:flex;gap:18px;align-items:center;padding:10px 16px"><b>달못 1호 갱 권리증</b>' + CONFIG.payments.map(function (p, i) { return '<span style="display:flex;align-items:center;gap:6px"><span class="stamp" style="width:34px;height:34px;font-size:11px">도장</span>' + TEXT.stampName[i] + '</span>'; }).join('') + '</div>';
-    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:760px"><h2>15일째 · 그믐 · 마지막 도장을 찍었어요. 달못 1호 갱은 이제 내 거예요</h2>' + mini +
+    if (!settings.bestBy) settings.bestBy = {};
+    var bk = bestKey(), best = settings.bestBy[bk] || (bk === 'grade:1' ? settings.best || 0 : 0), isNew = F.score > best;
+    if (isNew) { settings.bestBy[bk] = F.score; if (bk === 'grade:1') settings.best = F.score; }
+    var unlocked = !run.daily && !run.tutorial && (run.grade || 1) < 3 && (settings.gradeOpen || 1) <= (run.grade || 1) && !ui.unlockShown;
+    if (!run.daily && (run.grade || 1) >= (settings.gradeOpen || 1) && (run.grade || 1) < 3) { settings.gradeOpen = (run.grade || 1) + 1; }
+    if (unlocked) ui.unlockShown = true;
+    saveSettings();
+    var mini = '<div class="deedCard" style="display:flex;gap:14px;align-items:center;padding:10px 16px;flex-wrap:wrap"><b>' + gradeName(run.grade) + ' 권리증</b>' + Core.payments(run).map(function (p, i) { return '<span style="display:flex;align-items:center;gap:6px"><span class="stamp" style="width:34px;height:34px;font-size:11px">도장</span>' + Core.stampNames(run)[i] + '</span>'; }).join('') + '</div>';
+    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:800px"><h2>15일째 · 그믐 · 마지막 도장을 찍었어요. ' + gradeName(run.grade) + '은 이제 내 거예요</h2>' + mini +
       '<div style="font-size:20px;margin:14px 0">남긴 돈 (이번 판 점수) <b class="px acc" style="font-size:26px">' + fmt(F.score) + '</b></div>' +
-      '<div class="sub">' + (best ? '이 광산 최고 점수 ' + fmt(best) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' + chart + '<div style="margin-top:6px;font-size:14px">' + st + '</div>' +
+      '<div class="sub">' + (run.daily ? TEXT.daily + ' ' + run.daily + ' · ' : '') + (best ? '이 광산 최고 점수 ' + fmt(best) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' +
+      (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸어요. 새 광맥 하나가 더 나오고 값이 올라요. 권리증 화면에서 골라요</div>' : '') + chart + '<div style="margin-top:6px;font-size:14px">' + st + '</div>' +
       '<div class="panel" style="padding:8px 12px;margin-top:10px"><div class="note">권리증 뒷면, 작은 글씨</div><div>' + esc(TEXT.deedBack) + '</div><div class="sub" style="margin-top:4px">중개인 구 실장: "' + esc(TEXT.deedNext) + '"</div></div>' +
       '<div style="margin-top:14px;text-align:right"><button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
   } else {
-    var paid = CONFIG.payments.slice(0, run.stamps).map(function (p, i) { return TEXT.stampName[i] + ' ' + fmt(p.amount); }).join(', ') || '없어요';
+    var paid = Core.payments(run).slice(0, run.stamps).map(function (p, i) { return Core.stampNames(run)[i] + ' ' + fmt(p.amount); }).join(', ') || '없어요';
     h = '<div class="dim" style="background:#0b0a10"></div><div class="dlg" style="width:720px"><h2 style="color:#e5484d">계약 해지</h2>' +
       F.body.map(function (b) { return '<div class="quote">' + esc(b) + '</div>'; }).join('') +
       '<div style="font-size:24px;font-weight:700;color:#e5484d;margin:10px 0">' + fmt(F.short) + ' 모자랐어요</div>' +
@@ -987,14 +1059,14 @@ function shopHtml(merchant) {
   });
   if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>진열 바꾸기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 자리만 바뀌어요</span></div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했어요)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
-  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="lbl">장착 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots + (merchant ? '' : ' · 되팔면 산 값의 절반이에요') + '</div>';
+  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="lbl">장착 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots + (merchant || !CONFIG.features.sellBack ? '' : ' · 되팔면 산 값의 절반이에요') + '</div>';
   run.owned.forEach(function (id) {
     var t = Core.TOOL_BY_ID[id];
     h += '<div class="card panel" style="padding:5px 8px;cursor:default" data-tool="' + id + '"><div class="ic" style="width:32px;height:32px">' + iconHtml('icons.' + t.icon, 22) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div><div class="d" style="font-size:12px">' + esc(t.desc) + '</div></div>' +
-      (merchant ? '' : '<button data-sell="' + id + '">되팔기 +' + Core.sellPrice(run, id) + '</button>') + '</div>';
+      (merchant || !CONFIG.features.sellBack ? '' : '<button data-sell="' + id + '">되팔기 +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없어요</div>';
-  h += '<div class="lbl" style="margin-top:6px">쓰는 칸</div><div class="note">두드려 보기 · 발파' + (run.cons.length ? ' · ' + run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; }).join(' · ') : ' · 소모품 칸은 비어 있어요') + '</div>';
+  h += '<div class="lbl" style="margin-top:6px">쓰는 칸</div><div class="note">' + (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기 · ' : '') + '발파' + (run.cons.length ? ' · ' + run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; }).join(' · ') : ' · 소모품 칸은 비어 있어요') + '</div>';
   h += '<div class="panel" id="shopDesc" style="padding:8px 10px;margin-top:auto;min-height:80px;font-size:13px;line-height:18px"><span class="muted">물건에 마우스를 올리면 설명과 엮이는 도구가 보여요.</span></div></div></div>';
   h += '<div style="display:flex;justify-content:flex-end;gap:10px;align-items:center;margin-top:8px">' +
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
@@ -1004,10 +1076,13 @@ function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
     tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oKeys', '키보드 단축키', settings.keys) + tg('oShake', '화면 흔들림', settings.shake) +
+    (CONFIG.preset === 'v22' ? tg('oChord', '둘레 한꺼번에 열기', settings.chord !== false, '숫자 위에 서서 한 번 더 누르면 열어요') : '') +
     tg('oFlash', '지뢰 플래시', settings.flash) + tg('oLegend', '판 아래 범례', settings.legend) + tg('oBub', '강조 말풍선', settings.bubbles) +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
+    '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
+    '<div style="display:flex;gap:8px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button></div>' +
     '<button id="oRestart">새 판 시작</button><button id="oRestartTut">첫 판 안내로 다시</button><button id="oGiveUp">판 포기</button>' +
-    '<button class="primary" id="oClose">계속하기</button></div><div class="note" style="margin-top:10px">시드 ' + run.seed + '</div></div>';
+    '<button class="primary" id="oClose">계속하기</button></div><div class="note" style="margin-top:10px">시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</div></div>';
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
 function openingHtml() {
@@ -1084,10 +1159,17 @@ function bindOverlay() {
   on('oReroll', function () { Core.reroll(run); renderOverlay(); ui.hudDirty = true; });
   on('oDay', goNextDay); on('oLeave', function () { Core.leaveRoom(run); afterAction(); });
   on('oService', function () { Core.merchantService(run); drainFx(); renderOverlay(); });
-  on('oAgain', function () { startNewRun(false); });
+  on('oAgain', function () { startNewRun(false, { grade: run.grade, daily: !!run.daily }); });
+  on('oDaily', function () { startNewRun(false, { daily: true }); });
+  on('oNormal', function () { startNewRun(false); });
+  on('oGiftCash', function () { giftGo(-1); });
+  on('oChord', function () { settings.chord = settings.chord === false; saveSettings(); applySettingsToRules(); renderOverlay(); });
+  OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
   on('oQuick', function () { settings.quickDig = !settings.quickDig; saveSettings(); renderOverlay(); });
   on('oKeys', function () { settings.keys = !settings.keys; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
+  on('oLogGet', playlogDownload);
+  on('oLogClear', function () { askConfirm('기록된 하루 ' + playlogLoad().length + '개를 지울까요? 되돌릴 수 없어요', function () { playlogSave([]); ui.sub = 'pause'; renderOverlay(); }, { yes: '지우기', no: '그대로 두기' }); });
   on('oOpSkip', function () { openingEnd(); }); on('oOpNext', function () { openingNext(); });
   on('oShake', function () { settings.shake = !settings.shake; saveSettings(); renderOverlay(); });
   on('oFlash', function () { settings.flash = !settings.flash; saveSettings(); renderOverlay(); });
@@ -1119,23 +1201,28 @@ function synergyLine(t) {
   return same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
 }
 function giftHtml() {
-  var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:900px"><h2>' + TEXT.gift.title + '</h2>';
-  h += '<div class="quote">중개인 구 실장: "' + esc(run.tutorial ? TEXT.gift.enter : TEXT.gift.enter + ' ' + TEXT.gift.enter2) + '"</div><div style="display:flex;gap:14px;margin-top:10px">';
+  var stampR = run.giftKind === 'stamp', full = run.owned.length >= CONFIG.shop.passiveSlots;
+  var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:900px"><h2>' + (stampR ? TEXT.reward.title + ' · 도장 ' + run.stamps + '개' : TEXT.gift.title) + '</h2>';
+  var q = stampR ? TEXT.reward.enter + ' ' + TEXT.reward.cashEnter.replace('{cash}', fmt(run.giftCash)) : run.tutorial ? TEXT.gift.enter : TEXT.gift.enter + ' ' + TEXT.gift.enter2;
+  h += '<div class="quote">중개인 구 실장: "' + esc(q) + '"</div>' + (stampR && full ? '<div class="note" style="margin-top:6px">' + esc(TEXT.reward.full) + '</div>' : '') + '<div style="display:flex;gap:14px;margin-top:10px;' + (stampR && full ? 'opacity:0.45' : '') + '">';
   run.giftOpts.forEach(function (id, i) {
     var t = Core.TOOL_BY_ID[id];
     h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px">' + iconHtml('icons.' + t.icon, 40) +
       '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' +
       '</div>';
   });
-  h += '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">카드를 클릭해서 골라요</span><button class="primary" id="oGift">' + TEXT.gift.button + '</button></div></div>';
+  h += '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">카드를 클릭해서 골라요</span><span style="display:flex;gap:10px">' +
+    (stampR ? '<button id="oGiftCash">' + esc(TEXT.reward.cash.replace('{cash}', fmt(run.giftCash))) + '</button>' : '') +
+    (stampR && full ? '' : '<button class="primary" id="oGift">' + TEXT.gift.button + '</button>') + '</span></div></div>';
   return h;
 }
 function giftGo(i) {
   if (performance.now() - ui.shownAt < 500) return;
   var r = Core.chooseGift(run, i == null ? ui.sel : i);
   if (!r.ok) return;
-  ui.giftLine = '중개인 구 실장: "' + TEXT.gift.after + '" · 받은 도구: ' + Core.TOOL_BY_ID[r.id].name;
   ui.sel = 0; ui.shownAt = performance.now();
+  if (run.phase === 'shop') { renderOverlay(); ui.hudDirty = true; return; }   // 도장 선물 → 상점
+  ui.giftLine = '중개인 구 실장: "' + TEXT.gift.after + '" · 받은 도구: ' + Core.TOOL_BY_ID[r.id].name;
   if (run.phase === 'board') { renderOverlay(); ui.hudDirty = true; } else beginDay();
 }
 function deedGo() {
@@ -1194,7 +1281,7 @@ function afterAction() {
   if (ph === 'mine' && run.tutorial) {   // 말풍선 6: X 칸이 처음 둘레 8칸에 들어온 순간(첫 판 끝까지 유효). 낙서 7은 Day 1~3
     var d = run.d, nx = Core.neighbors(d.floor, d.px, d.py).filter(function (c) { return c.cover !== 'open' && c.mark === 1; });
     if (nx.length) { bubble('xmark', TEXT.bubbles.xmark, { cell: { x: nx[0].x, y: nx[0].y } }); if (run.day <= 3) teachHere('x', TUTORIAL.b3Graffiti.x, { x: nx[0].x, y: nx[0].y }); }
-    if (run.day <= 3 && d.candle <= 20 && d.candle > 0) teachHere('ember', TUTORIAL.b3Graffiti.o, { x: d.px, y: d.py });   // 낙서 8: 촛불이 처음 20 이하가 된 자리
+    if (run.day <= 3 && d.candle <= 20 && d.candle > 0 && CONFIG.features.embers) teachHere('ember', TUTORIAL.b3Graffiti.o, { x: d.px, y: d.py });   // 낙서 8: 촛불이 처음 20 이하가 된 자리
   }
   if (ui.aim && run.d && Core.cellAt(run.d.floor, ui.aim.x, ui.aim.y).cover === 'open') ui.aim = null;
   ui.hudDirty = true;
@@ -1273,7 +1360,12 @@ function clickCell(p) {
     ui.aim = { x: p.x, y: p.y }; afterAction(); return;
   }
   ui.aim = null;
-  if (p.x === d.px && p.y === d.py) { if (f.stair && f.stair.found && f.stair.x === p.x && f.stair.y === p.y) openFork(); return; }
+  if (p.x === d.px && p.y === d.py) {
+    if (f.stair && f.stair.found && f.stair.x === p.x && f.stair.y === p.y) { openFork(); return; }
+    var ci = Core.chordInfo(run, p.x, p.y);
+    if (ci && ci.marked > 0) { if (ci.ready) { Core.chord(run, p.x, p.y); afterAction(); } else say(TEXT.chord.need, p); }
+    return;
+  }
   if (!Core.walkable(f, c)) { noPath(p); return; }
   var rt = Core.travelTo(run, p.x, p.y); if (!rt.ok) noPath(p);
   afterAction();
@@ -1376,9 +1468,11 @@ board.addEventListener('mousedown', function (e) {
   var p = boardCell(e); if (!p) return;
   if (e.button === 2) {   // 오른쪽 클릭: 고르기 상태면 취소, 아니면 분필 순환(거리 제한 없음)
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
+    ui.dayClicks = (ui.dayClicks || 0) + 1;
     var c = Core.cellAt(run.d.floor, p.x, p.y); if (c.cover !== 'open') { Core.mark(run, p.x, p.y); ui.chalkHintDone = true; } afterAction(); return;
   }
   if (e.button !== 0) return;
+  ui.dayClicks = (ui.dayClicks || 0) + 1;
   clickCell(p);
 });
 
@@ -1406,4 +1500,6 @@ function updateHUDSafe() {
 }
 fitStage();
 startNewRun(!settings.tutorialDone);
+// 개발 서버에서만: 화면 점검 스크립트가 상태를 읽는 손잡이(빌드에는 빠져요)
+if (import.meta.env && import.meta.env.DEV) window.__ocd = { get run() { return run; }, Core: Core, afterAction: afterAction };
 requestAnimationFrame(frame);

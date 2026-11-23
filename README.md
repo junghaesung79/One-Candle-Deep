@@ -2,13 +2,13 @@
 
 지뢰찾기 숫자 추리 + 채굴 로그라이트. 탑다운 2D 픽셀 인디 게임이에요.
 
-> 숫자는 둘레 8칸의 지뢰와 보물을 함께 세요. 층마다 바뀌는 광맥 규칙으로 둘을 가려내 노다지 줄을 잇고, X를 그은 지뢰는 터뜨려 길을 열어요. 보름 동안 세 번, 광산 값을 치르고 도장을 받으면 광산이 내 것이 돼요.
+> 숫자는 둘레 8칸의 지뢰와 보물을 함께 세요. 층마다 바뀌는 광맥 규칙으로 둘을 가려내 노다지 줄을 잇고, X를 그은 지뢰는 터뜨려 길을 열어요. 보름 동안 사흘마다 광산 값을 치르고, 도장 다섯 개를 받으면 광산이 내 것이 돼요.
 
-A minesweeper mining roguelite where every number counts both mines and treasure. Read each floor's vein rule to tell them apart, chain finds into a Lode Streak, and blast the mines you're sure of. Fifteen days, three stamps on the deed, and the mine is yours.
+A minesweeper mining roguelite where every number counts both mines and treasure. Read each floor's vein rule to tell them apart, chain finds into a Lode Streak, and blast the mines you're sure of. Fifteen days, a payment every third day, five stamps on the deed, and the mine is yours.
 
 ## 현재 상태
 
-- **기획:** 2차 기획안 v2.1
+- **기획:** 2차 기획안 v2.1. 그 위에 재미 보고서로 고친 v2.2 시험 규칙(도장 다섯 번, 광맥 셋, 둘레 한꺼번에 열기, 오늘의 광산 등)을 프로토타입 기본으로 넣고 사람 플레이테스트를 앞두고 있어요. v2.1 규칙도 비교용으로 남아 있어요(`?preset=v21`)
 - **단계:** 웹 프로토타입으로 규칙과 경제를 검증하는 중이에요(M0)
 - **본 개발:** Godot 4로 만들어 스팀(PC)에 낼 계획이에요
 - 1인 개발

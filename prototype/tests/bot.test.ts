@@ -23,4 +23,6 @@ describe('봇 한 판', () => {
     expect(voided).toBeGreaterThan(0);
   });
   it('첫 판(고정 층) 경로가 끝까지 가요', () => { for (let s = 0; s < 3; s++) finishes(0, { tutorial: true }); });
+  it('v2.1 프리셋도 끝까지 가요', () => { env.Core.applyPreset('v21'); try { for (let s = 1; s <= 5; s++) finishes(1000 + s, { policy: 'normal' }); } finally { env.Core.applyPreset('v22'); } });
+  it('등급 2·3 광산도 끝까지 가요', () => { for (let s = 1; s <= 3; s++) { finishes(1100 + s, { policy: 'normal', grade: 2 } as any); finishes(1200 + s, { policy: 'normal', grade: 3 } as any); } });
 });
