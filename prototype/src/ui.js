@@ -1,5 +1,5 @@
 import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES } from './core.js';
-import { SPR, iconHtml, moonCanvas } from './sprites.js';
+import { SPR, iconHtml } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
@@ -675,7 +675,9 @@ function drawFlameIc(lvl) {
 (function initHud() {
   $('pouchIc').innerHTML = iconHtml('pouch', 24);
   $('coinsIc').innerHTML = iconHtml('coins', 18);
-  $('help').innerHTML = '<div style="display:flex;gap:8px;align-items:center"><button id="bGear" title="설정">⚙ 설정</button></div><div id="hint" style="margin-top:6px;font-size:13px;line-height:18px;color:#c9c3d6"></div>';
+  $('bCal').innerHTML = iconHtml('ui.cal', 24); $('bCal').title = '달력';
+  $('bGear').innerHTML = iconHtml('ui.gear', 24); $('bGear').title = '설정';
+  $('bCal').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'cal'; renderOverlay(); } };
   $('bGear').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); } };
   $('bReturn').onclick = function () { askReturn(); };   // R53: 버튼 → 확인 창
   $('sign').addEventListener('click', function () { var f = run && run.d && run.d.floor; if (f) setDesc('<b>' + RULES[f.rule].name + '</b><br>' + esc(RULES[f.rule].sign) + '<br><span class="muted">' + esc(RULES[f.rule].help) + '</span><br>' + veinDiagram(f.rule)); });
@@ -733,14 +735,16 @@ function updateHUD() {
     $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24));
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
-  $('dayTxt').innerHTML = run.day + '일째 <span class="muted">/ ' + CONFIG.days + '</span><br><span class="muted" style="font-weight:400">' + (CONFIG.days - run.day + 1) + '일 남음</span>';
-  var mw = $('moonWrap'); if (mw._d !== run.day) { mw.innerHTML = '<img class="pix" width="32" height="32" style="width:32px;height:32px" src="' + moonCanvas(run.day).toDataURL() + '">'; mw._d = run.day; }
+  // 판: 날짜(달력·설정 단추는 같은 줄)
+  $('runDay').innerHTML = '<span class="px">' + run.day + '</span>일째 <span class="muted" style="font-weight:400">/ ' + CONFIG.days + '</span>';
+  $('runLeft').textContent = (CONFIG.days - run.day + 1) + '일 남음';
+  var hintH = hintText();   // 마우스를 올린 칸에서 할 일. 촛불 막대의 미리 보기(ui.preCost)도 여기서 정해요
   // 오늘 주머니 / 금고
   var pocketShow = d ? Math.max(0, Math.round(d.pocket - ui.pocketPending)) : 0;
   $('pocketVal').textContent = fmt(pocketShow);
   var danger = d && inMine && ((d.hp === 1 && !(run.tutorial && run.day === 1)) || d.embersOn);   // R38: 첫 판 Day 1은 체력 1이어도 붉게 강조하지 않는다
   $('pocketBox').classList.toggle('danger', !!danger);
-  $('pocketBadge').innerHTML = danger ? '<span class="badge">쓰러지면 절반을 잃어요</span>' : (d && inMine ? '<span class="muted" style="font-size:12px;margin-left:6px">올라가면 금고로</span>' : '');
+  $('pocketNote').innerHTML = danger ? '<span class="badge">쓰러지면 절반을 잃어요</span>' : (d && inMine ? '올라가면 금고로 들어가요' : '');
   $('goalTxt').innerHTML = goalLine(run);
   $('vaultTxt').innerHTML = '금고 <b class="px" style="font-size:14px">' + fmt(run.cash) + '</b>';
   var np = Core.nextPayment(run), amt = np ? np.amount : 1;
@@ -752,8 +756,12 @@ function updateHUD() {
     $('candleVal').textContent = d.embersOn ? '0' : d.candle;
     $('candleVal').style.color = d.candle <= CONFIG.lowLight ? '#ff9a4d' : '#ffd25a';
     var cmax = Math.max(d.candleMax, d.candle), cb = $('candleBar');
-    cb.firstChild.style.width = (d.candle / cmax * 320) + 'px';
-    cb.lastChild.style.left = (CONFIG.lowLight / cmax * 320) + 'px';
+    cb.firstChild.style.width = (d.candle / cmax * 100) + '%';
+    cb.lastChild.style.left = (CONFIG.lowLight / cmax * 100) + '%';
+    var pc = Math.min(ui.preCost || 0, d.candle), pre = cb.children[1];   // 누르면 탈 촛불을 막대 끝에 미리 보여 줘요
+    pre.style.display = pc > 0 ? 'block' : 'none';
+    if (pc > 0) { pre.style.left = ((d.candle - pc) / cmax * 100) + '%'; pre.style.width = (pc / cmax * 100) + '%'; }
+    cb.lastChild.style.display = CONFIG.features.lowLight ? 'block' : 'none';
     var er = $('embersRow');
     if (d.embersOn) {
       cb.style.display = 'none'; er.style.display = 'flex';
@@ -781,7 +789,7 @@ function updateHUD() {
     $('streakSteps').innerHTML = st;
     $('streakNext').textContent = d.streak === 0 ? '연달아 캐면 값이 올라요' : '다음 보물 ' + multTxt(mul) + ' · 지뢰면 ×1';
     drawFlameIc(showLvl);
-    var hs = ''; for (var k = 0; k < d.hpMax; k++) hs += iconHtml(k < d.hp ? 'heart' : 'heartE', 36);
+    var hs = ''; for (var k = 0; k < d.hpMax; k++) hs += iconHtml(k < d.hp ? 'heart' : 'heartE', 28);
     $('hearts').innerHTML = hs;
   }
   // 도구 칸
@@ -802,6 +810,9 @@ function updateHUD() {
     us += a ? '<div class="uslot' + (md.kind === 'cons' && md.slot === u ? ' on' : '') + '" data-use="' + u + '" data-tool="' + a.id + '">' + iconHtml('icons.' + Core.TOOL_BY_ID[a.id].icon, 18) + '<span>' + Core.TOOL_BY_ID[a.id].short + '<br>×' + a.n + '</span></div>' : '<div class="uslot off"><span class="muted">빈 칸</span></div>';
   }
   if ($('useSlots')._h !== us) { $('useSlots').innerHTML = us; $('useSlots')._h = us; bindSlotEvents(); }
+  // 버튼으로 쓸 것이 하나도 없으면 줄째 숨겨요(빈 칸만 늘어놓지 않아요)
+  var anyUse = (d && (d.probesMax || CONFIG.features.probeBase)) || run.cons.some(function (a) { return a; });
+  $('useWrap').style.display = anyUse ? 'block' : 'none';
 
   // 설명 칸
   var dh = ui.desc;
@@ -812,12 +823,12 @@ function updateHUD() {
     if (d && d.chunkSpec && !d.chunkDone) dh += '<b>큰 덩이</b> 지하 ' + d.chunkSpec.depth + '층 · ' + d.chunkSpec.w + '×' + d.chunkSpec.h + ' · 값 ' + fmt(d.chunkSpec.value * Core.stage(run).valueMul) + ' × 콤보<br>';
     if (f && !(d.mutations.length && d.chunkSpec && !d.chunkDone)) dh += '<span class="muted">표지판: ' + esc(RULES[f.rule].help) + '</span>';   // 칸이 모자라면 표지판 보조 줄은 머리 표지판(누르면 보임)에 맡긴다
   }
-  $('descBox').innerHTML = dh;
+  $('descBody').innerHTML = dh;
+  $('hint').innerHTML = hintH;
   // 올라가기 버튼
   $('bReturn').classList.toggle('hot', !!danger);
   $('bReturn').disabled = !inMine;
   var rl = $('bReturn').lastChild; if (rl._t !== 'r') { rl.innerHTML = '올라가기'; rl._t = 'r'; }
-  $('hint').innerHTML = hintText();
   board.style.cursor = ui.mode ? 'crosshair' : 'pointer';
   // 범례·주문·로그
   var lg = $('legend');
@@ -844,20 +855,23 @@ function bindSlotEvents() {
 }
 // 버튼 줄 아래 한 줄: 마우스를 올린 칸 설명(01 2.5)
 function hintText() {
+  ui.preCost = 0;
   var d = run.d; if (!d || run.phase !== 'mine') return '';
   if (ui.mode) return '오른쪽 클릭이나 버튼을 다시 누르면 그만둬요';
   var h = ui.hover;
-  var aimTxt = function (q) { return q.mark === 1 ? '한 번 더 누르면 터뜨려요 · 촛불 −' + Core.igniteCost(run) : TEXT.ops.aimed.replace('{n}', Core.hitCost(run)); };
+  var aimTxt = function (q) { ui.preCost = q.mark === 1 ? Core.igniteCost(run) : Core.hitCost(run); return q.mark === 1 ? '한 번 더 누르면 터뜨려요 · 촛불 −' + Core.igniteCost(run) : TEXT.ops.aimed.replace('{n}', Core.hitCost(run)); };
   if (!h) { var ac0 = ui.aim && Core.cellAt(d.floor, ui.aim.x, ui.aim.y); return ac0 ? esc(aimTxt(ac0)) : ''; }
   var c = Core.cellAt(d.floor, h.x, h.y);
   if (c.cover !== 'open') {
     var isX = c.mark === 1, verb = isX ? '터뜨려요' : '캐요', cost = isX ? Core.igniteCost(run) : Core.hitCost(run);
+    if (!settings.aim) ui.preCost = cost;
     if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(aimTxt(c));
     if (!settings.aim) return (Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' : '누르면 걸어가서 ') + verb + ' · 촛불 −' + cost;
     return '누르면 옆으로 가요. 한 번 더 누르면 ' + verb;
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
+  if (ci && ci.ready && (!settings.aim || (h.x === d.px && h.y === d.py))) ui.preCost = Core.hitCost(run);
   if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : !settings.aim ? '누르면 걸어가서 주변 칸을 한꺼번에 열어요 · 촛불 −' + Core.hitCost(run) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변 칸을 한꺼번에 열어요';
   var fs0 = d.floor.stair;
   if (fs0 && fs0.found && fs0.x === h.x && fs0.y === h.y && !settings.aim) return '누르면 걸어가서 내려갈 층을 골라요 · 깊을수록 보물이 많고 비싸요';
@@ -940,6 +954,7 @@ function renderOverlay() {
   else if (p === 'final') h = finalHtml();
   else if (ui.sub === 'pause') h = pauseHtml();
   else if (ui.sub === 'bag') h = bagHtml();
+  else if (ui.sub === 'cal') h = calHtml();
   OV.innerHTML = h;
   OV.className = h ? 'show' : '';
   if (h && p !== 'mine') clearBubbles();
@@ -949,7 +964,7 @@ function boardHtml() {
   var np = Core.nextPayment(run), pay = Core.paymentFor(run.day), G = Core.goalInfo(run);
   var futMut = np ? (run.mutationPlan[np.day] || []) : [];
   var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1040px;background:#2a2018;border:3px solid #5a3d28;padding:16px 20px">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0">' + run.day + '일째 아침 · 갱 입구 게시판</h2><div style="display:flex;align-items:center;gap:8px">' + '<img class="pix" width="32" height="32" style="width:32px;height:32px" src="' + moonCanvas(run.day).toDataURL() + '"><span>' + (CONFIG.days - run.day + 1) + '일 남음</span></div></div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h2 style="margin:0">' + run.day + '일째 아침 · 갱 입구 게시판</h2><span class="muted">' + (CONFIG.days - run.day + 1) + '일 남음</span></div>';
   h += '<div style="display:flex;gap:16px">';
   // 왼쪽: 권리증 칸
   h += '<div class="panel" style="width:360px;padding:12px 14px;' + (pay ? 'border-color:#c4432b' : '') + '">';
@@ -1159,7 +1174,7 @@ function shopHtml(merchant) {
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
   return h;
 }
-function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
+function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
     tg('oAim', '조준', settings.aim, '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨려요. 끄면 한 번에 걸어가서 해요') + tg('oShake', '화면 흔들림', settings.shake) +
@@ -1226,6 +1241,39 @@ var OPENING_ART = [
 ];
 function openingNext() { if (ui.opening == null) return; if (ui.opening >= 2) openingEnd(); else { ui.opening++; renderOverlay(); } }
 function openingEnd() { ui.opening = null; if (!settings.openingSeen) { settings.openingSeen = true; saveSettings(); } ui.shownAt = performance.now() - 2000; renderOverlay(); ui.hudDirty = true; }
+// 달력: 한 줄이 도장 하나까지의 날들이에요. 지난날은 번 돈, 오늘은 금빛, 도장 날은 동그라미(찍으면 붉은 도장)
+function calHtml() {
+  var P = Core.payments(run), S = CONFIG.stages, names = Core.stampNames(run), G = Core.goalInfo(run), start = 1, rows = '';
+  var incOf = {}; run.history.forEach(function (x) { incOf[x.day] = x; });
+  P.forEach(function (p, i) {
+    var cells = '';
+    for (var day = start; day <= p.day; day++) {
+      var past = day < run.day, today = day === run.day, sd = day === p.day, done = sd && i < run.stamps, hx = incOf[day];
+      var cls = 'cday' + (past ? ' past' : '') + (today ? ' today' : '') + (sd ? ' stampDay' : '') + (done ? ' stamped' : '');
+      var inner = '<span class="n px">' + day + '</span>';
+      if (hx) inner += hx.collapsed ? '<span class="inc bad">쓰러짐</span>' : '<span class="inc">+' + fmt(hx.income) + '</span>';
+      else if (today) inner += '<span class="inc" style="color:#ffd25a">오늘</span>';
+      cells += '<div class="' + cls + '">' + inner + '</div>';
+    }
+    var a = S[Math.min(i, S.length - 1)], b = S[Math.min(i + 1, S.length - 1)], fx = [];
+    if (i === P.length - 1) fx.push('남은 금고가 이번 판 점수예요');
+    else {
+      if (b.valueMul !== a.valueMul) fx.push('다음 날부터 캔 값이 ×' + b.valueMul + '로 올라요');
+      if (b.rowShift > a.rowShift) fx.push('다음 날부터 갱이 한 층 깊어져요');
+      if (CONFIG.features.stampReward) fx.push('도장 선물을 하나 골라요');
+    }
+    var ck = CONFIG.chunks && CONFIG.chunks[p.day];
+    if (ck) fx.push('그날 지하 ' + ck.depth + '층에 큰 덩이가 묻혀요');
+    var st = i < run.stamps ? '<span style="color:#e5484d;font-weight:700">찍었어요</span>'
+      : (G && G.day === p.day ? (G.left > 0 ? '<span class="warnTxt">' + fmt(G.left) + ' 모자라요</span>' : '<span class="acc">채웠어요</span>') : '');
+    rows += '<div class="calRow">' + cells + '<div class="calSide"><span class="amt">' + esc(names[i] || ('도장 ' + (i + 1))) + ' ' + fmt(p.amount) + '</span> · ' + p.day + '일째' + (st ? ' · ' + st : '') +
+      '<div class="note">' + esc(fx.join(' · ')) + '</div></div></div>';
+    start = p.day + 1;
+  });
+  return '<div class="dim" id="oCalDim"></div><div class="dlg" style="width:760px"><div style="display:flex;align-items:baseline;gap:12px"><h2>달력</h2><span class="muted">' + run.day + '일째 · ' + (CONFIG.days - run.day + 1) + '일 남음</span></div>' +
+    '<div class="note" style="margin-bottom:4px">한 줄이 도장 하나까지의 날들이에요. 동그라미가 도장 찍는 날이고, 그날 밤 금고에서 내요.</div>' + rows +
+    '<div style="text-align:right;margin-top:12px"><button class="primary" id="oClose">닫기</button></div></div>';
+}
 function bagHtml() {
   var d = run.d, f = d && d.floor;
   var h = '<div class="dim" style="background:rgba(11,10,16,0.75)"></div><div class="dlg" style="width:620px"><h2>가방</h2>';
@@ -1263,6 +1311,7 @@ function bindOverlay() {
   on('oRestartTut', function () { askConfirm('첫 판 안내(정해진 층)로 새로 시작할까요?', function () { startNewRun(true); }); });
   on('oGiveUp', function () { askConfirm('판을 포기할까요? 계약 해지가 돼요.', function () { ui.sub = null; run.payment = { short: Math.max(0, (Core.nextPayment(run) || { amount: 0 }).amount - run.cash) }; run.final = { success: false, score: 0, stamps: run.stamps, day: run.day, short: run.payment.short, body: ['판을 포기했어요. 갱구는 잠겼고 다음 보름에 다시 열려요.'] }; run.phase = 'final'; renderOverlay(); }); });
   on('oClose', function () { ui.sub = null; renderOverlay(); });
+  on('oCalDim', function () { ui.sub = null; renderOverlay(); });
   var q = OV.querySelectorAll('[data-order]');
   for (var i = 0; i < q.length; i++) q[i].onclick = function () { ui.sel = +this.dataset.order; renderOverlay(); };
   on('oGift', function () { giftGo(); });
@@ -1486,7 +1535,7 @@ document.addEventListener('keydown', function (e) {
   var p = run.phase;
   if (code === 'Escape') {   // 설정은 Esc로 연다
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
-    if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag') { ui.sub = null; renderOverlay(); return; }
+    if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag' || ui.sub === 'cal') { ui.sub = null; renderOverlay(); return; }
     if (p === 'mine') { ui.sub = 'pause'; renderOverlay(); }
     return;
   }
@@ -1576,7 +1625,7 @@ function frame(now) {
 }
 function updateHUDSafe() {
   if (!run.d) { // 아침 화면: 머리만
-    $('dayTxt').innerHTML = run.day + '일째 <span class="muted">/ ' + CONFIG.days + '</span>';
+    $('runDay').innerHTML = '<span class="px">' + run.day + '</span>일째 <span class="muted" style="font-weight:400">/ ' + CONFIG.days + '</span>'; $('runLeft').textContent = (CONFIG.days - run.day + 1) + '일 남음';
     $('vaultTxt').innerHTML = '금고 <b class="px" style="font-size:14px">' + fmt(run.cash) + '</b>'; $('goalTxt').innerHTML = goalLine(run);
     return;
   }

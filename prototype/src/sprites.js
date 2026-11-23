@@ -128,22 +128,12 @@ function iconHtml(name, size, cls) {
   SPR.icons.nugget = SPR.nugget; SPR.icons.gem = SPR.gem;
 })();
 
-// 달: Day 1 보름 → Day 15 그믐(R1)
-function moonCanvas(day) {
-  var k = Math.min(1, Math.max(0, (day - 1) / (CONFIG.days - 1)));   // 0 보름 ~ 1 그믐
-  var cv = document.createElement('canvas'); cv.width = 16; cv.height = 16;
-  var g = cv.getContext('2d');
-  for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
-    var nx = (x - 7.5) / 6.5, ny = (y - 7.5) / 6.5;
-    if (nx * nx + ny * ny > 1) continue;
-    var w = Math.sqrt(1 - ny * ny);
-    var lit = nx < w * (1 - 2 * k) + 0.0001;   // 기우는 달: 오른쪽부터 어두워짐
-    if (k >= 0.999) lit = false;
-    var edge = (nx * nx + ny * ny) > 0.78;
-    g.fillStyle = lit ? (edge ? '#c9c3d6' : '#f1ece2') : (edge ? '#2a2633' : '#34303f');
-    g.fillRect(x, y, 1, 1);
-  }
-  return cv;
-}
+// 오른쪽 패널 단추 그림(12×12): 달력, 설정
+SPR.ui = {
+  cal: mkSprite(["..k.....k...", ".rkrrrrrkrr.", ".rrrrrrrrrr.", ".wwwwwwwwww.", ".wdwwdwwdww.", ".wwwwwwwwww.", ".wdwwdwwyyw.", ".wwwwwwwyyw.", ".wdwwdwwwww.", ".wwwwwwwwww.", ".ssssssssss.", "............"],
+    { k: '#c9c3d6', r: '#c4432b', w: '#e9dfc8', d: '#8a8496', y: '#e0a526', s: '#8a8496' }),
+  gear: mkSprite([".....gg.....", "..g.gggg.g..", ".gggggggggg.", "..gggddggg..", ".gggd..dggg.", "gggd....dggg", "gggd....dggg", ".gggd..dggg.", "..gggddggg..", ".gggggggggg.", "..g.gggg.g..", ".....gg....."],
+    { g: '#c9c3d6', d: '#6f6880' })
+};
 
-export { SPR, mkSprite, sprUrl, iconHtml, moonCanvas };
+export { SPR, mkSprite, sprUrl, iconHtml };

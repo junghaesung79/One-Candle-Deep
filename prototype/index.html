@@ -25,7 +25,6 @@
   #sign .tx { font-size: 14px; color: #efe7d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #sign .badge { margin-left: 6px; }
   #hdrRight { display: flex; align-items: center; gap: 8px; }
-  #dayTxt { font-size: 14px; font-weight: 700; text-align: right; line-height: 17px; white-space: nowrap; }
   .badge { display: inline-block; font-size: 12px; font-weight: 700; background: #3a0f14; border: 1px solid #c4432b; color: #f1ece2; padding: 0 5px; line-height: 17px; white-space: nowrap; }
   .badge.gold { background: #3a3220; border-color: #a8781c; color: #ffd25a; }
   #tally { left: 20px; top: 64px; width: 16px; height: 528px; image-rendering: pixelated; }
@@ -37,54 +36,83 @@
   #orderLine { left: 40px; top: 630px; width: 728px; height: 20px; font-size: 13px; padding: 0 10px; line-height: 20px; color: #c9c3d6; white-space: nowrap; overflow: hidden; }
   #log { left: 40px; top: 652px; width: 728px; height: 52px; padding: 3px 10px; font-size: 14px; line-height: 22px; }
   #log div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* 오른쪽 */
-  #pocketBox { left: 808px; top: 12px; width: 432px; height: 100px; padding: 6px 12px; border-style: dashed; }
-  #pocketBox.danger { border-color: #c4432b; }
-  #pocketBox.blink { border-color: #ffd25a; }
+  /* 오른쪽: 위에서 아래로 판 → 오늘 버틸 힘 → 콤보 → 돈의 흐름(주머니 → 금고 → 도장) → 도구 → 설명 */
+  #side { left: 808px; top: 12px; width: 432px; height: 692px; display: flex; flex-direction: column; gap: 8px; }
+  #side > .panel { flex: none; }
   .prow { display: flex; align-items: center; gap: 8px; }
-  #pocketVal { font-size: 22px; margin-left: auto; color: #f2c14e; }
-  #goalTxt { font-size: 14px; margin: 3px 0 4px; white-space: nowrap; overflow: hidden; }
-  #vaultTxt { font-size: 14px; white-space: nowrap; }
-  #payBar { flex: 1; height: 10px; background: #2a2633; position: relative; border: 1px solid #34303f; }
-  #payBar i { position: absolute; top: 0; bottom: 0; left: 0; }
-  #payBar .v { background: #b87333; } #payBar .p { background: repeating-linear-gradient(90deg, #f2c14e 0 4px, transparent 4px 6px); }
-  #candleBox { left: 808px; top: 120px; width: 432px; height: 88px; padding: 6px 12px; display: flex; gap: 10px; align-items: center; }
+  .lbl { font-size: 12.5px; font-weight: 700; color: #a59fb3; }
+  .lbl.big { font-size: 14px; color: #f1ece2; }
+  #runBar { height: 48px; padding: 0 6px 0 12px; display: flex; align-items: center; gap: 8px; }
+  #runDay { font-size: 15px; font-weight: 700; white-space: nowrap; }
+  #runDay .px { font-size: 15px; color: #ffd25a; }
+  #runLeft { font-size: 13px; color: #a59fb3; white-space: nowrap; }
+  .ibtn { width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center; flex: none; }
+  .ibtn:focus-visible, button:focus-visible { outline: 2px solid #ffd25a; outline-offset: 2px; }
+  #candleBox { height: 92px; padding: 8px 12px; display: flex; gap: 10px; align-items: center; }
   #candleCv { width: 48px; height: 48px; image-rendering: pixelated; flex: none; }
-  #candleMain { flex: 1; position: relative; }
+  #candleMain { flex: 1; min-width: 0; }
   #candleVal { font-size: 22px; color: #ffd25a; }
-  #candleBar { position: relative; width: 320px; height: 10px; background: #2a2633; margin: 4px 0 4px; }
+  #hearts { display: flex; gap: 2px; margin-left: auto; }
+  #candleBar { position: relative; height: 10px; background: #2a2633; margin: 6px 0 5px; }
   #candleBar i { position: absolute; left: 0; top: 0; bottom: 0; background: #ffd25a; transition: width 0.12s linear; }
+  #candleBar s { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, #ff9a4d 0 3px, #5a3d28 3px 5px); display: none; }
   #candleBar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #a59fb3; }
-  #candleCost { font-size: 12.5px; color: #a59fb3; white-space: nowrap; }
+  #candleCost { font-size: 12.5px; color: #a59fb3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #embersRow { display: none; align-items: center; gap: 3px; margin: 2px 0; }
-  #streakBox { left: 808px; top: 216px; width: 280px; height: 56px; padding: 4px 10px; }
+  #streakBox { height: 52px; padding: 5px 12px; }
   #streakVal { font-size: 16px; color: #f1ece2; white-space: nowrap; margin-left: auto; }
   #streakSteps { display: flex; gap: 3px; flex: none; }
-  #streakSteps i { width: 26px; height: 8px; background: #2a2633; border: 1px solid #34303f; }
+  #streakSteps i { height: 8px; background: #2a2633; border: 1px solid #34303f; }
   #streakSteps i.on { background: #ffb347; border-color: #ff8a3d; }
-  #streakNext { font-size: 12px; color: #a59fb3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  #streakNext { font-size: 12.5px; color: #a59fb3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   #streakBox.broke { border-color: #a59fb3; }
   #streakBox.max { border-color: #ffd25a; }
-  #hpBox { left: 1096px; top: 216px; width: 144px; height: 56px; padding: 4px 8px; }
-  #hearts { display: flex; gap: 4px; }
-  #toolsBox { left: 808px; top: 280px; width: 432px; height: 140px; padding: 5px 10px; }
-  .lbl { font-size: 12.5px; font-weight: 700; color: #a59fb3; }
-  .slots { display: flex; gap: 6px; margin: 3px 0 5px; }
+  #pocketBox { padding: 8px 12px 10px; border-style: dashed; }
+  #pocketBox.danger { border-color: #c4432b; }
+  #pocketBox.blink { border-color: #ffd25a; }
+  #pocketVal { font-size: 22px; margin-left: auto; color: #f2c14e; }
+  #pocketNote { font-size: 12.5px; color: #a59fb3; margin: 2px 0 8px 32px; min-height: 17px; }
+  #bReturn { width: 100%; height: 38px; font-size: 14px; position: relative; overflow: hidden; }
+  #bReturn .gauge { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,210,90,0.25); }
+  #bReturn.hot { border-color: #c4432b; }
+  #vaultBox { padding: 8px 12px 10px; }
+  #vaultTxt { font-size: 14px; white-space: nowrap; }
+  #goalTxt { font-size: 13px; margin-left: auto; white-space: nowrap; }
+  #payBar { height: 10px; background: #2a2633; position: relative; border: 1px solid #34303f; margin-top: 7px; }
+  #payBar i { position: absolute; top: 0; bottom: 0; left: 0; }
+  #payBar .v { background: #b87333; } #payBar .p { background: repeating-linear-gradient(90deg, #f2c14e 0 4px, transparent 4px 6px); }
+  #toolsBox { padding: 6px 12px 8px; }
+  .slots { display: flex; gap: 6px; margin-top: 4px; }
+  #useWrap { margin-top: 6px; }
   .slot { width: 48px; height: 48px; background: #2a2633; border: 2px solid #34303f; box-sizing: border-box; display: flex; align-items: center; justify-content: center; position: relative; transition: transform 0.08s; }
   .slot.empty { border-style: dashed; background: transparent; }
   .slot.pop { transform: translateY(-3px); border-color: #ffd25a; }
-  .uslot { width: 77px; height: 40px; line-height: 13px; font-size: 11px !important; background: #2a2633; border: 2px solid #34303f; box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding: 0 4px; font-size: 12px; font-weight: 700; color: #f1ece2; cursor: pointer; }
+  .uslot { width: 96px; height: 40px; line-height: 14px; font-size: 12px; background: #2a2633; border: 2px solid #34303f; box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding: 0 6px; font-weight: 700; color: #f1ece2; cursor: pointer; }
   .uslot .k { display: none; }
   .uslot.on { border-color: #ffd25a; background: #3a3220; color: #ffd25a; }
   .uslot.off { color: #5d5868; cursor: default; }
-  #descBox { left: 808px; top: 428px; width: 432px; height: 122px; padding: 5px 10px; font-size: 12.5px; line-height: 17px; overflow: hidden; }
+  #descBox { flex: 1 1 auto !important; min-height: 0; padding: 8px 12px; font-size: 13.5px; line-height: 20px; overflow: hidden; }
   #descBox b { color: #ffd25a; }
-  #bReturn { left: 808px; top: 556px; width: 432px; height: 40px; font-size: 14px; position: absolute; overflow: hidden; }
-  #bReturn .gauge { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: rgba(255,210,90,0.25); }
-  #bReturn.hot { border-color: #c4432b; }
-  #help { left: 808px; top: 602px; width: 432px; height: 102px; font-size: 12px; line-height: 16.5px; color: #a59fb3; padding: 4px 10px; }
-  #help b { color: #c9c3d6; }
-  #help .dbg { color: #6f6880; }
+  #hint { color: #f1ece2; font-weight: 700; min-height: 20px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #2a2633; }
+  #hint:empty { display: none; }
+  #descBody { color: #c9c3d6; }
+  /* 달력 */
+  .calRow { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
+  .cday { width: 46px; height: 46px; box-sizing: border-box; border: 2px solid #34303f; background: #26222e; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; flex: none; position: relative; }
+  .cday .n { font-size: 12px; color: #c9c3d6; }
+  .cday .inc { font-size: 11px; color: #f2c14e; font-weight: 700; }
+  .cday .inc.bad { color: #e5484d; }
+  .cday.past { background: #1d1a24; border-color: #2a2633; }
+  .cday.past .n { color: #6f6880; }
+  .cday.today { border-color: #ffd25a; background: #3a3220; }
+  .cday.today .n { color: #ffd25a; }
+  .cday.stampDay { border-radius: 50%; border-style: dashed; border-color: #a59fb3; }
+  .cday.stampDay.today { border-style: solid; border-color: #ffd25a; }
+  .cday.stamped { border: 3px solid #b8322a; border-style: solid; background: rgba(184,50,42,0.12); }
+  .cday.stamped .n { color: #e5484d; }
+  .calSide { flex: 1; min-width: 0; margin-left: 10px; font-size: 13.5px; line-height: 19px; }
+  .calSide .amt { font-weight: 700; }
+  .calSide .note { font-size: 12.5px; }
   button { font-family: inherit; font-size: 14px; font-weight: 700; color: #f1ece2; background: #2a2633; border: 2px solid #34303f; padding: 6px 12px; cursor: pointer; }
   button:hover { border-color: #ffd25a; }
   button:disabled { color: #5d5868; border-color: #2a2633; cursor: default; }
@@ -157,7 +185,7 @@
   <div id="hdr" class="abs">
     <div id="floorName" data-term="지하 층">지하 <span class="px">1</span>층</div>
     <div id="sign" data-term="광맥"><span id="signIc"></span><div style="min-width:0"><div class="nm" id="signName"></div><div class="tx" id="signText"></div></div></div>
-    <div id="hdrRight"><span id="mutIcons"></span><span id="stairSt"></span><div id="dayTxt"></div><div id="moonWrap"></div></div>
+    <div id="hdrRight"><span id="mutIcons"></span><span id="stairSt"></span></div>
   </div>
   <canvas id="tally" class="abs" width="16" height="528"></canvas>
   <div id="boardWrap" class="abs"><canvas id="board" width="720" height="528" aria-label="탑다운 채굴 판"></canvas></div>
@@ -165,34 +193,41 @@
   <div id="orderLine" class="abs"></div>
   <div id="log" class="abs panel"></div>
 
-  <div id="pocketBox" class="abs panel">
-    <div class="prow"><span id="pouchIc"></span><span class="lbl" style="font-size:14px;color:#f1ece2" data-term="오늘 주머니">오늘 주머니</span><span id="pocketBadge"></span><span id="pocketVal" class="px">0</span></div>
-    <div id="goalTxt" data-term="도장"></div>
-    <div class="prow"><span id="coinsIc"></span><span id="vaultTxt" data-term="금고"></span><div id="payBar"><i class="v"></i><i class="p"></i></div></div>
-  </div>
-  <div id="candleBox" class="abs panel">
-    <canvas id="candleCv" width="24" height="24"></canvas>
-    <div id="candleMain">
-      <div class="prow"><span class="lbl" style="font-size:14px;color:#f1ece2" data-term="촛불">촛불</span><span id="candleVal" class="px">80</span><span id="awakeBadge"></span></div>
-      <div id="candleBar"><i></i><b></b></div>
-      <div id="embersRow"></div>
-      <div id="candleCost"></div>
+  <div id="side" class="abs">
+    <div id="runBar" class="panel">
+      <div id="runDay"></div><div id="runLeft"></div><span style="flex:1"></span>
+      <button id="bCal" class="ibtn" aria-label="달력">달력</button>
+      <button id="bGear" class="ibtn" aria-label="설정">설정</button>
     </div>
+    <div id="candleBox" class="panel">
+      <canvas id="candleCv" width="24" height="24"></canvas>
+      <div id="candleMain">
+        <div class="prow"><span class="lbl big" data-term="촛불">촛불</span><span id="candleVal" class="px">80</span><span id="awakeBadge"></span><div id="hearts" data-term="체력"></div></div>
+        <div id="candleBar"><i></i><s></s><b></b></div>
+        <div id="embersRow"></div>
+        <div id="candleCost"></div>
+      </div>
+    </div>
+    <div id="streakBox" class="panel">
+      <div class="prow" style="height:22px"><canvas id="flameCv" width="10" height="10" style="width:20px;height:20px;image-rendering:pixelated"></canvas><span class="lbl big" data-term="콤보">콤보</span><span id="streakVal" class="px">×1</span></div>
+      <div class="prow" style="margin-top:4px"><div id="streakSteps"></div><div id="streakNext"></div></div>
+    </div>
+    <div id="pocketBox" class="panel">
+      <div class="prow"><span id="pouchIc"></span><span class="lbl big" data-term="오늘 주머니">오늘 주머니</span><span id="pocketVal" class="px">0</span></div>
+      <div id="pocketNote"></div>
+      <button id="bReturn"><span class="gauge"></span><span style="position:relative">올라가기</span></button>
+    </div>
+    <div id="vaultBox" class="panel">
+      <div class="prow"><span id="coinsIc"></span><span id="vaultTxt" data-term="금고"></span><span id="goalTxt" data-term="도장"></span></div>
+      <div id="payBar"><i class="v"></i><i class="p"></i></div>
+    </div>
+    <div id="toolsBox" class="panel">
+      <div class="lbl" id="ownLbl" data-term="가진 도구">가진 도구 0/5</div>
+      <div class="slots" id="ownSlots"></div>
+      <div id="useWrap"><div class="lbl" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="slots" id="useSlots"></div></div>
+    </div>
+    <div id="descBox" class="panel"><div id="hint"></div><div id="descBody"></div></div>
   </div>
-  <div id="streakBox" class="abs panel">
-    <div class="prow" style="height:22px"><canvas id="flameCv" width="10" height="10" style="width:20px;height:20px;image-rendering:pixelated"></canvas><span class="lbl" data-term="콤보">콤보</span><span id="streakVal" class="px">×1</span></div>
-    <div class="prow" style="margin-top:4px"><div id="streakSteps"></div><div id="streakNext"></div></div>
-  </div>
-  <div id="hpBox" class="abs panel"><div class="lbl" data-term="체력">체력</div><div id="hearts"></div></div>
-  <div id="toolsBox" class="abs panel">
-    <div class="lbl" id="ownLbl" data-term="가진 도구">가진 도구 0/5</div>
-    <div class="slots" id="ownSlots"></div>
-    <div class="lbl" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div>
-    <div class="slots" id="useSlots"></div>
-  </div>
-  <div id="descBox" class="abs panel"></div>
-  <button id="bReturn" class="abs"><span class="gauge"></span><span style="position:relative">올라가기</span></button>
-  <div id="help" class="abs panel"></div>
   <div id="fxLayer"></div>
   <div id="termTip"></div>
   <div id="ov"></div>
