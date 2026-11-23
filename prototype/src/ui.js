@@ -850,7 +850,8 @@ function hintText() {
   if (c.cover !== 'open') {
     var isX = c.mark === 1, verb = isX ? '터뜨려요' : '캐요', cost = isX ? Core.igniteCost(run) : Core.hitCost(run);
     if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(aimTxt(c));
-    return !settings.aim && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' + verb + ' · 촛불 −' + cost : '누르면 옆으로 가요. 한 번 더 누르면 ' + verb;
+    if (!settings.aim) return (Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' : '누르면 걸어가서 ') + verb + ' · 촛불 −' + cost;
+    return '누르면 옆으로 가요. 한 번 더 누르면 ' + verb;
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
@@ -1156,9 +1157,9 @@ function shopHtml(merchant) {
 function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
-    tg('oAim', '조준', settings.aim, '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨려요') + tg('oShake', '화면 흔들림', settings.shake) +
+    tg('oAim', '조준', settings.aim, '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨려요. 끄면 한 번에 걸어가서 해요') + tg('oShake', '화면 흔들림', settings.shake) +
     tg('oFlash', '지뢰 플래시', settings.flash) +
-    '<div class="note" style="margin-top:2px">키보드로도 할 수 있어요: WASD·방향키 이동 · QEZC 대각 · Space 캐기 · F 분필 · B 발파 · 1 두드려 보기 · 2~4 한 번 쓰는 물건 · R 올라가기 · Tab 가방 · Esc 설정</div>' +
+    '<div class="note" style="margin-top:2px">키보드: Esc 설정 · Tab 가방 · R 올라가기 · Enter·Space 다음 화면 · 숫자 키로 카드 고르기</div>' +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
     '<div class="note" style="margin-top:2px">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '</div>' +
     '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
@@ -1437,6 +1438,7 @@ function clickCell(p) {
   if (ui.mode) { modeClick(p); return; }
   if (c.cover !== 'open') {
     var adj = Core.cheb(d.px, d.py, p.x, p.y) === 1, aimedHere = ui.aim && ui.aim.x === p.x && ui.aim.y === p.y;
+    if (!adj && !settings.aim) { var ra0 = Core.approach(run, p.x, p.y); if (!ra0.ok) { noPath(p); return; } adj = true; }   // R93: 조준이 꺼져 있으면 떨어진 칸도 걸어가서 바로
     if (adj && (aimedHere || !settings.aim)) {   // R92: 바위는 캐고, X 칸은 터뜨려요
       d.face = { dx: p.x - d.px, dy: p.y - d.py };
       var r = c.mark === 1 ? Core.ignite(run, p.x, p.y) : Core.hit(run, p.x, p.y); if (r.ok) ui.aim = null; afterAction(); return;
@@ -1458,13 +1460,7 @@ function clickCell(p) {
 }
 
 // ---------- 입력 ----------
-// 키보드 단축키(늘 켜짐, R87). 판 화면에는 표시하지 않고 설정 창에만 적는다(R53)
-var MOVE_KEYS = {
-  ArrowUp: [0, -1], KeyW: [0, -1], Numpad8: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], Numpad2: [0, 1],
-  ArrowLeft: [-1, 0], KeyA: [-1, 0], Numpad4: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0], Numpad6: [1, 0],
-  KeyQ: [-1, -1], Numpad7: [-1, -1], KeyE: [1, -1], Numpad9: [1, -1], KeyZ: [-1, 1], Numpad1: [-1, 1], KeyC: [1, 1], Numpad3: [1, 1]
-};
-function keyAim() { var d = run.d; return { x: d.px + d.face.dx, y: d.py + d.face.dy }; }
+// 키보드(R93): 판 위 조작(이동·캐기·분필·발파)은 마우스로만. 키는 창 넘기기·고르기와 Esc·Tab·R만 남긴다
 document.addEventListener('keydown', function (e) {
   if (ui.sweep) { e.preventDefault(); if (!e.repeat) endSweep(); return; }
   if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
@@ -1521,16 +1517,6 @@ document.addEventListener('keydown', function (e) {
   if (ui.sub === 'bag') { if (code === 'Tab') { ui.sub = null; renderOverlay(); } return; }
   if (ui.sub) return;
   if (code === 'Tab') { ui.sub = 'bag'; renderOverlay(); return; }
-  bubbleOnAction();
-  var k = keyAim();
-  if (MOVE_KEYS[code]) { var mv = MOVE_KEYS[code]; Core.move(run, mv[0], mv[1]); var ka = keyAim(), kc = Core.cellAt(run.d.floor, ka.x, ka.y); ui.aim = kc && kc.cover !== 'open' ? ka : null; afterAction(); return; }
-  if (code === 'Space') { if (!e.repeat) { var kc2 = Core.cellAt(run.d.floor, k.x, k.y); if (kc2 && kc2.mark === 1) Core.ignite(run, k.x, k.y); else Core.hit(run, k.x, k.y); afterAction(); } return; }
-  if (code === 'KeyF') { Core.mark(run, k.x, k.y); afterAction(); return; }
-  if (code === 'Digit1') { if (modeOk('probe')) { Core.probe(run, k.x, k.y); afterAction(); } return; }
-  if (code === 'KeyB') { Core.ignite(run, k.x, k.y); afterAction(); return; }
-  var am = /^Digit([2-4])$/.exec(code);
-  if (am) { Core.useCons(run, +am[1] - 2, k.x, k.y); afterAction(); return; }
-  if (code === 'Enter' || code === 'NumpadEnter') { openFork(); return; }
   if (code === 'KeyR' && !e.repeat) askReturn();
 });
 OV.addEventListener('click', function (e) {
