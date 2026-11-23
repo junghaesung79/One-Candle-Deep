@@ -120,3 +120,4 @@ export declare const TUTORIAL_MUT8: string;
 export declare const TEXT: any;
 export declare const TUTORIAL: any;
 export declare const TREASURE_NAMES: Record<number, string>;
+export declare const CHARACTERS: any[];

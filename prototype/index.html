@@ -92,6 +92,17 @@
   .uslot .k { display: none; }
   .uslot.on { border-color: #ffd25a; background: #3a3220; color: #ffd25a; }
   .uslot.off { color: #5d5868; cursor: default; }
+  #charBox { padding: 6px 12px; font-size: 13px; }
+  .skRow { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .mk { width: 18px; height: 18px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid; font-family: Consolas, Menlo, monospace; }
+  .mk.x { color: #ff8f6b; border-color: #c4432b; } .mk.o { color: #7fe9ef; border-color: #3e8a8a; }
+  .charList { display: flex; flex-direction: column; gap: 6px; }
+  .charPick { display: flex; align-items: center; gap: 10px; padding: 4px 10px; background: #1d1a24; border: 2px solid #34303f; cursor: pointer; }
+  .charPick:hover { border-color: #6f6880; }
+  .charPick.sel { border-color: #ffd25a; background: #2a2418; }
+  .charPick .nm { font-size: 15px; font-weight: 700; }
+  .charInfo { margin-top: 10px; padding: 10px 12px; font-size: 14px; line-height: 20px; }
+  .charInfo .skDesc { margin: 2px 0 6px 23px; }
   #descBox { flex: 1 1 auto !important; min-height: 0; padding: 8px 12px; font-size: 13.5px; line-height: 20px; overflow: hidden; }
   #descBox b { color: #ffd25a; }
   #hint { color: #f1ece2; font-weight: 700; min-height: 20px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #2a2633; }
@@ -227,6 +238,7 @@
       <div class="slots" id="ownSlots"></div>
       <div id="useWrap"><div class="lbl" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="slots" id="useSlots"></div></div>
     </div>
+    <div id="charBox" class="panel"></div>
     <div id="descBox" class="panel"><div id="hint"></div><div id="descBody"></div></div>
   </div>
   <div id="fxLayer"></div>

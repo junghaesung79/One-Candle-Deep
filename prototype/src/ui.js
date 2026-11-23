@@ -1,4 +1,4 @@
-import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES } from './core.js';
+import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES, CHARACTERS } from './core.js';
 import { SPR, iconHtml } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
@@ -79,7 +79,7 @@ function startNewRun(tutorial, o) {
   var grade = tutorial ? 1 : Math.max(1, Math.min(settings.gradeOpen || 1, o.grade || settings.grade || 1));
   var daily = !tutorial && o.daily ? todayStr() : null;
   var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : (Date.now() & 0x7fffffff);
-  run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
+  run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: settings.char });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
   ui.shownAt = performance.now(); ui.mode = null; ui.aim = null;
@@ -475,7 +475,7 @@ function drawBoard(now) {
   }
   // 광부 + 곡괭이 불꽃(콤보 단계)
   var hurt = anim.hurtT && now > anim.hurtT && now - anim.hurtT < 600;
-  if (!(hurt && Math.floor(now / 80) % 2)) g.drawImage(SPR.miner, d.px * T, d.py * T, T, T);
+  if (!(hurt && Math.floor(now / 80) % 2)) g.drawImage(SPR.minerBy[run.char] || SPR.miner, d.px * T, d.py * T, T, T);
   drawPickFlame(g, d.px * T + 34, d.py * T + 2, d.streak, now);
   keyLabels.forEach(function (k) { drawCellLabel(g, f, k[0], k[1], k[2]); });
   // 튀어 오르는 것들
@@ -792,6 +792,20 @@ function updateHUD() {
     var hs = ''; for (var k = 0; k < d.hpMax; k++) hs += iconHtml(k < d.hp ? 'heart' : 'heartE', 28);
     $('hearts').innerHTML = hs;
   }
+  // 캐릭터 칸: 지금 캐릭터와 X·O 스킬(마우스를 올리면 설명 칸에 자세히)
+  var chc = Core.charOf(run), ckey = chc.id + '|' + (d ? d.survey + '/' + d.surveyMax + '|' + Core.igniteCost(run) : '');
+  if ($('charBox')._k !== ckey) {
+    $('charBox')._k = ckey;
+    var xExtra = '촛불 ' + (d ? Core.igniteCost(run) : CONFIG.igniteCost + (chc.igniteDelta || 0));
+    var oExtra = chc.id === 'surveyor' ? (d ? '오늘 ' + d.survey + '/' + d.surveyMax + '번' : '하루 ' + chc.surveyPerDay + '번') : '';
+    $('charBox').innerHTML = '<div class="prow">' + iconHtml('minerBy.' + chc.id, 32) + '<div style="min-width:0;flex:1"><div class="prow" style="gap:6px"><b style="font-size:15px">' + esc(chc.name) + '</b>' +
+      (chc.weak ? '<span class="note warnTxt" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(chc.weak) + '</span>' : chc.perk ? '<span class="note acc">' + esc(chc.perk) + '</span>' : '') + '</div>' +
+      '<div class="prow" style="gap:14px;margin-top:2px"><span data-skill="x">' + skillRow('x', chc.x, xExtra) + '</span><span data-skill="o">' + skillRow('o', chc.o, oExtra) + '</span></div></div></div>';
+    $('charBox').querySelectorAll('[data-skill]').forEach(function (el) {
+      el.onmouseenter = function () { var k = el.getAttribute('data-skill'), sk = Core.charOf(run)[k]; ui.desc = '<b>' + (k === 'x' ? 'X 칸' : 'O 칸') + ' · ' + esc(sk.name) + '</b><br>' + esc(sk.desc); ui.hudDirty = true; };
+      el.onmouseleave = function () { ui.desc = null; ui.hudDirty = true; };
+    });
+  }
   // 도구 칸
   $('ownLbl').textContent = '가진 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots;
   var os = '';
@@ -865,7 +879,9 @@ function hintText() {
   if (!h) { var ac0 = ui.aim && Core.cellAt(d.floor, ui.aim.x, ui.aim.y); return ac0 ? esc(aimTxt(ac0)) : ''; }
   var c = Core.cellAt(d.floor, h.x, h.y);
   if (c.cover !== 'open') {
-    var isX = c.mark === 1, verb = isX ? '터뜨려요' : '캐요', cost = isX ? Core.igniteCost(run) : Core.hitCost(run);
+    var ch = Core.charOf(run), isX = c.mark === 1, survey = c.mark === 2 && d.survey > 0;
+    var verb = isX ? (ch.id === 'defuser' ? '해체해요' : ch.id === 'blaster' ? '크게 터뜨려요' : '터뜨려요') : survey ? '청진하고 캐요' : (c.mark === 2 && ch.id === 'gambler') ? '걸고 캐요' : '캐요';
+    var cost = isX ? Core.igniteCost(run) : Core.hitCost(run) + (survey ? CONFIG.probeCost : 0);
     if (!settings.aim) ui.preCost = cost;
     if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(aimTxt(c));
     if (!settings.aim) return (Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' : '누르면 걸어가서 ') + verb + ' · 촛불 −' + cost;
@@ -894,6 +910,20 @@ function stampNm(day) { var i = stampIdx(day); return i >= 0 ? Core.stampNames(r
 var NUM_KO = ['', '한', '두', '세', '네', '다섯', '여섯'];
 function gradeName(g) { return CONFIG.gradeNames[(g || 1) - 1] || CONFIG.gradeNames[0]; }
 function bestKey() { return run.daily ? 'daily:' + run.daily : 'grade:' + (run.grade || 1); }
+// 캐릭터 고르기(권리증 화면 오른쪽). 첫 판은 광부로만 해요
+function skillRow(k, sk, extra) { return '<div class="skRow"><span class="mk ' + k + '">' + (k === 'x' ? 'X' : 'O') + '</span><b>' + esc(sk.name) + '</b>' + (extra ? ' <span class="muted">' + extra + '</span>' : '') + '</div>'; }
+function charPickHtml() {
+  var cur = Core.charOf(run), list = run.tutorial ? CHARACTERS.slice(0, 1) : CHARACTERS;
+  var h = '<div style="flex:1;min-width:0"><div class="lbl big" style="margin-bottom:8px">누구로 캘까요?</div><div class="charList">';
+  list.forEach(function (c) {
+    h += '<div class="charPick' + (c.id === cur.id ? ' sel' : '') + '" data-char="' + c.id + '">' + iconHtml('minerBy.' + c.id, 40) + '<div style="min-width:0"><div class="nm">' + esc(c.name) + '</div><div class="note">X ' + esc(c.x.name) + ' · O ' + esc(c.o.name) + '</div></div></div>';
+  });
+  h += '</div><div class="panel charInfo"><div style="color:#c9c3d6;margin-bottom:6px">' + esc(cur.line) + '</div>' +
+    skillRow('x', cur.x) + '<div class="note skDesc">' + esc(cur.x.desc) + '</div>' + skillRow('o', cur.o) + '<div class="note skDesc">' + esc(cur.o.desc) + '</div>' +
+    (cur.perk ? '<div class="acc" style="margin-top:6px">' + esc(cur.perk) + '</div>' : '') + (cur.weak ? '<div class="warnTxt" style="margin-top:4px">약점: ' + esc(cur.weak) + '</div>' : '') + '</div>' +
+    (run.tutorial ? '<div class="note" style="margin-top:8px">첫 판은 광부로 해요. 첫 판 안내를 건너뛰면 다른 사람도 고를 수 있어요.</div>' : '') + '</div>';
+  return h;
+}
 function deedHtml(stampsShown, anim) {
   var P = Core.payments(run);
   var h = '<div class="deedCard"><div class="ttl">' + gradeName(run.grade) + ' 권리증 (가)' + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</div><div style="font-size:14px;margin-bottom:6px">광산 값은 ' + NUM_KO[P.length] + ' 번에 나눠 내요. 낼 때마다 도장 하나예요.</div>';
@@ -915,7 +945,7 @@ function recordDay() {
   var h = run.history[run.history.length - 1];
   var list = playlogLoad();
   list.push({ at: new Date().toISOString(), seed: run.seed, tutorial: !!run.tutorial, day: h.day, ms: Date.now() - ui.dayT0, clicks: ui.dayClicks || 0,
-              reason: h.reason, income: h.income, depth: h.depth, candleLeft: h.candleLeft, hpLeft: run.d ? run.d.hp : null, stamps: run.stamps,
+              char: run.char, reason: h.reason, income: h.income, depth: h.depth, candleLeft: h.candleLeft, hpLeft: run.d ? run.d.hp : null, stamps: run.stamps,
               uncertain: uncertainOf(h.rec), rec: h.rec });
   playlogSave(list);
 }
@@ -937,7 +967,7 @@ function renderOverlay() {
   var p = run.phase, h = '';
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
   if (p === 'deed') {
-    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:620px;border:none;background:transparent;text-align:left">' +
+    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1060px;border:none;background:transparent;text-align:left;display:flex;gap:28px;align-items:flex-start"><div style="width:620px;flex:none">' +
       '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0) +
       '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
       '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
@@ -945,7 +975,7 @@ function renderOverlay() {
       (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '</span>') +
       '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
       (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
-      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>';
+      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + charPickHtml() + '</div>';
   } else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
   else if (p === 'mine' && ui.sub === 'fork') h = forkHtml();
@@ -1188,7 +1218,7 @@ function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추). 화�
     '<h3 style="margin-top:14px">이번 판</h3><div style="display:flex;gap:6px"><button id="oRestart" style="flex:1">새 판 시작</button><button id="oRestartTut" style="flex:1">첫 판 안내로 다시</button><button id="oGiveUp" style="flex:1">판 포기</button></div>' +
     '<h3 style="margin-top:14px">기록</h3><div class="note">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '<br>' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button><button id="oOpening" style="flex:1">오프닝 만화 다시 보기</button></div>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · 시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
 function openingHtml() {
@@ -1302,6 +1332,7 @@ function bindOverlay() {
   on('oDaily', function () { startNewRun(false, { daily: true }); });
   on('oNormal', function () { startNewRun(false); });
   on('oGiftCash', function () { giftGo(-1); });
+  OV.querySelectorAll('[data-char]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (run.phase !== 'deed' || run.d) return; run.char = b.getAttribute('data-char'); settings.char = run.char; saveSettings(); renderOverlay(); ui.hudDirty = true; }; });
   OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
   on('oAim', function () { settings.aim = !settings.aim; ui.aim = null; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });

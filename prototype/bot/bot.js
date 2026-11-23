@@ -159,6 +159,7 @@ class Bot {
       const b = bestUnk();
       if (!b.c || b.p < thr) return null;
       if (Core.owns(run, 'betchalk') && b.p >= (o.betO || 0.8) && b.c.mark !== 2) Core.mark(run, b.c.x, b.c.y, 2);
+      else if (d.survey > 0 && !b.c.mark) Core.mark(run, b.c.x, b.c.y, 2);   // 측량사: 거는 칸에 O를 그어 청진으로 캔다
       return b.c;
     };
     // 실수(처음 하는 사람): 가끔 확인 안 한 위험 칸을 친다
@@ -288,7 +289,8 @@ class Bot {
           if (Core.approach(run, c.x, c.y).ok) { const r = Core.probe(run, c.x, c.y); if (r.ok) return true; }
         }
         if (c.probe === 'mine') { this.tried.add(c); return true; }
-        if ((d.hp >= 3 && ph <= 0.5) || (d.hp === 2 && ph <= 0.34) || ph <= 0.2 || c.probe === 'safe') return this.dig(run, c, 'guessDigs');
+        if (d.survey > 0 && !c.mark && ph > 0.15) Core.mark(run, c.x, c.y, 2);   // 측량사: 위험한 칸은 청진으로
+        if ((d.hp >= 3 && ph <= 0.5) || (d.hp === 2 && ph <= 0.34) || ph <= 0.2 || c.probe === 'safe' || (c.mark === 2 && d.survey > 0)) return this.dig(run, c, 'guessDigs');
       }
     }
     return false;
@@ -483,7 +485,7 @@ function playRun(env, seed, opts) {
   opts = opts || {};
   const Core = env.Core, bot = new Bot(env, Object.assign({ botSeed: seed }, opts));
   const tut = opts.tutorial != null ? !!opts.tutorial : !!bot.o.tutorial;
-  const run = Core.newRun(seed, { tutorial: tut, grade: opts.grade || 1 });
+  const run = Core.newRun(seed, { tutorial: tut, grade: opts.grade || 1, char: opts.char });
   if (opts.mutations) run.mutationPlan = Object.assign({}, opts.mutations);
   if (opts.startTools) opts.startTools.forEach(id => { run.owned.push(id); run.paidFor[id] = Core.TOOL_BY_ID[id].price; });
   const days = [], pays = [];

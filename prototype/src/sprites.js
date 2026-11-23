@@ -1,4 +1,4 @@
-import { Core, CONFIG } from './core.js';
+import { Core, CONFIG, CHARACTERS } from './core.js';
 
 // ================= 스프라이트 (문자열 + 팔레트, 3배 표시). 1차 시안 A 스프라이트를 그대로 쓰고 2차 요소를 같은 톤으로 더했다 =================
 var SPR = {};
@@ -49,6 +49,7 @@ function iconHtml(name, size, cls) {
   var MINER = ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "..oYYYYYYYYYYo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"];
   var MIP = { o: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', f: '#f0c39a', F: '#c9936a', e: '#1a1420', r: '#c4432b', d: '#3e5f8a' };
   SPR.miner = mkSprite(MINER, MIP);
+  SPR.minerBy = {}; CHARACTERS.forEach(function (c) { SPR.minerBy[c.id] = mkSprite(MINER, Object.assign({}, MIP, { r: c.color })); });   // 캐릭터마다 셔츠 색만 달라요
   var CHALK = ["................", "................", "................", "...ww......ww...", "....ww....ww....", ".....ww..ww.....", "......wwww......", ".......ww.......", "......wwww......", ".....ww..ww.....", "....ww....ww....", "...ww......ww...", "..ww........ww..", "................", "................", "................"];
   SPR.chalkX = mkSprite(CHALK, { w: '#e6e1d6' });
   var O = blank();
