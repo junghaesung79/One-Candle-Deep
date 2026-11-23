@@ -3,7 +3,7 @@ import { SPR, iconHtml, moonCanvas } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
 var run = null;
-var settings = { shake: true, flash: true, tutorialDone: false, best: 0, quickDig: false, openingSeen: false, gradeOpen: 1, grade: 1, bestBy: {}, bubblesOnce: {} };   // R54: 바로 캐기(기본 꺼짐). R87: 키보드 단축키·범례·말풍선은 늘 켜짐
+var settings = { shake: true, flash: true, tutorialDone: false, best: 0, aim: false, openingSeen: false, gradeOpen: 1, grade: 1, bestBy: {}, bubblesOnce: {} };   // R92: 조준(기본 꺼짐, 끄면 옆 칸은 한 번에 캐고 X는 한 번에 터뜨려요). R87: 키보드 단축키·범례·말풍선은 늘 켜짐
 try { var sv = JSON.parse(localStorage.getItem('ocd2_settings') || 'null'); if (sv) settings = Object.assign(settings, sv); } catch (e) {}
 // 주소 뒤에 ?preset=v21 을 붙이면 2차 기획 v2.1 규칙으로 해 볼 수 있어요(플레이테스트 비교용)
 try { var qpreset = new URLSearchParams(location.search).get('preset'); if (qpreset) Core.applyPreset(qpreset); } catch (e) {}
@@ -82,7 +82,7 @@ function startNewRun(tutorial, o) {
   run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
-  ui.shownAt = performance.now(); ui.mode = null; ui.aim = null; ui.quickTipNow = false;
+  ui.shownAt = performance.now(); ui.mode = null; ui.aim = null;
   ui.opening = tutorial && !settings.openingSeen ? 0 : null;   // R52: 첫 판만 자동
   anim.pend = {}; anim.pops = [];
   renderOverlay(); ui.hudDirty = true;
@@ -463,7 +463,7 @@ function drawBoard(now) {
     } else {
       if (ui.aim) {
         var ac = Core.cellAt(f, ui.aim.x, ui.aim.y);
-        if (ac && ac.cover !== 'open') { drawBrackets(g, ui.aim.x * T, ui.aim.y * T, '#f1ece2'); if (run.tutorial && run.day === 1 && !ui.firstBreakDone) keyLabels.push([ui.aim.x, ui.aim.y, '한 번 더 클릭']); }
+        if (ac && ac.cover !== 'open') { drawBrackets(g, ui.aim.x * T, ui.aim.y * T, ac.mark === 1 ? '#ff8a3d' : '#f1ece2'); if (run.tutorial && run.day === 1 && !ui.firstBreakDone) keyLabels.push([ui.aim.x, ui.aim.y, '한 번 더 클릭']); }
       }
       if (ui.hover && !(ui.aim && ui.aim.x === ui.hover.x && ui.aim.y === ui.hover.y)) {
         var hc = Core.cellAt(f, ui.hover.x, ui.hover.y);
@@ -843,12 +843,14 @@ function bindSlotEvents() {
 function hintText() {
   var d = run.d; if (!d || run.phase !== 'mine') return '';
   if (ui.mode) return '오른쪽 클릭이나 버튼을 다시 누르면 그만둬요';
-  var h = ui.hover; if (!h) return ui.aim ? esc(TEXT.ops.aimed.replace('{n}', Core.hitCost(run))) : '';
+  var h = ui.hover;
+  var aimTxt = function (q) { return q.mark === 1 ? '한 번 더 누르면 터뜨려요 · 촛불 −' + Core.igniteCost(run) : TEXT.ops.aimed.replace('{n}', Core.hitCost(run)); };
+  if (!h) { var ac0 = ui.aim && Core.cellAt(d.floor, ui.aim.x, ui.aim.y); return ac0 ? esc(aimTxt(ac0)) : ''; }
   var c = Core.cellAt(d.floor, h.x, h.y);
   if (c.cover !== 'open') {
-    if (c.mark === 1) return esc(TEXT.ops.xHover);
-    if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(TEXT.ops.aimed.replace('{n}', Core.hitCost(run)));
-    return settings.quickDig && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 캐요 · 촛불 −' + Core.hitCost(run) : '누르면 옆으로 가요. 한 번 더 누르면 캐요';
+    var isX = c.mark === 1, verb = isX ? '터뜨려요' : '캐요', cost = isX ? Core.igniteCost(run) : Core.hitCost(run);
+    if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(aimTxt(c));
+    return !settings.aim && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' + verb + ' · 촛불 −' + cost : '누르면 옆으로 가요. 한 번 더 누르면 ' + verb;
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
@@ -1049,8 +1051,6 @@ function settleHtml() {
   if (o) { var def = Core.ORDER_BY_ID[o.id]; h += '<div class="fadein note" style="animation-delay:' + (delay + 900) + 'ms;font-size:14px">주문 ' + esc(def.text) + ': ' + (o.done ? '<span class="acc">달성</span>' : Math.min(o.prog, def.goal) + '/' + def.goal + ' · 못 이룸') + '</div>'; }
   var np = Core.nextPayment(run);
   if (np) h += '<div class="fadein" style="animation-delay:' + (delay + 900) + 'ms;margin-top:8px;font-size:15px">' + goalLine(run) + '</div>';
-  if (run.tutorial && S.day === 1 && !settings.quickDig && !settings.quickTip) { settings.quickTip = true; saveSettings(); ui.quickTipNow = true; }   // R54 첫 판 Day 1 끝 한 번 안내
-  if (ui.quickTipNow && S.day === 1) h += '<div class="fadein panel" style="animation-delay:' + (delay + 950) + 'ms;margin-top:8px;padding:6px 10px;font-size:14px;border-color:#a8781c">' + esc(TEXT.ops.quick) + '</div>';
   h += '<div class="fadein" style="animation-delay:' + (delay + 1000) + 'ms;margin-top:14px;text-align:right"><button class="primary" id="oNext">' + (S.payDay ? '도장 찍으러 가기' : '상점으로') + '</button></div></div>';
   return h;
 }
@@ -1156,7 +1156,7 @@ function shopHtml(merchant) {
 function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
-    tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oShake', '화면 흔들림', settings.shake) +
+    tg('oAim', '조준', settings.aim, '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨려요') + tg('oShake', '화면 흔들림', settings.shake) +
     tg('oFlash', '지뢰 플래시', settings.flash) +
     '<div class="note" style="margin-top:2px">키보드로도 할 수 있어요: WASD·방향키 이동 · QEZC 대각 · Space 캐기 · F 분필 · B 발파 · 1 두드려 보기 · 2~4 한 번 쓰는 물건 · R 올라가기 · Tab 가방 · Esc 설정</div>' +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
@@ -1246,7 +1246,7 @@ function bindOverlay() {
   on('oNormal', function () { startNewRun(false); });
   on('oGiftCash', function () { giftGo(-1); });
   OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
-  on('oQuick', function () { settings.quickDig = !settings.quickDig; saveSettings(); renderOverlay(); });
+  on('oAim', function () { settings.aim = !settings.aim; ui.aim = null; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
   on('oLogGet', playlogDownload);
   on('oLogClear', function () { askConfirm('기록된 하루 ' + playlogLoad().length + '개를 지울까요? 되돌릴 수 없어요', function () { playlogSave([]); ui.sub = 'pause'; renderOverlay(); }, { yes: '지우기', no: '그대로 두기' }); });
@@ -1431,16 +1431,15 @@ function modeClick(p) {
   if (r.ok) ui.mode = null;
   afterAction();
 }
-// 왼쪽 클릭(R54): 바위 → 옆으로 가서 조준, 조준된 바위 → 캐기. 바로 캐기면 옆 바위는 한 번에
+// 왼쪽 클릭(R92): 떨어진 바위·X → 옆으로 가서 조준, 옆 칸 → 바위는 캐기, X는 발파. 설정 '조준'을 켜면 옆 칸도 한 번은 조준
 function clickCell(p) {
   var d = run.d, f = d.floor, c = Core.cellAt(f, p.x, p.y);
   if (ui.mode) { modeClick(p); return; }
   if (c.cover !== 'open') {
-    if (c.mark === 1) { ui.aim = null; say(TEXT.ops.xCell, p); return; }   // R57: X 칸은 캐지지 않는다
-    var adj = Core.cheb(d.px, d.py, p.x, p.y) === 1;
-    if (adj && ((ui.aim && ui.aim.x === p.x && ui.aim.y === p.y) || settings.quickDig)) {
+    var adj = Core.cheb(d.px, d.py, p.x, p.y) === 1, aimedHere = ui.aim && ui.aim.x === p.x && ui.aim.y === p.y;
+    if (adj && (aimedHere || !settings.aim)) {   // R92: 바위는 캐고, X 칸은 터뜨려요
       d.face = { dx: p.x - d.px, dy: p.y - d.py };
-      var r = Core.hit(run, p.x, p.y); if (r.ok) ui.aim = null; afterAction(); return;
+      var r = c.mark === 1 ? Core.ignite(run, p.x, p.y) : Core.hit(run, p.x, p.y); if (r.ok) ui.aim = null; afterAction(); return;
     }
     if (!adj) { var ra = Core.approach(run, p.x, p.y); if (!ra.ok) { noPath(p); return; } }
     else d.face = { dx: p.x - d.px, dy: p.y - d.py };
@@ -1525,7 +1524,7 @@ document.addEventListener('keydown', function (e) {
   bubbleOnAction();
   var k = keyAim();
   if (MOVE_KEYS[code]) { var mv = MOVE_KEYS[code]; Core.move(run, mv[0], mv[1]); var ka = keyAim(), kc = Core.cellAt(run.d.floor, ka.x, ka.y); ui.aim = kc && kc.cover !== 'open' ? ka : null; afterAction(); return; }
-  if (code === 'Space') { if (!e.repeat) { var kc2 = Core.cellAt(run.d.floor, k.x, k.y); if (kc2 && kc2.mark === 1) say(TEXT.ops.xCell, k); else { Core.hit(run, k.x, k.y); afterAction(); } } return; }
+  if (code === 'Space') { if (!e.repeat) { var kc2 = Core.cellAt(run.d.floor, k.x, k.y); if (kc2 && kc2.mark === 1) Core.ignite(run, k.x, k.y); else Core.hit(run, k.x, k.y); afterAction(); } return; }
   if (code === 'KeyF') { Core.mark(run, k.x, k.y); afterAction(); return; }
   if (code === 'Digit1') { if (modeOk('probe')) { Core.probe(run, k.x, k.y); afterAction(); } return; }
   if (code === 'KeyB') { Core.ignite(run, k.x, k.y); afterAction(); return; }

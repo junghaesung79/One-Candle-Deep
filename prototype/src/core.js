@@ -291,7 +291,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
     mine: '지뢰를 터뜨리면 체력이 1 줄어요. 노다지 줄은 ×1로 돌아가요',
     streak: '지뢰 없이 보물을 연달아 캐면 값이 올라요',
     sign: '이 층의 보물은 표지판에 적힌 대로 묻혀 있어요',
-    xmark: '발파 버튼을 누르고 X 칸을 클릭하면 터뜨려요(촛불 4). 지뢰면 길이 열리고, 보물이면 녹아 없어져요',
+    xmark: 'X 칸을 누르면 터뜨려요(촛불 4). 지뢰면 길이 열리고, 보물이면 녹아 없어져요',
     ember: '불씨일 때 지뢰를 터뜨리면 체력이 남아 있어도 쓰러져요',
     gold: '금빛 점이 찍힌 숫자는 큰 덩이에 닿아 있어요'
   },
@@ -300,7 +300,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
          probe: '알아볼 칸을 클릭하세요. 촛불이 2 들어요. 그만두려면 오른쪽 클릭이에요', blast: '터뜨릴 X 칸을 클릭하세요. 그만두려면 오른쪽 클릭이나 버튼을 다시 누르세요',
          blastTip: '발파 · X를 그은 칸을 터뜨려요. 촛불이 4 들어요', powder: '화약으로 터뜨릴 X 칸을 클릭하세요. 그만두려면 오른쪽 클릭이나 버튼을 다시 누르세요',
          needX: 'X를 그은 칸에만 쓸 수 있어요', noX: '먼저 오른쪽 클릭으로 X를 그어요', xCell: 'X 칸이에요. 캐려면 오른쪽 클릭으로 X를 지우고, 터뜨리려면 발파를 쓰세요',
-         aimed: '한 번 더 누르면 캐요 · 촛불 −{n}', xHover: 'X 칸 · 캐지지 않아요', stair: '계단을 한 번 더 클릭하면 내려가요', quick: "설정에서 '바로 캐기'를 켜면 한 번 클릭으로 캘 수 있어요",
+         aimed: '한 번 더 누르면 캐요 · 촛불 −{n}', stair: '계단을 한 번 더 클릭하면 내려가요',
          noPath: '가는 길이 없어요', returnAsk: '버리는 촛불 {c} · 금고로 가는 주머니 {p}' },
   stairShown: '계단 자리는 처음부터 보여요. 가는 길을 숫자로 찾아요',
   candleOut: '촛불이 다 탔어요. 오늘은 여기까지예요',
@@ -392,7 +392,7 @@ var TUTORIAL = {
   },
   gang: { 2: 'thin', 3: 'moon' },          // 01 11.2 첫 판 고정 갱 상태
   firstRule: { 2: 'border' },             // 01 16.2 Day 2 게시판 "오늘 첫 층: 테두리 광맥"
-  b3Graffiti: { x: 'X 칸은 발파 버튼으로 터뜨리세요. 보물에 쓰면 녹으니 지뢰가 확실할 때만요.', o: '불이 꺼져도 O는 보여요. 미리 그어 두세요.', stair: '이 밑은 내일 가세요.' }
+  b3Graffiti: { x: 'X 칸은 누르면 터져요. 보물이면 녹으니 지뢰가 확실할 때만 그으세요.', o: '불이 꺼져도 O는 보여요. 미리 그어 두세요.', stair: '이 밑은 내일 가세요.' }
 };
 
 var TREASURE_NAMES = { 1: '금 알갱이', 2: '청록 보석', 3: '유물' };
@@ -1564,7 +1564,7 @@ var Core = (function () {
     var d = run.d, f = d.floor, c = cellAt(f, x, y);
     if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) return { ok: false };
     d.face = { dx: sgn(x - d.px), dy: sgn(y - d.py) };
-    // R57: X를 그은 칸은 캐지지 않는다. 발파는 발파 버튼(ignite)으로만
+    // R57: X를 그은 칸은 캐지지 않는다. X 칸을 누르면 화면이 발파(ignite)를 불러요(R92)
     if (c.mark === 1) { log(run, TEXT.ops.xCell); fx(run, { t: 'locked', x: x, y: y, text: TEXT.ops.xCell }); return { ok: false, locked: true, xcell: true }; }
     var ember = d.embersOn;
     var cls = (run.record || (c.haz === 'mine' && !ember)) ? classify(run, c) : null;   // 지뢰 판정 한 줄은 지뢰일 때만 계산해요
