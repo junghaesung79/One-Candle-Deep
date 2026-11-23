@@ -80,7 +80,7 @@ var CONFIG = {
 var RULES = {   // 02 6.5(해요체)
   plain:    { name: '맨땅', sign: '규칙이 없어요. 숫자만 보면 돼요', help: '보물과 지뢰가 아무 데나 묻혀 있어요', icon: 'rPlain' },
   pair:     { name: '짝 광맥', sign: '보물 바로 옆에 보물이 하나 더 있어요', help: '위·아래·왼쪽·오른쪽 중 한 칸이에요. 대각선은 아니에요', icon: 'rPair' },
-  lonely:   { name: '외톨이 광맥', sign: '보물 둘레 8칸에는 다른 보물이 없어요', help: '보물을 캤다면 그 둘레에 묻힌 것은 전부 지뢰예요', icon: 'rLonely' },
+  lonely:   { name: '외톨이 광맥', sign: '보물 주변 8칸에는 다른 보물이 없어요', help: '보물을 캤다면 그 주변에 묻힌 것은 전부 지뢰예요', icon: 'rLonely' },
   rows:     { name: '가로줄 광맥', sign: '보물은 가로 세 줄에만 있어요', help: '세 줄은 서로 붙어 있지 않아요. 그 밖의 줄에 묻힌 것은 전부 지뢰예요', icon: 'rRows' },
   tally:    { name: '눈금 광맥', sign: '왼쪽 벽 눈금이 그 줄에 남은 보물 수예요', help: '눈금이 0인 줄에 묻힌 것은 전부 지뢰예요', icon: 'rTally' },
   minepair: { name: '지뢰 짝 광맥', sign: '지뢰가 둘씩 붙어 있어요. 보물 값은 한 등급 높아요', help: '위·아래·왼쪽·오른쪽으로 붙어요. 대각선은 아니에요. 혼자 떨어져 묻힌 것은 보물이에요', icon: 'rMinePair' },
@@ -133,7 +133,7 @@ var MUTATIONS = {   // 02 6.6: 예고는 구 실장 대사, 당일은 해요체
   noprobe: { name: '마른 손', warn: '그날은 벽을 두드려도 소리가 안 납니다. 두드려 보기는 못 쓰십니다.', today: '두드려 보기를 쓸 수 없어요' },
   nap:     { name: '선잠', warn: '그날은 광산이 덩이 근처에서 이미 깨어 있습니다. 촛불을 넉넉히 남겨 가세요.', today: '큰 덩이 층에 도착하면 바로 한 번 캘 때 촛불이 2 들어요' },
   twin:    { name: '쌍둥이 지뢰', warn: '그날은 지뢰가 둘씩 붙어 있습니다.', today: '모든 층에서 지뢰가 둘씩 붙어 있어요' },   // 측정용(봇 opts.mutations). 지금은 갱 상태
-  quake:   { name: '여진', warn: '그날은 지뢰 하나가 터지면 닿아 있는 지뢰도 터집니다. 다치는 건 한 번입니다.', today: '지뢰를 터뜨리면 둘레 8칸으로 닿은 지뢰도 터져요. 체력은 1만 줄어요' }
+  quake:   { name: '여진', warn: '그날은 지뢰 하나가 터지면 닿아 있는 지뢰도 터집니다. 다치는 건 한 번입니다.', today: '지뢰를 터뜨리면 주변 8칸으로 닿은 지뢰도 터져요. 체력은 1만 줄어요' }
 };
 var MUTATION_IDS = ['blur', 'sleepy', 'noprobe', 'nap'];   // R29 등급 1 변덕 풀. 쌍둥이 지뢰는 갱 상태로, 여진은 등급 4 이상. 계단이 보이면(stairShown) 잠든 계단은 뺀다
 var TUTORIAL_MUT8 = 'blur';                                // R29 첫 판 Day 8 고정
@@ -152,7 +152,7 @@ var TOOLS = [
       on_streak_break: function (ctx, ev) { if (ctx.state.ready !== false && ev.from > 0) { ev.to = ev.from - 1; ctx.state.ready = false; ctx.proc('줄 한 단계만'); } }
     } },
   { id: 'lens', axis: '줄', rarity: '고급', name: '감정 렌즈', short: '렌즈', price: 180, kind: 'passive', icon: 'lens', sets: ['21', '22'],
-    desc: '노다지 줄이 ×1.5 이상일 때 직접 깬 칸의 숫자 옆에, 둘레에 보물이 섞여 있으면 보석 점이 찍혀요',
+    desc: '노다지 줄이 ×1.5 이상일 때 직접 깬 칸의 숫자 옆에, 주변에 보물이 섞여 있으면 보석 점이 찍혀요',
     hooks: {
       on_break: function (ctx, ev) {
         if (!ev.direct || ctx.mult() < CONFIG.lensMinMult) return;
@@ -191,7 +191,7 @@ var TOOLS = [
   { id: 'tongs', axis: '발파', rarity: '희귀', name: '해체 집게', short: '집게', price: 310, kind: 'passive', icon: 'tongs', sets: ['21', '22'],
     desc: '불을 붙인 X 칸이 지뢰가 아니면 녹이지 않고 집게로 꺼내요. 촛불은 1만 들고, 보물은 그을린 채(반값) 나와요' },
   { id: 'wedge', axis: '발파', rarity: '고급', name: '울림 쐐기', short: '쐐기', price: 220, kind: 'passive', icon: 'wedge', sets: ['21', '22'],
-    desc: '보물이나 지뢰를 없애 숫자가 0이 되면, 그 칸 둘레 두 칸까지 안전한 칸이 열려요' },
+    desc: '보물이나 지뢰를 없애 숫자가 0이 되면, 그 칸 주변 두 칸까지 안전한 칸이 열려요' },
   { id: 'tapper', axis: '발파', rarity: '일반', name: '청진 망치', short: '망치', price: 120, kind: 'passive', icon: 'tapper', sets: ['22'],
     desc: '하루 두 번 두드려 보기를 쓸 수 있어요(한 번에 촛불 2). 옆 칸이 지뢰인지 아닌지 알려 줘요' },
   // v2.1에만 있는 도구(수치만 올리는 도구라 재미 보고서에서 뺐어요)
@@ -224,7 +224,7 @@ var TOOLS = [
     } },
   // 소모품
   { id: 'powder', rarity: '소모품', name: '화약', short: '화약', price: 40, kind: 'consumable', icon: 'powder', sets: ['21', '22'],
-    desc: '조준한 X 칸에 촛불 없이 불을 붙여요' },
+    desc: '고른 X 칸에 촛불 없이 불을 붙여요' },
   { id: 'match', rarity: '소모품', name: '성냥 묶음', short: '성냥', price: 50, kind: 'consumable', icon: 'match', sets: ['21'],
     desc: '촛불이 꺼진 뒤에만 켤 수 있어요. 촛불 +10으로 다시 불이 붙어요' }
 ];
@@ -286,7 +286,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   boardTalk: '주문서 두 장 붙여 놨어. 한 장만 떼 가.',
   // 02 6.9 강조 말풍선 7개(키 이름 없음)
   bubbles: {
-    number: '숫자는 둘레 8칸의 지뢰와 보물을 합친 수예요',
+    number: '숫자는 주변 8칸의 지뢰와 보물을 합친 수예요',
     gravel: '부서진 바위에서 자갈이 나와요. 조금이지만 쌓여요',
     mine: '지뢰를 터뜨리면 체력이 1 줄어요. 노다지 줄은 ×1로 돌아가요',
     streak: '지뢰 없이 보물을 연달아 캐면 값이 올라요',
@@ -305,11 +305,30 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   stairShown: '계단 자리는 처음부터 보여요. 가는 길을 숫자로 찾아요',
   candleOut: '촛불이 다 탔어요. 오늘은 여기까지예요',
   perfect: '완벽한 층이에요. 보물을 다 캐고 지뢰를 한 번도 안 밟았어요',
-  chord: { need: '둘레에 그은 X·O 수가 숫자와 같을 때 한꺼번에 열 수 있어요', none: '둘레에 열 칸이 없어요', hint: '한 번 더 누르면 둘레를 한꺼번에 열어요 · 촛불 −{n}' },
-  reward: { title: '도장 선물', enter: '도장 기념입니다. 셋 중 하나 가져가세요.', cashEnter: '도구가 싫으시면 금고에 {cash} 넣어 드리겠습니다.', button: '이걸로 받기', cash: '금고에 {cash} 받기', full: '장착 도구 칸이 가득이라 금고로 받아요' },
+  chord: { need: '주변에 그은 X·O 수가 숫자와 같을 때 한꺼번에 열 수 있어요', none: '주변에 열 칸이 없어요', hint: '한 번 더 누르면 주변를 한꺼번에 열어요 · 촛불 −{n}' },
+  reward: { title: '도장 선물', enter: '도장 기념입니다. 셋 중 하나 가져가세요.', cashEnter: '도구가 싫으시면 금고에 {cash} 넣어 드리겠습니다.', button: '이걸로 받기', cash: '금고에 {cash} 받기', full: '도구를 다섯 개 다 가져서 금고로 받아요' },
   chunkShownFloor: '큰 덩이 층 · 금빛 테두리가 덩이 자리예요. 숫자는 덩이를 칸마다 따로 세요',
   stageChange: { mul: '내일부터 캔 값 ×{mul}', deep: '내일부터 갱이 한 층 깊어져요(지뢰와 보물이 늘어요)', same: '캔 값은 그대로예요' },
   daily: '오늘의 광산',
+  deeper: '깊을수록 보물이 많고 비싼 보물이 잘 나와요. 지뢰도 늘고, 내려가는 촛불도 늘어요',
+  // 용어 설명(화면에서 마우스를 올리면 떠요). 07 용어집과 같은 뜻, 해요체 한두 줄
+  terms: {
+    '노다지 줄': '지뢰를 치지 않고 보물을 연달아 캐면 보물 값의 배수가 올라요(×1 → ×1.5 → ×2 … ×3). 지뢰를 치면 ×1로 돌아가요',
+    '오늘 주머니': '오늘 캔 돈이에요. 올라가면 금고로 옮겨요. 쓰러지면 절반을 잃어요',
+    '금고': '모아 둔 돈이에요. 도장 값을 내고 도구를 사요. 쓰러져도 줄지 않아요',
+    '도장': '광산 값을 나눠 낼 때마다 권리증에 도장을 찍어요. 도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요',
+    '촛불': '하루에 쓸 수 있는 힘이에요. 캐기 1, 발파 4, 계단은 2 + 내려갈 층. 다 타면 그날은 끝나요',
+    '체력': '지뢰를 치면 1 줄어요. 0이 되면 쓰러져서 오늘 주머니의 절반을 잃어요. 다음 날 다시 차요',
+    '광맥': '그 층에 보물이 묻힌 규칙이에요. 규칙을 알면 숫자만으로는 모르는 칸이 보물인지 지뢰인지 가릴 수 있어요',
+    '발파': 'X를 그은 칸에 불을 붙여요(촛불 4). 지뢰면 다치지 않고 터져서 주변이 열려요. 보물이면 녹아 없어져요',
+    '두드려 보기': '옆 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요',
+    '가진 도구': '갖고만 있어도 효과가 나는 도구예요. 다섯 개까지 가질 수 있어요',
+    '버튼으로 쓰는 것': '버튼을 누르고 판에서 칸을 골라 써요. 화약 같은 물건은 한 번 쓰면 없어져요',
+    '남은 보물·지뢰': '이 층에 아직 묻혀 있는 보물과 지뢰의 수예요. 다 세면 마지막 칸도 알 수 있어요',
+    '큰 덩이': '도장 찍는 날 묻히는 큰 보물이에요. 금빛 테두리 안 칸을 다 캐야 값을 받아요',
+    '지하 층': '깊을수록 보물이 많고 비싼 보물이 잘 나와요. 지뢰도 늘고, 내려가는 촛불도 늘어요',
+    '시세': '도장을 찍으면 다음 날부터 캔 값이 오르거나 갱이 깊어져요'
+  },
   // 지뢰를 밟았을 때 알 수 있던 칸이었는지 한 줄(재미 보고서 1주차)
   mineJudge: { known: '알 수 있던 칸이에요. 숫자와 표지판으로 지뢰가 확실했어요', bet: '보물 아니면 지뢰인 칸이었어요. 이번에는 지뢰였어요', unknown: '숫자만으로는 가리기 어려운 칸이었어요' },
   // R56 계단 빛 번짐(02 6.9 기록 창)
@@ -346,7 +365,7 @@ var TUTORIAL = {
       'm..g..m..g..m..',
       '..m....m...m..m'],
       graffiti: [
-        { x: 3, y: 6, w: 4, text: '숫자는 둘레 8칸에 묻힌 것의 개수예요. 지뢰와 보물을 합쳐서 세요.' },
+        { x: 3, y: 6, w: 4, text: '숫자는 주변 8칸에 묻힌 것의 개수예요. 지뢰와 보물을 합쳐서 세요.' },
         { x: 7, y: 3, w: 3, text: '1 옆에 바위가 하나만 남았으면 거기에 뭔가 있어요.', target: [5, 3] },
         { x: 7, y: 4, w: 3, text: '저도 여기서 한 번 데었어요. 곡괭이 불꽃도 같이 꺼졌어요.', after: 'mine', mine: [11, 5] },   // 06 장면 4: 지뢰가 터진 뒤에만
         { x: 9, y: 7, w: 3, text: '밑줄 그어진 숫자 옆에 계단이 있어요.', stairHint: true },   // 계단이 보이면(stairShown) 빼요
@@ -408,7 +427,7 @@ PRESETS.v22 = {
   },
   text: { opening1: '15일 안에 다섯 번 나눠 내세요. 사흘마다 도장을 찍어 드려요. 도장 다섯 개면 광산은 당신 거예요.',
           later22: '숫자로 못 가르는 두 칸이에요. 걸어 보든지, 다른 쪽부터 풀든지 골라요.',
-          later33: '큰 덩이는 금빛 테두리 안에 있어요. 둘레 숫자부터 풀고, 줄을 살려서 오세요.',   // v22에는 광산 깨어남이 없어요
+          later33: '큰 덩이는 금빛 테두리 안에 있어요. 주변 숫자부터 풀고, 줄을 살려서 오세요.',   // v22에는 광산 깨어남이 없어요
           gravel: '한 번에 많이 열리면 자갈이 나와요. 조금이지만 쌓여요' }
 };
 function applyPreset(name) {
@@ -1139,7 +1158,8 @@ var Core = (function () {
     if (rule === 'pair' && t % 2) t++;
     if ((rule === 'minepair' || twinDay(run)) && m % 2) m++;
     if (rule === 'rows') t = Math.max(6, t);
-    return { t: t, m: m };
+    var tw = row.tiers.slice(), tot = tw.reduce(function (a, b) { return a + b; }, 0) || 1;
+    return { t: t, m: m, tiers: tw.map(function (x) { return Math.round(100 * x / tot); }), tierUp: rule === 'minepair' };   // 보물 등급 확률(금 알갱이, 청록 보석, 유물)
   }
   function enterFloor(run, depth, rule, sx, sy, bonus) {
     var d = run.d, f;
@@ -1367,7 +1387,7 @@ var Core = (function () {
       fx(run, { t: 'numChange', x: n.x, y: n.y });
       if (numAt(f, n) === 0) { var before = run.act.chainCount; chainFrom(run, n, wedge); if (wedge && run.act.chainCount > before) any = true; }
     });
-    if (any) fx(run, { t: 'proc', id: 'wedge', icon: 'wedge', label: '둘레 2칸' });
+    if (any) fx(run, { t: 'proc', id: 'wedge', icon: 'wedge', label: '주변 2칸' });
   }
 
   // 보물 획득(값 = 기본 × 줄 배율 × (1 + 보너스)). 줄은 캔 뒤에 오른다
@@ -1442,7 +1462,7 @@ var Core = (function () {
       d.hp = Math.max(0, d.hp - ev.damage);
       // 지뢰 판정 한 줄: 덩이 층은 '지뢰 또는 덩이'라 가르지 않아요
       var jk = judge && !(f.chunk && !f.chunk.done && !feat('chunkShown')) ? (judge === 'knownM' ? 'known' : judge === 'bet' ? 'bet' : 'unknown') : null;
-      log(run, '펑. 체력 -' + ev.damage + '. ' + (jk ? TEXT.mineJudge[jk] + '.' : '둘레 숫자가 이 지뢰를 세고 있었어요.'), 'bad');
+      log(run, '펑. 체력 -' + ev.damage + '. ' + (jk ? TEXT.mineJudge[jk] + '.' : '주변 숫자가 이 지뢰를 세고 있었어요.'), 'bad');
       if (jk) fx(run, { t: 'judge', x: c.x, y: c.y, kind: jk, text: TEXT.mineJudge[jk] });
     }
     streakBreak(run, c.x, c.y);
@@ -2025,8 +2045,8 @@ var Core = (function () {
     if (run.cash < price) return { ok: false, poor: true };
     if (t.kind === 'passive') {
       if (owns(run, id)) return { ok: false };
-      if (run.owned.length >= CONFIG.shop.passiveSlots) { log(run, '장착 도구 칸이 가득이에요. 되팔아서 비우세요.'); return { ok: false, full: true }; }
-    } else if (consSlotFor(run, id) < 0) { log(run, '쓰는 칸이 가득이에요.'); return { ok: false, full: true }; }
+      if (run.owned.length >= CONFIG.shop.passiveSlots) { log(run, feat('sellBack') ? '도구 칸이 가득이에요. 되팔아서 비우세요.' : '도구는 다섯 개까지 가질 수 있어요.'); return { ok: false, full: true }; }
+    } else if (consSlotFor(run, id) < 0) { log(run, '한 번 쓰는 물건을 더 넣을 칸이 없어요.'); return { ok: false, full: true }; }
     run.cash -= price;
     S.sold[slot] = true;
     if (t.kind === 'passive') {

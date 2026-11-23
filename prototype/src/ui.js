@@ -626,7 +626,39 @@ function drawFlameIc(lvl) {
   $('bGear').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); } };
   $('bDown').onclick = function () { openFork(); };
   $('bReturn').onclick = function () { askReturn(); };   // R53: 버튼 → 확인 창
-  $('sign').addEventListener('click', function () { var f = run && run.d && run.d.floor; if (f) setDesc('<b>' + RULES[f.rule].name + '</b><br>' + esc(RULES[f.rule].sign) + '<br><span class="muted">' + esc(RULES[f.rule].help) + '</span>'); });
+  $('sign').addEventListener('click', function () { var f = run && run.d && run.d.floor; if (f) setDesc('<b>' + RULES[f.rule].name + '</b><br>' + esc(RULES[f.rule].sign) + '<br><span class="muted">' + esc(RULES[f.rule].help) + '</span><br>' + veinDiagram(f.rule)); });
+})();
+// 광맥 그림(5×5): g 보물, m 지뢰, o 보물이 나올 수 있는 칸, x 보물이 없는 칸, 숫자는 눈금
+var VEIN_PAT = {
+  plain: ['..g..', 'm....', '...m.', '.g...', '....m'],
+  pair: ['.....', '.gg..', '.....', '...g.', '...g.'],
+  border: ['ooooo', 'oxxxo', 'oxmxo', 'oxxxo', 'ogooo'],
+  lonely: ['.....', '.xxx.', '.xgx.', '.xxx.', '.....'],
+  rows: ['xxxxx', 'oogoo', 'xxxxx', 'xxxxx', 'ooogo'],
+  tally: ['1g...', '0xxxx', '2.g.g', '0xxxx', '1...g'],
+  minepair: ['.....', '.mm..', '.....', '...m.', '...m.']
+};
+function veinDiagram(rule) {
+  var P = VEIN_PAT[rule]; if (!P) return '';
+  var h = '<span class="vein" aria-hidden="true">';
+  P.forEach(function (row) { for (var i = 0; i < 5; i++) { var ch = row[i]; h += /[0-9]/.test(ch) ? '<i>' + ch + '</i>' : '<i class="' + (ch === '.' ? '' : ch) + '">' + (ch === 'x' ? '×' : '') + '</i>'; } });
+  return h + '</span>';
+}
+// 용어 설명 말풍선: data-term이 붙은 말에 마우스를 올리면 뜬다(판 위 숫자는 가리지 않게 그 말 아래에)
+(function termTips() {
+  var tip = $('termTip'), stageEl = $('stage');
+  stageEl.addEventListener('mouseover', function (e) {
+    var el = e.target && e.target.closest ? e.target.closest('[data-term]') : null;
+    var def = el && TEXT.terms[el.getAttribute('data-term')];
+    if (!def) { tip.style.display = 'none'; return; }
+    tip.innerHTML = '<b>' + esc(el.getAttribute('data-term')) + '</b><br>' + esc(def);
+    var sr = stageEl.getBoundingClientRect(), k = sr.width / 1280, r = el.getBoundingClientRect();
+    tip.style.display = 'block';
+    var x = (r.left - sr.left) / k, y = (r.bottom - sr.top) / k + 6, w = tip.offsetWidth, hh = tip.offsetHeight;
+    if (x + w > 1270) x = 1270 - w; if (y + hh > 712) y = (r.top - sr.top) / k - hh - 6;
+    tip.style.left = Math.max(4, x) + 'px'; tip.style.top = Math.max(4, y) + 'px';
+  });
+  stageEl.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
 })();
 function setDesc(h) { ui.desc = h; ui.descAt = performance.now(); ui.hudDirty = true; }
 function goalLine(run) {   // 02 6.1: "다음 도장까지 120 · 3일째"
@@ -646,7 +678,7 @@ function updateHUD() {
     $('signName').innerHTML = esc(R.name) + (f.chunk && !f.chunk.done ? ' <span class="badge gold">' + (CONFIG.features.chunkShown ? '큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ') · 금빛 테두리' : '이 층 어딘가에 큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ')') + '</span>' : '') + (f.chunk && f.chunk.done ? ' <span class="badge gold">덩이 캠</span>' : '');
     $('signText').textContent = R.sign;
     var rem = CONFIG.countsShown ? Core.remaining(f) : null;   // 재미 보고서 1주차: 이 층에 남은 보물·지뢰 수
-    $('stairSt').innerHTML = (rem ? '<span title="이 층에 남은 보물과 지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24));
+    $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> 계단 찾음</span>') : iconHtml('icons.stairsDim', 24));
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
   $('dayTxt').innerHTML = run.day + '일째 <span class="muted">/ ' + CONFIG.days + '</span><br><span class="muted" style="font-weight:400">' + (CONFIG.days - run.day + 1) + '일 남음</span>';
@@ -656,7 +688,7 @@ function updateHUD() {
   $('pocketVal').textContent = fmt(pocketShow);
   var danger = d && inMine && ((d.hp === 1 && !(run.tutorial && run.day === 1)) || d.embersOn);   // R38: 첫 판 Day 1은 체력 1이어도 붉게 강조하지 않는다
   $('pocketBox').classList.toggle('danger', !!danger);
-  $('pocketBadge').innerHTML = danger ? '<span class="badge">쓰러지면 절반을 잃어요</span>' : '';
+  $('pocketBadge').innerHTML = danger ? '<span class="badge">쓰러지면 절반을 잃어요</span>' : (d && inMine ? '<span class="muted" style="font-size:12px;margin-left:6px">올라가면 금고로</span>' : '');
   $('goalTxt').innerHTML = goalLine(run);
   $('vaultTxt').innerHTML = '금고 <b class="px" style="font-size:14px">' + fmt(run.cash) + '</b>';
   var np = Core.nextPayment(run), amt = np ? np.amount : 1;
@@ -695,13 +727,13 @@ function updateHUD() {
     $('streakBox').classList.toggle('max', d.streak >= cap && cap > 0);
     var st = '', n = cap + 1; for (var j = 0; j < n; j++) st += '<i class="' + (j <= d.streak && d.streak > 0 ? 'on' : '') + '" style="width:' + Math.floor(110 / n) + 'px"></i>';
     $('streakSteps').innerHTML = st;
-    $('streakNext').textContent = d.streak === 0 && run.tutorial ? '연달아 캐면 값이 올라요' : '다음 보물 ' + multTxt(mul);
+    $('streakNext').textContent = d.streak === 0 ? '연달아 캐면 값이 올라요' : '다음 보물 ' + multTxt(mul) + ' · 지뢰면 ×1';
     drawFlameIc(showLvl);
     var hs = ''; for (var k = 0; k < d.hpMax; k++) hs += iconHtml(k < d.hp ? 'heart' : 'heartE', 36);
     $('hearts').innerHTML = hs;
   }
   // 도구 칸
-  $('ownLbl').textContent = '장착 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots;
+  $('ownLbl').textContent = '가진 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots;
   var os = '';
   for (var s = 0; s < CONFIG.shop.passiveSlots; s++) {
     var id = run.owned[s];
@@ -744,7 +776,7 @@ function updateHUD() {
   if (ui.mode) lg.innerHTML = '<span class="acc" style="font-weight:700">' + esc(ui.mode.kind === 'probe' ? TEXT.ops.probe : ui.mode.kind === 'blast' ? TEXT.ops.blast : TEXT.ops.powder) + '</span>';   // 고르기 상태 안내(화면 아래 한 줄)
   else if (ui.judge && d && run.phase === 'mine') lg.innerHTML = iconHtml('mine', 20) + ' <b class="' + (ui.judge.kind === 'known' ? 'warnTxt' : 'acc') + '">' + esc(ui.judge.text) + '</b>';
   else if (d && d.embersOn) lg.innerHTML = '<span class="warnTxt" style="font-weight:700">불씨 다섯 번이에요. 지뢰를 터뜨리면 쓰러져요</span><span class="sep">|</span><span class="muted">' + TEXT.ember.bar + '</span>';
-  else lg.innerHTML = settings.legend ? '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 둘레 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>' : '';
+  else lg.innerHTML = settings.legend ? '<span class="px" style="color:' + NUMC[2] + ';font-size:16px">2</span> ' + iconHtml('mine', 20) + iconHtml('gem', 20) + ' <b>숫자 = 주변 8칸의 지뢰 + 보물</b><span class="sep">|</span><span class="muted">오른쪽 클릭: 분필 X → O → 지움</span>' : '';
   var o = run.order, ol = '';
   if (o) { var def = Core.ORDER_BY_ID[o.id]; ol = '주문: ' + esc(def.text) + ' (' + Math.min(o.prog, def.goal) + '/' + def.goal + ')' + (o.done ? ' <span class="acc">달성</span>' : o.failed ? ' <span class="muted">못 이룸</span>' : ''); }
   $('orderLine').innerHTML = ol;
@@ -771,11 +803,11 @@ function hintText() {
   if (c.cover !== 'open') {
     if (c.mark === 1) return esc(TEXT.ops.xHover);
     if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(TEXT.ops.aimed.replace('{n}', Core.hitCost(run)));
-    return settings.quickDig && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 캐요 · 촛불 −' + Core.hitCost(run) : '누르면 옆으로 가서 조준해요';
+    return settings.quickDig && Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 캐요 · 촛불 −' + Core.hitCost(run) : '누르면 옆으로 가요. 한 번 더 누르면 캐요';
   }
-  if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair);
+  if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair + ' · 깊을수록 보물이 많고 비싸요');
   var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
-  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 둘레를 한꺼번에 열어요';
+  if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : '누르면 그 숫자로 걸어가요. 한 번 더 누르면 주변를 한꺼번에 열어요';
   if (h.x === d.px && h.y === d.py && ci && ci.marked > 0) return esc(TEXT.chord.need);
   return '누르면 그 칸으로 걸어가요';
 }
@@ -869,6 +901,7 @@ function boardHtml() {
   // 왼쪽: 권리증 칸
   h += '<div class="panel" style="width:360px;padding:12px 14px;' + (pay ? 'border-color:#c4432b' : '') + '">';
   h += '<div class="lbl" style="font-size:14px;color:' + (pay ? '#e5484d' : '#a59fb3') + '">' + (pay ? '오늘 도장 찍는 날 · ' + stampNm(run.day) : '권리증') + '</div>';
+  h = h.replace(/<div class="lbl" style="font-size:14px;color:([^"]*)">([^<]*)<\/div>$/, '<div class="lbl" style="font-size:14px;color:$1" data-term="도장">$2</div>');
   var stamps = ''; for (var i = 0; i < Core.payments(run).length; i++) stamps += '<div class="stampSlot" style="width:34px;height:34px;border-color:#5d5868">' + (i < run.stamps ? '<div class="stamp" style="width:32px;height:32px;font-size:11px">도장</div>' : '') + '</div>';
   h += '<div style="display:flex;gap:8px;margin:8px 0">' + stamps + '</div>';
   if (G) {
@@ -878,7 +911,7 @@ function boardHtml() {
     h += '<div id="payBar" style="position:relative;height:10px;background:#1d1a24;border:1px solid #34303f;margin-top:6px"><i style="position:absolute;left:0;top:0;bottom:0;width:' + Math.min(100, run.cash / G.amount * 100) + '%;background:#b87333"></i></div>';
   }
   // 시세(01 5.4, 02 6.1 게시판 시세 표기)
-  h += '<div style="margin-top:10px;font-size:14px;line-height:21px">' + esc(Core.rateText(run)) + '</div>';
+  h += '<div style="margin-top:10px;font-size:14px;line-height:21px" data-term="시세">' + esc(Core.rateText(run)) + '</div>';
   if (futMut.length) h += '<div style="margin-top:12px;font-size:14px">' + np.day + '일째 광산 변덕:<br>' + futMut.map(function (m) { return iconHtml('muts.' + m, 20) + ' ' + MUTATIONS[m].name; }).join('<br>') + '</div>';
   h += '</div>';
   // 오른쪽
@@ -914,21 +947,23 @@ function consRoom(id) {   // 소모품을 더 받을 수 있는 개수
 function forkHtml() {
   var d = run.d, f = d.floor, opts = f.forkOptions, cost = Core.travelCost(run, f.depth + 1);
   var h = '<div class="dim" style="background:rgba(11,10,16,0.6)"></div><div class="dlg" style="width:760px"><h2>어느 쪽으로 내려갈까요?</h2>';
-  h += '<div style="font-size:16px;margin-bottom:12px">지하 ' + (f.depth + 1) + '층으로 내려가요 · <b class="acc">촛불 -' + cost + '</b> (' + d.candle + ' → ' + (d.candle - cost) + ')' + (d.candle < cost ? ' <span class="badge">촛불 모자람</span>' : '') + '</div>';
+  h += '<div style="font-size:16px;margin-bottom:4px">지하 ' + (f.depth + 1) + '층으로 내려가요 · <b class="acc">촛불 -' + cost + '</b> (' + d.candle + ' → ' + (d.candle - cost) + ')' + (d.candle < cost ? ' <span class="badge">촛불 모자람</span>' : '') + '</div>';
+  h += '<div class="sub" style="margin-bottom:12px;font-size:14px" data-term="지하 층">' + esc(TEXT.deeper) + '</div>';
   h += '<div style="display:flex;gap:14px">';
   opts.forEach(function (o, i) {
     h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-fork="' + i + '">';
     if (o.kind === 'floor') {
       var R = RULES[o.rule];
       if (!ui.rulesSeen[o.rule]) h += '<span class="badge gold first">처음</span>';
-      h += iconHtml('rules.' + o.rule, 48) + '<div class="nm">' + R.name + '</div><div class="tx">' + esc(R.sign) + '</div><div class="hp2">' + esc(R.help) + '</div>';
-      if (o.est) h += '<div class="tx" style="margin-top:6px;color:#c9c3d6">' + (CONFIG.countsShown ? '보물 ' + o.est.t + '개 · 지뢰 ' + o.est.m + '개' : '보물 ' + o.est.t + '개쯤 · 지뢰 ' + o.est.m + '개쯤') + '</div>';   // 02 6.5 갈림길 카드 네 줄
+      h += iconHtml('rules.' + o.rule, 48) + '<div class="nm">' + R.name + '</div><div class="tx">' + esc(R.sign) + '</div>' + veinDiagram(o.rule) + '<div class="hp2">' + esc(R.help) + '</div>';
+      if (o.est) h += '<div class="tx" style="margin-top:6px;color:#c9c3d6">' + (CONFIG.countsShown ? '보물 ' + o.est.t + '개 · 지뢰 ' + o.est.m + '개' : '보물 ' + o.est.t + '개쯤 · 지뢰 ' + o.est.m + '개쯤') + '</div>';
+      if (o.est && o.est.tiers) h += '<div class="tx" style="color:#c9c3d6;font-size:13px">' + (o.est.tierUp ? '보물이 한 등급 높아요 · ' : '') + '금 알갱이 ' + o.est.tiers[0] + '% · 청록 보석 ' + o.est.tiers[1] + '% · 유물 ' + o.est.tiers[2] + '%</div>';   // 02 6.5 갈림길 카드 네 줄
       if (o.bonus) h += '<div style="margin-top:6px;font-size:15px;font-weight:700;color:#ffd25a">' + esc(bonusText(o.bonus)) + '</div>';
       if (o.chunk) h += '<div style="margin-top:8px"><span class="badge gold">큰 덩이 있음 (' + d.chunkSpec.w + '×' + d.chunkSpec.h + ')</span></div>';
     } else if (o.kind === 'spring') {
       h += iconHtml('icons.spring', 48) + '<div class="nm">샘</div><div class="tx">체력 +1이나 촛불 +' + CONFIG.spring.candle + ' 중 하나를 골라요</div><div class="hp2">→ 지하 ' + o.depth + '층(맨땅)</div>';
     } else {
-      h += iconHtml('icons.merchant', 48) + '<div class="nm">상인 방</div><div class="tx">도구 3개, 소모품 1개가 있어요. 금고 돈으로 사요</div><div class="hp2">→ 지하 ' + o.depth + '층(맨땅)</div>';
+      h += iconHtml('icons.merchant', 48) + '<div class="nm">상인 방</div><div class="tx">도구 3개, 한 번 쓰는 물건 1개가 있어요. 금고 돈으로 사요</div><div class="hp2">→ 지하 ' + o.depth + '층(맨땅)</div>';
     }
     h += '</div>';
   });
@@ -1057,16 +1092,16 @@ function shopHtml(merchant) {
       '<div class="note">' + (can ? '사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자라요</span>' : '') : '') : '금고가 ' + fmt(pr - run.cash) + ' 모자라요') + '</div></div><div class="p">' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
   });
-  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>진열 바꾸기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 자리만 바뀌어요</span></div>';
+  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 세 자리만 바뀌어요</span></div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했어요)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
-  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="lbl">장착 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots + (merchant || !CONFIG.features.sellBack ? '' : ' · 되팔면 산 값의 절반이에요') + '</div>';
+  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots + (merchant || !CONFIG.features.sellBack ? '' : ' · 되팔면 산 값의 절반이에요') + '</div>';
   run.owned.forEach(function (id) {
     var t = Core.TOOL_BY_ID[id];
     h += '<div class="card panel" style="padding:5px 8px;cursor:default" data-tool="' + id + '"><div class="ic" style="width:32px;height:32px">' + iconHtml('icons.' + t.icon, 22) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div><div class="d" style="font-size:12px">' + esc(t.desc) + '</div></div>' +
       (merchant || !CONFIG.features.sellBack ? '' : '<button data-sell="' + id + '">되팔기 +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없어요</div>';
-  h += '<div class="lbl" style="margin-top:6px">쓰는 칸</div><div class="note">' + (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기 · ' : '') + '발파' + (run.cons.length ? ' · ' + run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; }).join(' · ') : ' · 소모품 칸은 비어 있어요') + '</div>';
+  h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기 · ' : '') + '발파' + (run.cons.length ? ' · ' + run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; }).join(' · ') : ' · 한 번 쓰는 물건은 없어요') + '</div>';
   h += '<div class="panel" id="shopDesc" style="padding:8px 10px;margin-top:auto;min-height:80px;font-size:13px;line-height:18px"><span class="muted">물건에 마우스를 올리면 설명과 엮이는 도구가 보여요.</span></div></div></div>';
   h += '<div style="display:flex;justify-content:flex-end;gap:10px;align-items:center;margin-top:8px">' +
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
@@ -1076,7 +1111,7 @@ function pauseHtml() {   // 설정(Esc 또는 ⚙ 버튼)
   function tg(id, label, on, note) { return '<button id="' + id + '" style="display:flex;justify-content:space-between;text-align:left"><span>' + label + (note ? ' <span class="note" style="font-weight:400">' + note + '</span>' : '') + '</span><span class="' + (on ? 'acc' : 'muted') + '">' + (on ? '켬' : '끔') + '</span></button>'; }
   return '<div class="dim"></div><div class="dlg" style="width:500px"><h2>설정</h2><div style="display:flex;flex-direction:column;gap:8px">' +
     tg('oQuick', '바로 캐기', settings.quickDig, '옆 바위는 한 번 클릭으로 캐요') + tg('oKeys', '키보드 단축키', settings.keys) + tg('oShake', '화면 흔들림', settings.shake) +
-    (CONFIG.preset === 'v22' ? tg('oChord', '둘레 한꺼번에 열기', settings.chord !== false, '숫자 위에 서서 한 번 더 누르면 열어요') : '') +
+    (CONFIG.preset === 'v22' ? tg('oChord', '주변 한꺼번에 열기', settings.chord !== false, '숫자 위에 서서 한 번 더 누르면 열어요') : '') +
     tg('oFlash', '지뢰 플래시', settings.flash) + tg('oLegend', '판 아래 범례', settings.legend) + tg('oBub', '강조 말풍선', settings.bubbles) +
     '<button id="oOpening">오프닝 만화 다시 보기</button>' +
     '<div class="note" style="margin-top:2px">' + esc(playlogSummary()) + '</div>' +
@@ -1145,7 +1180,7 @@ function bagHtml() {
   if (run.gang) h += '<h3>오늘 갱 상태</h3><div>' + esc(run.gang.name) + ' · ' + esc(run.gang.desc) + '</div>';
   if (d && d.mutations.length) h += '<h3>오늘 광산 변덕</h3>' + d.mutations.map(function (m) { return '<div>' + MUTATIONS[m].name + ' · ' + MUTATIONS[m].today + '</div>'; }).join('');
   if (run.order) h += '<h3>주문</h3><div>' + esc(Core.ORDER_BY_ID[run.order.id].text) + ' (' + Math.min(run.order.prog, Core.ORDER_BY_ID[run.order.id].goal) + '/' + Core.ORDER_BY_ID[run.order.id].goal + ')</div>';
-  h += '<h3>장착 도구</h3>' + (run.owned.length ? run.owned.map(function (id) { var t = Core.TOOL_BY_ID[id]; return '<div style="font-size:14px;margin:3px 0"><b>' + t.name + '</b> <span class="note">' + esc(t.desc) + '</span></div>'; }).join('') : '<div class="note">없음</div>');
+  h += '<h3>가진 도구</h3>' + (run.owned.length ? run.owned.map(function (id) { var t = Core.TOOL_BY_ID[id]; return '<div style="font-size:14px;margin:3px 0"><b>' + t.name + '</b> <span class="note">' + esc(t.desc) + '</span></div>'; }).join('') : '<div class="note">없음</div>');
   return h + '<div style="text-align:right;margin-top:12px"><button class="primary" id="oClose">닫기</button></div></div>';
 }
 function bindOverlay() {
@@ -1195,7 +1230,7 @@ function bindOverlay() {
   q = OV.querySelectorAll('[data-tool]');
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
-function axisName(t) { return t.kind === 'consumable' ? '소모품' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
+function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
   return same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
