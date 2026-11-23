@@ -914,7 +914,7 @@ function renderOverlay() {
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
   if (p === 'deed') {
     h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:620px;border:none;background:transparent;text-align:left">' +
-      '<div class="muted" style="font-size:13px;margin-bottom:10px">초 한 자루 (가제) · 2차 프로토타입</div>' + deedHtml(0) +
+      '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0) +
       '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
       '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
       '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:14px">' +
