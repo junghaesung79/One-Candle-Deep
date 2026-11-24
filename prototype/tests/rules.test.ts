@@ -330,6 +330,11 @@ describe('규칙 단위 검사', () => {
       check(Core.takeLoan(rl).ok && rl.payment.ok && rl.stamps === 1 && Core.payments(rl)[1].amount === next0 + 150 && rl.loanUsed, 'loan stamps now and adds 1.5x to the next stamp');
       const rn = Core.newRun(6205); Core.debugSkipDay(rn); Core.debugSkipDay(rn); Core.startDay(rn); rn.d.pocket = 100; Core.returnUp(rn); Core.afterSettle(rn); Core.afterPayment(rn);
       check(rn.phase === 'final' && !rn.final.success, 'refusing the loan ends the contract'); }
+    // 첫 판: 첫 도장이 모자라면 한 번 기다려 줘요(모자란 돈은 두 번째 도장에, 이자 없음). 합치기는 없어요
+    { const rt = Core.newRun(env.TUTORIAL.seed, { tutorial: true }); Core.debugSkipDay(rt); if (rt.phase === 'shop') Core.nextDay(rt); Core.debugSkipDay(rt); if (rt.phase === 'shop') Core.nextDay(rt);
+      Core.startDay(rt); rt.cash = 100; rt.d.pocket = 0; const second0 = Core.payments(rt)[1].amount; Core.returnUp(rt); Core.afterSettle(rt);
+      check(rt.phase === 'payment' && rt.payment.ok && rt.stamps === 1 && rt.cash === 0 && Core.payments(rt)[1].amount === second0 + 200 && rt.payment.grace === 200, 'first run: first stamp waits once, short moves to the second stamp');
+      rt.owned = ['fuse', 'refiner']; rt.boxed = { fuse: true }; check(Core.fusionsReady(rt).length === 0, 'first run: no fusion'); }
     // 유품: 하나뿐이라 챙기거나 두고 가요. 도구 칸을 쓰지 않고 판 끝까지 남아요
     { const rk = Core.newRun(7401); Core.startDay(rk); const hp0 = rk.d.hpMax, tc0 = Core.travelCost(rk, 3), cap0 = Core.streakCapIdx(rk), own0 = rk.owned.length;
       rk.boxOffer = { keep: 'ironhelm', opts: [], scorch: false, quote: '' };

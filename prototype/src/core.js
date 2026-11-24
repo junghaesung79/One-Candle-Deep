@@ -297,6 +297,12 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   endless: { ask: '광산은 이제 손님 겁니다. 더 파시겠습니까? 사흘마다 도장 값을 받겠습니다.', button: '끝없는 갱으로', name: '끝없는 도장', tag: '끝없는 갱',
              ok: ['끝없는 도장 하나 더 찍습니다. 남은 금고 {left}.', '받았습니다. 아직 더 파시겠다니 말리지 않겠습니다.'], fail: ['여기까지입니다. {short} 모자라셨습니다.', '오늘은 못 받겠군요. 여기서 멈추시죠.'],
              begin: '끝없는 갱에 들어섰어요. 사흘마다 도장을 찍고, 도장마다 층에 지뢰가 하나씩 늘어요', title: '끝없는 갱 {day}일째에서 멈췄어요', sub: '끝없는 도장 {n}개' },
+  firstRun: { deedHand: '아, 이걸 드리는 걸 잊었군요. 광산 권리증입니다. 첫 도장은 사흘째 밤, 300입니다.', deedTake: '받기', more: '나머지 도장은 권리증과 달력에서 볼 수 있어요',
+              unlocked: '이번 판에 열린 것', none: '이번 판에 새로 열린 건 없어요', nextUnlock: '다음에 열릴 사람: {name} · {cond}', newChar: '새 사람',
+              fadedBubble: '곽 씨: "바랜 분필 자국이네. 앞서 다녀간 이가 그은 거라 늘 맞네."', boxBubble: '곽 씨: "촛불이 흔들리는군. 이 층 어딘가에 옛 연장함이 묻혀 있네."',
+              progress: '{name}까지 {amt} 중 {have}' },
+  charLock: { surveyor: '첫 판 안내를 마치면 열려요', defuser: '처음 완납하면 열려요', gambler: '한 판에 도장 셋을 찍으면 열려요', blaster: '달못 2호 갱을 완납하면 열려요' },
+  grace: { quote: '첫 도장은 기다려 드리죠. 모자란 {n}은 두 번째 도장에 얹겠습니다.', line: '두 번째 도장에 {n}이 얹혔어요(첫 판만, 이자 없음)' },
   seed: { label: '시드', hint: '비우면 무작위', apply: '이 시드로', copy: '복사', copied: '복사했어요', other: '다른 판본의 시드라 광산이 다를 수 있어요', mark: '시드 판' },
   collapse: ['또 자네군. 주머니는 반만 받겠네.', '숨은 쉬네. 그럼 됐어.', '끌어낸 값으로 {n} 받았네. 나머지는 금고에 넣어 뒀어.', '내일 보세. 도장 찍는 날이 내일은 아니겠지.'],
   collapseEmber: '불 꺼지고 왜 더 쳤나. 대답은 됐네.',
@@ -2104,8 +2110,11 @@ var Core = (function () {
     if (run.phase !== 'settle' || run.boxOffer) return { ok: false };
     var pay = paymentFor(run.day, run);
     if (pay) {
-      var i = paymentIndex(pay, run), ok = run.cash >= pay.amount;
-      var P = { idx: i, name: pay.name, amount: pay.amount, ok: ok, before: run.cash, short: Math.max(0, pay.amount - run.cash) };
+      var i = paymentIndex(pay, run), ok = run.cash >= pay.amount, grace = 0;
+      if (!ok && run.tutorial && i === 1 && !run.graceUsed && pays(run)[1]) {   // 첫 판 첫 도장만: 모자란 돈을 두 번째 도장에 얹고 찍어 줘요(이자 없음)
+        grace = pay.amount - run.cash; run.graceUsed = true; run.cash += grace; pays(run)[1].amount += grace; ok = true;
+      }
+      var P = { idx: i, name: pay.name, amount: pay.amount, ok: ok, before: run.cash - grace, short: Math.max(0, pay.amount - run.cash), grace: grace };
       run.payment = P;
       run.phase = 'payment';
       if (ok) completePay(run);
@@ -2131,6 +2140,7 @@ var Core = (function () {
       P.fixed = [is5(run) ? TEXT.payFixed.stamp2.replace('{n}', run.stamps).replace('{change}', stageChangeText(run)) : TEXT.payFixed.stamp.replace('{n}', run.stamps).replace('{mul}', mulNext),
                  (muts.length > 1 ? TEXT.payFixed.next2 : muts.length ? TEXT.payFixed.next1 : TEXT.payFixed.next0).replace('{name}', stampNames(run)[i]).replace('{amt}', fmt(np.amount)).replace('{day}', np.day)];
       if (P.loanTaken) P.fixed.push(TEXT.short.loanLine.replace('{n}', fmt(P.loanTaken)));
+      if (P.grace) { P.fixed.push(TEXT.grace.line.replace('{n}', fmt(P.grace))); P.quote = TEXT.grace.quote.replace('{n}', fmt(P.grace)); }
     }
     return { ok: true };
   }
@@ -2290,7 +2300,7 @@ var Core = (function () {
   // ---------- 판 위 옛 연장함 ----------
   function placeBox(run, f, depth) {
     var d = run.d, R = CONFIG.relic;
-    if (!feat('relicBox') || f.tutorial || (d.stats.boxes || 0) > 0 || d.chunkSpec || depth < R.minDepth || run.day < R.minDay) return;   // 하루에 하나 캘 때까지 층마다 확률로 묻혀요
+    if (!feat('relicBox') || f.tutorial || (run.tutorial && run.stamps < 1) || (d.stats.boxes || 0) > 0 || d.chunkSpec || depth < R.minDepth || run.day < R.minDay) return;   // 하루에 하나 캘 때까지 층마다 확률로 묻혀요
     var rng = rngFrom(hashSeed(run.seed, run.day, depth, 0x424f58));
     var pity = run.day >= R.pityDay && !run.stats.boxes;   // 둘째 도장 날까지 하나도 못 주웠으면 다음 층에 꼭
     if (!pity && rng() >= R.chance) return;
@@ -2376,7 +2386,7 @@ var Core = (function () {
   }
   // ---------- 합친 도구 ----------
   function fusionsReady(run) {
-    if (!feat('fusion')) return [];
+    if (!feat('fusion') || run.tutorial) return [];   // 첫 판은 합치기 없음(reviews/16)
     if (CONFIG.relic.fuseNight === 'stamp' && !(run.payment && run.payment.ok && run.payment.idx && pays(run)[run.payment.idx - 1].day === run.day)) return [];   // 곽 씨는 도장 찍은 밤에만 와요
     if (CONFIG.relic.fuseMax && run.stats.fused >= CONFIG.relic.fuseMax) return [];
     return TOOLS.filter(function (t) { return t.fusion && (!t.sets || t.sets.indexOf(CONFIG.toolSet) >= 0) && run.owned.indexOf(t.id) < 0 && t.fusion.every(function (p) { return run.owned.indexOf(p) >= 0; }) && fuseSourceOk(run, t); }).map(function (t) { return t.id; });

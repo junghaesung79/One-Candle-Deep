@@ -18,6 +18,7 @@ function reveal(ids) {
   var nw = codexMark(ids); if (!nw.length || typeof ui === 'undefined') return;
   var now = performance.now();
   nw.forEach(function (id) { ui.revealAt[id] = now; });
+  if (run) (run.newSeen = run.newSeen || []).push.apply(run.newSeen, nw);
   var t = Core.TOOL_BY_ID[nw[nw.length - 1]] || Core.KEEP_BY_ID[nw[nw.length - 1]];
   ui.desc = '<span class="acc">' + TEXT.revealed + '</span> <b>' + esc(t.name) + '</b><br>' + esc(t.desc); ui.hudDirty = true;
 }
@@ -76,10 +77,23 @@ function countRun(won) {
   if (!run || run.statDone) return;
   run.statDone = true;
   var S = settings.stats || (settings.stats = { plays: 0, clears: 0, streak: 0, bestStreak: 0 });
-  S.plays++;
+  var before = openChars();
+  S.plays++; S.maxStamps = Math.max(S.maxStamps || 0, run.stamps || 0);
   if (won) { S.clears++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); } else S.streak = 0;
   saveSettings();
+  run.newChars = openChars().filter(function (id) { return before.indexOf(id) < 0; });   // 판 끝 화면 '이번 판에 열린 것'
 }
+// 캐릭터 열기(01 15.6): 광부는 처음부터, 나머지는 조건을 채우면 열려요. 잠긴 사람은 실루엣과 조건만
+function charOpen(id) {
+  var S = settings.stats || {}, B = settings.bestBy || {};
+  if (id === 'miner') return true;
+  if (id === 'surveyor') return (S.plays || 0) >= 1;
+  if (id === 'defuser') return (S.clears || 0) >= 1;
+  if (id === 'gambler') return (S.maxStamps || 0) >= 3;
+  if (id === 'blaster') return (B['grade:2'] || 0) > 0 || (settings.gradeOpen || 1) >= 3;
+  return true;
+}
+function openChars() { return CHARACTERS.filter(function (c) { return charOpen(c.id); }).map(function (c) { return c.id; }); }
 function statsLine() {
   var S = settings.stats; if (!S || !S.plays) return '아직 끝낸 판이 없어요';
   return '판 ' + S.plays + ' · 완납 ' + S.clears + '(' + Math.round(S.clears / S.plays * 100) + '%) · 연속 완납 ' + S.streak + '(최고 ' + S.bestStreak + ')';
@@ -96,7 +110,7 @@ function startNewRun(tutorial, o) {
   var daily = !tutorial && o.daily ? todayStr() : null;
   var seedSet = !tutorial && !daily && o.seed != null;   // 시드를 넣은 판
   var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : seedSet ? o.seed : Core.randomSeed();
-  run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: settings.char });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
+  run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: charOpen(settings.char || 'miner') ? settings.char : 'miner' });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   run.seedSet = seedSet;
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
@@ -179,6 +193,7 @@ function drainFx() {
         var gap = maxRing ? Math.max(CONFIG.fx.ringMinMs, Math.min(CONFIG.fx.ringMs, total / maxRing)) : 0;
         e.cells.forEach(function (c) { anim.pend[c.y * BW + c.x] = { t: start + c.ring * gap, was: c.was }; });
         if (e.floorStart && run.tutorial && run.day === 1 && run.d.floor.depth === 1) after(1700, function () { bubble('number', TEXT.bubbles.number, { el: 'legend', above: true }); });
+        if (e.floorStart) { var fc = run.d.floor.cells.filter(function (q) { return q.faded && q.cover !== 'open'; })[0]; if (fc) after(2100, function () { bubble('faded', TEXT.firstRun.fadedBubble, { cell: { x: fc.x, y: fc.y } }); }); }   // 바랜 분필 자국: 처음 본 자리에서 한 번
         if (e.floorStart && run.d.floor.rule !== 'plain' && run.tutorial) after(1700, function () { bubble('sign', TEXT.bubbles.sign, { el: 'sign', below: true }); });
         break;
       }
@@ -257,7 +272,7 @@ function drainFx() {
         after(700, function () { if (run.boxOffer) { ui.shownAt = performance.now(); renderOverlay(); } });
         break;
       }
-      case 'boxHere': blinkEl('candleBox', 'flick', 900); break;
+      case 'boxHere': blinkEl('candleBox', 'flick', 900); after(700, function () { bubble('boxHere', TEXT.firstRun.boxBubble, { el: 'candleBox', below: true }); }); break;
       case 'boxMelt': anim.pops.push({ x: e.x, y: e.y, t0: now + 150, kind: 'fizzle' }); break;
       case 'stair': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'stair' }); break;
       case 'locked': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'locked' }); break;
@@ -305,7 +320,7 @@ function candleFloat(delta) {
 // ---------- 강조 말풍선(6개, 첫 판) ----------
 function bubble(key, text, anchor) {
   if (ui.bubblesSeen[key]) return;
-  var anyRun = key === 'ember' || key === 'gold';   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
+  var anyRun = ['ember', 'gold', 'faded', 'boxHere'].indexOf(key) >= 0;   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
   if (!anyRun && !(run && run.tutorial)) return;
   if (anyRun && !run.tutorial) { if (!settings.bubblesOnce) settings.bubblesOnce = {}; if (settings.bubblesOnce[key]) return; settings.bubblesOnce[key] = true; saveSettings(); }
   ui.bubblesSeen[key] = true;
@@ -971,20 +986,21 @@ function charPickHtml() {
   var cur = Core.charOf(run), list = run.tutorial ? CHARACTERS.slice(0, 1) : CHARACTERS;
   var h = '<div style="flex:1;min-width:0"><div class="lbl big" style="margin-bottom:8px">누구로 캘까요?</div><div class="charList">';
   list.forEach(function (c) {
+    if (!charOpen(c.id)) { h += '<div class="charPick locked" title="' + esc(TEXT.charLock[c.id] || '') + '"><span class="sil">' + iconHtml('minerBy.' + c.id, 40) + '</span><div style="min-width:0"><div class="nm">???</div><div class="note">' + esc(TEXT.charLock[c.id] || '') + '</div></div></div>'; return; }
     h += '<div class="charPick' + (c.id === cur.id ? ' sel' : '') + '" data-char="' + c.id + '">' + iconHtml('minerBy.' + c.id, 40) + '<div style="min-width:0"><div class="nm">' + esc(c.name) + '</div><div class="note">X ' + esc(c.x.name) + ' · O ' + esc(c.o.name) + '</div></div></div>';
   });
   h += '</div><div class="panel charInfo"><div style="color:#c9c3d6;margin-bottom:6px">' + esc(cur.line) + '</div>' +
     skillRow('x', cur.x) + '<div class="note skDesc">' + esc(cur.x.desc) + '</div>' + skillRow('o', cur.o) + '<div class="note skDesc">' + esc(cur.o.desc) + '</div>' +
     (cur.perk ? '<div class="acc" style="margin-top:6px">' + esc(cur.perk) + '</div>' : '') + (cur.weak ? '<div class="warnTxt" style="margin-top:4px">약점: ' + esc(cur.weak) + '</div>' : '') + '</div>' +
-    (run.tutorial ? '<div class="note" style="margin-top:8px">첫 판은 광부로 해요. 첫 판 안내를 건너뛰면 다른 사람도 고를 수 있어요.</div>' : '') + '</div>';
+    (run.tutorial ? '<div class="note" style="margin-top:8px">첫 판은 광부로 해요. 다른 사람은 판을 하며 하나씩 열려요.</div>' : '') + '</div>';
   return h;
 }
-function deedHtml(stampsShown, anim) {
+function deedHtml(stampsShown, anim, focusFirst) {   // focusFirst: 첫 판은 첫 도장만 또렷하게
   var P = Core.payments(run);
   var h = '<div class="deedCard"><div class="ttl">' + gradeName(run.grade) + ' 권리증 (가)' + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</div><div style="font-size:14px;margin-bottom:6px">광산 값은 ' + NUM_KO[P.length] + ' 번에 나눠 내요. 낼 때마다 도장 하나예요.</div>';
   P.forEach(function (p, i) {
     var stamped = i < stampsShown, fall = anim && i === stampsShown - 1;
-    h += '<div class="stampRow"><div class="stampSlot">' + (stamped ? '<div class="stamp' + (fall ? ' fall' : '') + '" style="' + (fall ? 'opacity:0;animation-delay:1400ms' : '') + '">도장</div>' : '') + '</div><b style="width:110px">' + Core.stampNames(run)[i] + '</b>' + iconHtml('coins', 18) + '<span class="px" style="font-size:15px;width:80px;text-align:right">' + fmt(p.amount) + '</span><span style="margin-left:14px">· ' + p.day + '일째</span>' + iconHtml('', 0) + '</div>';
+    h += '<div class="stampRow"' + (focusFirst && i > 0 ? ' style="opacity:0.3"' : '') + '><div class="stampSlot">' + (stamped ? '<div class="stamp' + (fall ? ' fall' : '') + '" style="' + (fall ? 'opacity:0;animation-delay:1400ms' : '') + '">도장</div>' : '') + '</div><b style="width:110px">' + Core.stampNames(run)[i] + '</b>' + iconHtml('coins', 18) + '<span class="px" style="font-size:15px;width:80px;text-align:right">' + fmt(p.amount) + '</span><span style="margin-left:14px">· ' + p.day + '일째</span>' + iconHtml('', 0) + '</div>';
   });
   return h + '</div>';
 }
@@ -1025,7 +1041,7 @@ function renderOverlay() {
   else if (ui.sub === 'codex') h = codexHtml();
   else if (p === 'deed') {
     h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1060px;border:none;background:transparent;text-align:left;display:flex;gap:28px;align-items:flex-start"><div style="width:620px;flex:none">' +
-      '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0) +
+      '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0, false, run.tutorial) +
       '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
       '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
       '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:14px">' +
@@ -1033,14 +1049,14 @@ function renderOverlay() {
       '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
       (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
       (!run.tutorial && !run.daily ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">' + esc(TEXT.seed.label) + '</span><input id="seedIn" spellcheck="false" autocomplete="off" placeholder="' + esc(TEXT.seed.hint) + '" style="width:150px" value="' + (run.seedSet ? Core.seedCode(run.seed) : '') + '"><button id="oSeed">' + esc(TEXT.seed.apply) + '</button><span class="note">지금 ' + Core.seedCode(run.seed) + ' · ' + CONFIG.genVersion + '</span></div>' : '') +
-      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + charPickHtml() + '</div>';
+      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + (run.tutorial ? '' : charPickHtml()) + '</div>';   // 첫 판은 캐릭터 칸 없이
   } else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
   else if (p === 'mine' && ui.sub === 'fork') h = forkHtml();
   else if (p === 'room') h = run.room.kind === 'spring' ? springHtml() : shopHtml(true);
   else if (p === 'settle') h = settleHtml();
   else if (p === 'payment') h = paymentHtml();
-  else if (p === 'shop') h = shopHtml(false);
+  else if (p === 'shop') h = run.deedLater && !run.deedHanded ? deedLateHtml() : shopHtml(false);
   else if (p === 'final') h = finalHtml();
   else if (ui.sub === 'pause') h = pauseHtml();
   else if (ui.sub === 'bag') h = bagHtml();
@@ -1164,9 +1180,25 @@ function settleHtml() {
   var o = run.order;
   if (o) { var def = Core.ORDER_BY_ID[o.id]; h += '<div class="fadein note" style="animation-delay:' + (delay + 900) + 'ms;font-size:14px">주문 ' + esc(def.text) + ': ' + (o.done ? '<span class="acc">달성</span>' : Math.min(o.prog, def.goal) + '/' + def.goal + ' · 못 이룸') + '</div>'; }
   var np = Core.nextPayment(run);
-  if (np && !(S.line && /도장/.test(S.line))) h += '<div class="fadein" style="animation-delay:' + (delay + 900) + 'ms;margin-top:8px;font-size:15px">' + goalLine(run) + '</div>';   // 구 실장 말에 이미 있으면 되풀이하지 않아요
+  if (np && !(S.line && /도장/.test(S.line))) h += '<div class="fadein" style="animation-delay:' + (delay + 900) + 'ms;margin-top:8px;font-size:15px">' + goalLine(run) + '</div>';
+  if (np && np.day > run.day) h += stampProgress(np, delay + 950);   // 구 실장 말에 이미 있으면 되풀이하지 않아요
   h += '<div class="fadein" style="animation-delay:' + (delay + 1000) + 'ms;margin-top:14px;text-align:right"><button class="primary" id="oNext">' + (S.payDay ? '도장 찍으러 가기' : '상점으로') + '</button></div></div>';
   return h;
+}
+// 다음 도장까지 얼마나 모았는지: 도장 모양 칸이 금고만큼 차요(reviews/16)
+// 판 끝 '이번 판에 열린 것': 도감에 새로 열린 도구·유품, 새로 열린 사람, 다음에 열릴 사람 하나(reviews/16)
+function unlockBlock() {
+  var items = (run.newSeen || []).filter(function (id, i, a) { return a.indexOf(id) === i; }).map(function (id) { var t = Core.TOOL_BY_ID[id] || Core.KEEP_BY_ID[id]; return t ? iconHtml('icons.' + t.icon, 20) + ' ' + esc(t.name) : ''; }).filter(Boolean);
+  (run.newChars || []).forEach(function (id) { var c = Core.CHAR_BY_ID[id]; items.push(iconHtml('minerBy.' + id, 22) + ' <b class="acc">' + esc(TEXT.firstRun.newChar) + '</b> ' + esc(c.name)); });
+  var next = CHARACTERS.filter(function (c) { return !charOpen(c.id); })[0];
+  return '<div class="panel" style="padding:8px 12px;margin-top:10px"><div class="note">' + esc(TEXT.firstRun.unlocked) + '</div><div style="display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:4px;align-items:center;font-size:14px">' +
+    (items.length ? items.map(function (x) { return '<span style="display:inline-flex;align-items:center;gap:4px">' + x + '</span>'; }).join('') : '<span class="muted">' + esc(TEXT.firstRun.none) + '</span>') + '</div>' +
+    (next ? '<div class="note" style="margin-top:4px">' + esc(TEXT.firstRun.nextUnlock.replace('{name}', '???').replace('{cond}', TEXT.charLock[next.id] || '')) + '</div>' : '') + '</div>';
+}
+function stampProgress(np, delayMs) {
+  var names = Core.stampNames(run), idx = Core.payments(run).indexOf(np), have = Math.min(run.cash, np.amount), k = np.amount ? have / np.amount : 1;
+  return '<div class="fadein" style="animation-delay:' + delayMs + 'ms;display:flex;align-items:center;gap:10px;margin-top:8px"><div class="stampSlot" style="width:34px;height:34px;flex:none;position:relative;overflow:hidden"><div style="position:absolute;left:0;right:0;bottom:0;height:' + Math.round(k * 100) + '%;background:rgba(196,67,43,0.55)"></div></div>' +
+    '<div style="flex:1"><div style="height:8px;background:#2a2633;border:1px solid #3a3542"><div style="height:100%;width:' + Math.round(k * 100) + '%;background:#c4432b"></div></div><div class="note" style="margin-top:3px">' + esc(TEXT.firstRun.progress.replace('{name}', names[idx] || np.name).replace('{amt}', fmt(np.amount)).replace('{have}', fmt(have))) + '</div></div></div>';
 }
 function settleTick(now) {
   if (run.phase !== 'settle') return;
@@ -1233,6 +1265,7 @@ function finalHtml() {
       '<div class="sub">' + (run.daily ? TEXT.daily + ' ' + run.daily + ' · ' : '') + (best ? (EN ? '이 광산 끝없는 갱 최고 ' + best + '일째' : '이 광산 최고 점수 ' + fmt(best)) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' +
       (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸어요. 새 광맥 하나가 더 나오고 값이 올라요. 권리증 화면에서 골라요</div>' : '') + chart + '<div style="margin-top:6px;font-size:14px">' + st + '</div>' +
       '<div class="panel" style="padding:8px 12px;margin-top:10px"><div class="note">권리증 뒷면, 작은 글씨</div><div>' + esc(TEXT.deedBack) + '</div><div class="sub" style="margin-top:4px">중개인 구 실장: "' + esc(TEXT.deedNext) + '"</div></div>' +
+      unlockBlock() +
       '<div class="note" style="margin-top:10px">' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button></div>' +
       (!EN && !run.tutorial ? '<div class="quote" style="margin-top:10px">중개인 구 실장: "' + esc(TEXT.endless.ask) + '"</div>' : '') +
       '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">' + (!EN && !run.tutorial ? '<button id="oEndless">' + esc(TEXT.endless.button) + '</button>' : '') + '<button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
@@ -1243,6 +1276,7 @@ function finalHtml() {
       '<div style="font-size:24px;font-weight:700;color:#e5484d;margin:10px 0">' + fmt(F.short) + ' 모자랐어요</div>' +
       (F.compare ? '<div style="font-size:15px;margin-bottom:6px">' + esc(F.compare) + '</div>' : '') +
       '<h3>이번 판 기록</h3><div style="font-size:14px">낸 돈: ' + paid + '<br>' + st + '</div>' + chart +
+      unlockBlock() +
       '<div class="note" style="margin-top:10px">' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button></div>' +
       '<div style="margin-top:14px;text-align:right"><button class="primary" id="oAgain">다시 계약하기</button></div></div>';
   }
@@ -1271,7 +1305,7 @@ function shopHtml(merchant) {
   });
   if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 세 자리만 바뀌어요</span></div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했어요)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
-  var canSell = !merchant && (CONFIG.features.sellBack || CONFIG.features.toolSell);
+  var canSell = !merchant && (CONFIG.features.sellBack || CONFIG.features.toolSell) && (!run.tutorial || run.owned.length >= Core.slotsOf(run));   // 첫 판은 칸이 찼을 때만 팔기(reviews/16)
   h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:5px;min-height:0"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + Core.slotsOf(run) + (!canSell ? '' : CONFIG.features.toolSell ? ' · 심 씨는 상점 값의 ' + (Core.owns(run, 'regular') ? '75%' : '절반') + '에 사요' : ' · 되팔면 산 값의 절반이에요') + '</div>';
   if (!merchant && S.fuse && S.fuse.length) S.fuse.forEach(function (fid) {   // 합치기: 재료 둘을 가진 밤
     var ft = Core.TOOL_BY_ID[fid], a = Core.TOOL_BY_ID[ft.fusion[0]], b = Core.TOOL_BY_ID[ft.fusion[1]];
@@ -1311,7 +1345,7 @@ function openingHtml() {
     h += '<div style="width:312px;opacity:' + (on ? 1 : 0.12) + ';transition:opacity 0.4s"><canvas class="opCv" data-i="' + i + '" width="104" height="78" style="width:312px;height:234px;image-rendering:pixelated;border:3px solid #34303f;display:block"></canvas>' +
       '<div style="min-height:72px;margin-top:8px;font-size:15px;line-height:22px;color:#f1ece2">' + (on ? (o.who ? '<b class="acc">' + esc(o.who) + '</b>: "' + esc(o.cap) + '"' : esc(o.cap)) : '') + '</div></div>';
   });
-  h += '</div><div style="display:flex;justify-content:space-between;margin-top:10px"><button id="oOpSkip">건너뛰기</button><button class="primary" id="oOpNext">' + (k >= 2 ? '시작하기' : '다음') + '</button></div></div>';
+  h += '</div><div style="display:flex;justify-content:space-between;margin-top:10px"><span style="display:flex;gap:8px"><button id="oOpSkip">건너뛰기</button>' + (run && run.tutorial && !settings.openingSeen ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '') + '</span><button class="primary" id="oOpNext">' + (k >= 2 ? '시작하기' : '다음') + '</button></div></div>';
   return h;
 }
 function drawOpening() {
@@ -1355,8 +1389,16 @@ var OPENING_ART = [
     rc(g, '#e8c9a0', 72, 52, 4, 4); rc(g, '#3a3542', 71, 56, 6, 6); rc(g, '#1d1a24', 71, 62, 8, 2);
   }
 ];
+// 첫 판: 만화 뒤 곧장 판으로 들어갔으니, 첫 밤 정산 뒤 구 실장이 권리증을 건네요. 첫 도장만 또렷하게
+function deedLateHtml() {
+  return '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:640px"><div class="quote">중개인 구 실장: "' + esc(TEXT.firstRun.deedHand) + '"</div>' + deedHtml(0, false, true) +
+    '<div class="note" style="margin-top:8px">' + esc(TEXT.firstRun.more) + '</div><div style="text-align:right;margin-top:12px"><button class="primary" id="oDeedTake">' + esc(TEXT.firstRun.deedTake) + '</button></div></div>';
+}
+function deedTake() { if (!run.deedLater || run.deedHanded) return; run.deedHanded = true; ui.shownAt = performance.now(); renderOverlay(); ui.hudDirty = true; }
 function openingNext() { if (ui.opening == null) return; if (ui.opening >= 2) openingEnd(); else { ui.opening++; renderOverlay(); } }
-function openingEnd() { ui.opening = null; if (!settings.openingSeen) { settings.openingSeen = true; saveSettings(); } ui.shownAt = performance.now() - 2000; renderOverlay(); ui.hudDirty = true; }
+function openingEnd() { var first = !settings.openingSeen; ui.opening = null; if (first) { settings.openingSeen = true; saveSettings(); } ui.shownAt = performance.now() - 2000;
+  if (first && run.tutorial && run.phase === 'deed' && run.day === 1) { run.deedLater = true; beginDay(); return; }   // 첫 판은 만화 뒤 곧장 지하 1층. 권리증은 첫 밤에(reviews/16)
+  renderOverlay(); ui.hudDirty = true; }
 // 달력: 한 줄이 도장 하나까지의 날들이에요. 지난날은 번 돈, 오늘은 금빛, 도장 날은 동그라미(찍으면 붉은 도장)
 function calHtml() {
   var P = Core.payments(run), S = CONFIG.stages, names = Core.stampNames(run), G = Core.goalInfo(run), start = 1, rows = '';
@@ -1424,6 +1466,7 @@ function bindOverlay() {
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
   on('oLogGet', playlogDownload);
   on('oLogClear', function () { askConfirm('기록된 하루 ' + playlogLoad().length + '개를 지울까요? 되돌릴 수 없어요', function () { playlogSave([]); ui.sub = 'pause'; renderOverlay(); }, { yes: '지우기', no: '그대로 두기' }); });
+  on('oDeedTake', deedTake);
   on('oOpSkip', function () { openingEnd(); }); on('oOpNext', function () { openingNext(); });
   on('oShake', function () { settings.shake = !settings.shake; saveSettings(); renderOverlay(); });
   on('oFlash', function () { settings.flash = !settings.flash; saveSettings(); renderOverlay(); });
@@ -1464,7 +1507,7 @@ function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' 
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
   var out = same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
-  if (CONFIG.features.fusion) {   // 합쳐지는 재료: 만들어 본 적이 있으면 짝과 결과를, 없으면 귀띔만
+  if (CONFIG.features.fusion && !run.tutorial) {   // 합쳐지는 재료: 만들어 본 적이 있으면 짝과 결과를, 없으면 귀띔만
     var fu = TOOLS.filter(function (q) { return q.fusion && q.fusion.indexOf(t.id) >= 0; })[0];
     if (fu) { var mate = Core.TOOL_BY_ID[fu.fusion[0] === t.id ? fu.fusion[1] : fu.fusion[0]]; out += '<br><span class="acc">' + esc(codex.seen[fu.id] ? TEXT.fuse.recipe.replace('{mate}', Core.josa(mate.name, '과', '와')).replace('{name}', fu.name) : TEXT.fuse.hint) + '</span>'; }
   }
@@ -1484,7 +1527,7 @@ function boxHtml() {
     B.opts.forEach(function (id, i) {
       var t = Core.TOOL_BY_ID[id];
       h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
-        '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
+        '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && !run.tutorial && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
     });
     h += '</div>';
   } else h += '<div class="note" style="margin-top:10px">쓸 만한 도구는 이미 다 가졌어요</div>';
@@ -1770,7 +1813,7 @@ document.addEventListener('keydown', function (e) {
   if (p === 'payment') { if (!e.repeat && (code === 'Enter' || code === 'Space')) payNext(); return; }
   if (p === 'final') { if ((code === 'Enter') && performance.now() - ui.finalAt > 600) startNewRun(false); return; }
   if (p === 'shop' || (p === 'room' && run.room.kind === 'merchant')) {
-    if (code === 'Enter') { if (p === 'shop') goNextDay(); else { Core.leaveRoom(run); afterAction(); } }
+    if (code === 'Enter') { if (p === 'shop' && run.deedLater && !run.deedHanded) deedTake(); else if (p === 'shop') goNextDay(); else { Core.leaveRoom(run); afterAction(); } }
     var m = /^Digit([1-9])$/.exec(code);
     if (m) buyTool(+m[1] - 1);
     return;
