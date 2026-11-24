@@ -71,7 +71,9 @@ var CONFIG = {
            sellSite: 0.25, sellShop: 0.5, sellBonus: 0.25, beltSlots: 2, loanMul: 1.5 },
   chainGravel: { min: 8, per: 1 },
   fadedChalk: { o: [0, 0, 1], x: [0, 1, 2] },
-  keepsake: { share: 0.25 },                  // 옛 연장함 가운데 이만큼은 도구 둘 대신 유품 하나   // 바랜 분필 자국: 층마다 제비에서 하나씩 뽑아요(O는 0·0·1, X는 0·1·2). 늘 맞아요
+  keepsake: { share: 0.25 },
+  endless: { every: 3, mul: 1.5, round: 100, minesPerStamp: 1, minesMax: 8 },   // 끝없는 갱: 마지막 도장 뒤 3일마다, 직전 도장의 1.5배. 끝없는 도장마다 층 지뢰 +1(최대 8)
+  genVersion: '2.2',                           // 시드 판본: 같은 시드라도 판본이 다르면 광산이 다를 수 있어요                  // 옛 연장함 가운데 이만큼은 도구 둘 대신 유품 하나   // 바랜 분필 자국: 층마다 제비에서 하나씩 뽑아요(O는 0·0·1, X는 0·1·2). 늘 맞아요
   ruleTune: {},
   firstRunDiscount: 1,                       // 첫 판(안내 판) 납부액 배수. 1이면 할인 없음. 의뢰인 결정 대기(처음 하는 사람 보정)                              // 광맥별 보물·지뢰 수 더하기 { pair: { t: -2, m: 0 } }. 광맥끼리 수입을 맞추는 손잡이(v22)           // gravel 'chain': 층 도착 때가 아닌 와르르로 min칸 이상 열리면 칸마다 per(시세 붙음)
   stampReward: { n: 3, cash: [60, 150, 300, 500], rarity: [[60, 35, 5], [45, 40, 15], [30, 45, 25], [20, 45, 35]] },   // 도장 선물: 도장 k개째 [일반, 고급, 희귀] 가중치, 대신 받는 금고 돈
@@ -292,6 +294,10 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   deedTitle: '광산 계약서',
   stampName: ['첫 도장', '두 번째 도장', '마지막 도장'],
   stampName5: ['첫 도장', '두 번째 도장', '세 번째 도장', '네 번째 도장', '마지막 도장'],
+  endless: { ask: '광산은 이제 손님 겁니다. 더 파시겠습니까? 사흘마다 도장 값을 받겠습니다.', button: '끝없는 갱으로', name: '끝없는 도장', tag: '끝없는 갱',
+             ok: ['끝없는 도장 하나 더 찍습니다. 남은 금고 {left}.', '받았습니다. 아직 더 파시겠다니 말리지 않겠습니다.'], fail: ['여기까지입니다. {short} 모자라셨습니다.', '오늘은 못 받겠군요. 여기서 멈추시죠.'],
+             begin: '끝없는 갱에 들어섰어요. 사흘마다 도장을 찍고, 도장마다 층에 지뢰가 하나씩 늘어요', title: '끝없는 갱 {day}일째에서 멈췄어요', sub: '끝없는 도장 {n}개' },
+  seed: { label: '시드', hint: '비우면 무작위', apply: '이 시드로', copy: '복사', copied: '복사했어요', other: '다른 판본의 시드라 광산이 다를 수 있어요', mark: '시드 판' },
   collapse: ['또 자네군. 주머니는 반만 받겠네.', '숨은 쉬네. 그럼 됐어.', '끌어낸 값으로 {n} 받았네. 나머지는 금고에 넣어 뒀어.', '내일 보세. 도장 찍는 날이 내일은 아니겠지.'],
   collapseEmber: '불 꺼지고 왜 더 쳤나. 대답은 됐네.',
   dayEnd: { normal: '오늘 {n} 넣으셨습니다. 다음 도장까지 {short} 남았습니다.', over: '금고가 도장 값을 넘었습니다. 남는 돈은 손님 겁니다.',
@@ -547,6 +553,17 @@ var Core = (function () {
     for (var i = 0; i < arguments.length; i++) { h ^= (arguments[i] | 0); h = Math.imul(h, 16777619) >>> 0; h ^= h >>> 13; }
     return h >>> 0;
   }
+  // 시드 코드: 헷갈리는 글자(0 O 1 I L U)를 뺀 30글자 6자리(30^6 = 7억 2,900만 가지). 무작위·오늘의 광산·글 시드는 이 범위에서 만들어 늘 6자리로 보여요(reviews/15 3장)
+  var SEED_ABC = '23456789ABCDEFGHJKMNPQRSTVWXYZ', SEED_MAX = 729000000;
+  function seedCode(n) { n = n >>> 0; var len = n < SEED_MAX ? 6 : 7, s = ''; for (var i = 0; i < len; i++) { s = SEED_ABC[n % 30] + s; n = Math.floor(n / 30); } return s.slice(0, 3) + '-' + s.slice(3); }
+  function parseSeed(text) {   // 코드 꼴이면 풀고, 숫자면 그대로, 아니면 글을 해시해요. 비우면 null
+    var t = String(text == null ? '' : text).trim(); if (!t) return null;
+    var u = t.toUpperCase().replace(/[-\s]/g, '');
+    if (/^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{6,7}$/.test(u)) { var v = 0; for (var i = 0; i < u.length; i++) v = v * 30 + SEED_ABC.indexOf(u[i]); if (v <= 0xffffffff) return v >>> 0; }
+    if (/^\d{1,10}$/.test(t) && +t <= 0xffffffff) return (+t) >>> 0;
+    var h = 2166136261 >>> 0; for (var k = 0; k < t.length; k++) { h ^= t.charCodeAt(k); h = Math.imul(h, 16777619) >>> 0; } return h % SEED_MAX;
+  }
+  function randomSeed() { return Date.now() % SEED_MAX; }
   function shuffle(a, rng) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rng() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function pick(a, rng) { return a[Math.floor(rng() * a.length)]; }
   function weightedIdx(rng, arr) { var tot = 0, i; for (i = 0; i < arr.length; i++) tot += arr[i]; var r = rng() * tot; for (i = 0; i < arr.length; i++) { r -= arr[i]; if (r < 0) return i; } return 0; }
@@ -575,7 +592,9 @@ var Core = (function () {
   function stage(run) { var S = CONFIG.stages; return S[Math.min(run.stamps || 0, S.length - 1)]; }
   function feat(k) { return CONFIG.features[k]; }
   function pays(run) { return (run && run.payments) || CONFIG.payments; }
-  function stampNames(run) { return pays(run).length === 5 ? TEXT.stampName5 : TEXT.stampName; }
+  function is5(run) { return pays(run).length >= 5; }
+  function stampNames(run) { if (!is5(run)) return TEXT.stampName; var out = TEXT.stampName5.slice(); for (var i = 5; i < pays(run).length; i++) out.push(TEXT.endless.name + ' ' + (i - 4)); return out; }
+  function payText(run, i) { return i > 5 ? TEXT.endless : (is5(run) ? TEXT.pay5 : TEXT.pay)[i]; }   // 끝없는 도장(6번째부터)은 따로
   function cellRes(c) { return feat('gravel') === 'cell' ? c.res : 0; }   // 자갈: 'cell' 칸마다 / 'chain' 큰 와르르만(endAct)
   var V21_ORDER = ['gloves', 'lens', 'lastcard', 'fuse', 'refiner', 'sieve', 'ledger', 'moonsieve', 'wedge', 'betchalk', 'sheet', 'tongs', 'powder', 'match'];   // v2.1 목록 순서(상점 뽑기가 v2.1과 같게)
   function toolPool() {
@@ -1062,14 +1081,13 @@ var Core = (function () {
       log: [], logSeq: 0, fx: [], history: [], eventCounts: {},
       stats: { deepest: 0, treasures: 0, collapses: 0, mines: 0, chainMax: 0, earned: 0, blasts: 0, perfect: 0, chords: 0, boxes: 0, sold: 0, fused: 0 },
       boxOffer: null, boxed: {}, keeps: [], loanUsed: false, loan: null,
-      metaRng: rngFrom(hashSeed(seed, 777)),
       mutationPlan: {}
     };
     // 등급이 오르면 납부액에 배수(01 14.2). 판마다 납부 표를 따로 들고 있어요
     var gm = gradeMulOf(run) * (run.tutorial ? CONFIG.firstRunDiscount || 1 : 1);
     run.payments = CONFIG.payments.map(function (p) { return { day: p.day, name: p.name, amount: gm === 1 ? p.amount : Math.round(p.amount * gm / 10) * 10 }; });
     // 변덕은 판 시작에 정하고 앞 납부 때 알린다
-    var pool = shuffle(MUTATION_IDS.filter(function (m) { return !(CONFIG.stairShown && m === 'sleepy'); }), run.metaRng);
+    var pool = shuffle(MUTATION_IDS.filter(function (m) { return !(CONFIG.stairShown && m === 'sleepy'); }), rngFrom(hashSeed(seed, 0x4d555441)));
     if (run.tutorial) pool = [TUTORIAL_MUT8].concat(pool.filter(function (m) { return m !== TUTORIAL_MUT8; }));
     if (feat('mutations')) { run.mutationPlan[8] = [pool[0]]; run.mutationPlan[15] = [pool[1], pool[2]]; }
     planRun(run);
@@ -1204,7 +1222,7 @@ var Core = (function () {
     var cm = CONFIG.candleMax + (gang(run, 'shallow') ? 10 : 0) - (gang(run, 'rough') ? 10 : 0) + (charOf(run).candleDelta || 0) + keepSum(run, 'candle');
     var hm = Math.max(1, CONFIG.hpMax + keepSum(run, 'hp'));
     var pay = paymentFor(run.day, run);
-    var chunkSpec = pay && CONFIG.chunks[run.day] ? Object.assign({}, CONFIG.chunks[run.day]) : null;
+    var chunkSrc = pay && (CONFIG.chunks[run.day] || (run.endless ? CONFIG.chunks[CONFIG.days] : null)), chunkSpec = chunkSrc ? Object.assign({}, chunkSrc) : null;   // 끝없는 도장 날은 마지막 도장 날 덩이
     if (chunkSpec) chunkSpec.value = Math.round(chunkSpec.value * gradeMulOf(run));   // 등급 배수는 큰 덩이 값에도(01 14.2)
     run.d = {
       candle: cm, candleMax: cm, hp: hm, hpMax: hm,
@@ -1245,9 +1263,9 @@ var Core = (function () {
   function floorSpec(run, depth, rule, sx, sy) {
     var d = run.d;
     var chunk = (d.chunkSpec && d.chunkSpec.depth === depth && !d.chunkDone) ? d.chunkSpec : null;
-    return { depth: depth, rule: rule, sx: sx, sy: sy, seed: hashSeed(run.seed, run.day, d.floorIdx + 1, RULE_IDS.indexOf(rule) + 1),
+    return { depth: depth, rule: rule, sx: sx, sy: sy, seed: hashSeed(run.seed, run.day, depth, RULE_IDS.indexOf(rule) + 1),   // 시드 열쇠: 날, 깊이, 광맥. 같은 시드에 같은 길이면 같은 층(reviews/15 4장)
              chunk: chunk, twin: twinDay(run), gangId: run.gang && run.gang.id, rowShift: stage(run).rowShift,
-             extraM: d.pendingBonus === 'more' ? CONFIG.forkBonus.moreMines : 0, extraT: d.pendingBonus === 'more' ? CONFIG.forkBonus.moreTreasures : 0 };
+             extraM: (d.pendingBonus === 'more' ? CONFIG.forkBonus.moreMines : 0) + endlessMines(run), extraT: d.pendingBonus === 'more' ? CONFIG.forkBonus.moreTreasures : 0 };
   }
   // 갈림길 카드의 "보물 n개쯤 · 지뢰 n개쯤"(층 생성 값)
   function floorEstimate(run, depth, rule, bonus) {
@@ -1255,6 +1273,7 @@ var Core = (function () {
     if (gang(run, 'smell')) { m += 2; t += 2; }
     if (gang(run, 'quiet')) { m -= 2; t -= 1; }
     if (bonus === 'more') { m += CONFIG.forkBonus.moreMines; t += CONFIG.forkBonus.moreTreasures; }
+    m += endlessMines(run);
     var tune = CONFIG.ruleTune && CONFIG.ruleTune[rule]; if (tune) { t += tune.t || 0; m += tune.m || 0; }
     if (rule === 'pair' && t % 2) t++;
     if ((rule === 'minepair' || twinDay(run)) && m % 2) m++;
@@ -1263,6 +1282,7 @@ var Core = (function () {
     return { t: t, m: m, tiers: tw.map(function (x) { return Math.round(100 * x / tot); }), tierUp: rule === 'minepair' };   // 보물 등급 확률(금 알갱이, 청록 보석, 유물)
   }
   function enterFloor(run, depth, rule, sx, sy, bonus) {
+    var gr;
     var d = run.d, f;
     d.pendingBonus = bonus || null;
     var later = run.tutorial ? TUTORIAL.later[run.day + '-' + depth] : null;
@@ -1284,7 +1304,7 @@ var Core = (function () {
     if (depth > d.stats.depth) d.stats.depth = depth;
     emit(run, 'on_floor_enter', { depth: depth, rule: rule });
     orderEvent(run, 'depth', { depth: depth });
-    if (!f.graffiti.length && !f.tutorial && !run.tutorial && run.metaRng() < 0.35) placeGraffiti(f, pick(TEXT.graffiti, run.metaRng));   // 일반 낙서는 둘째 판부터
+    if (!f.graffiti.length && !f.tutorial && !run.tutorial && (gr = rngFrom(hashSeed(run.seed, run.day, depth, 0x47524146)))() < 0.35) placeGraffiti(f, pick(TEXT.graffiti, gr));   // 일반 낙서는 둘째 판부터
     // 시작 칸은 열린 채 시작하고 와르르(R17)
     beginAct(run, sx, sy);
     var c = cellAt(f, sx, sy);
@@ -1307,7 +1327,7 @@ var Core = (function () {
     // 계단 바람(R39): 첫 판 지하 1층 도착 때 한 번 알린다
     // R56·R60 계단 빛 번짐: 중심은 계단에서 가로·세로 0~1칸 어긋난 칸(층 시드로 고정). 반경 2칸 안에 계단이 늘 들어온다
     if (f.stair && !f.stair.blocked && !CONFIG.stairShown) {
-      var lr = rngFrom(hashSeed(run.seed, run.day, d.floorIdx, 0x4c4954));
+      var lr = rngFrom(hashSeed(run.seed, run.day, depth, 0x4c4954));
       f.light = { x: Math.max(0, Math.min(W - 1, f.stair.x + Math.floor(lr() * 3) - 1)), y: Math.max(0, Math.min(H - 1, f.stair.y + Math.floor(lr() * 3) - 1)) };
     }
     if (CONFIG.stairShown) { if (f.stair && !f.stair.blocked && run.taught && !run.taught.stairShown) { run.taught.stairShown = true; log(run, TEXT.stairShown); } }   // 한 판에 한 번
@@ -1914,7 +1934,7 @@ var Core = (function () {
 
   // 갈림길(R3): 다음 층 광맥 둘 중 하나. 가끔 샘·상인 방
   function forkOptions(run, depth) {
-    var d = run.d, rng = rngFrom(hashSeed(run.seed, run.day, depth, d.floorIdx, 9));
+    var d = run.d, rng = rngFrom(hashSeed(run.seed, run.day, depth, 9));
     d.forkCount++;
     var chunkHere = d.chunkSpec && d.chunkSpec.depth === depth && !d.chunkDone;
     var opts;
@@ -1951,7 +1971,7 @@ var Core = (function () {
     if (!roomKind) { log(run, '지하 ' + o.depth + '층 · ' + RULES[o.rule].name + '.'); enterFloor(run, o.depth, o.rule, d.px, d.py, o.bonus); }
     else {   // 덤 '가는 길에 샘·상인 방': 방에 들렀다가 카드의 광맥 층으로(01 8.3)
       run.room = { kind: roomKind, next: o.depth, rule: o.kind === 'floor' ? o.rule : 'plain', x: d.px, y: d.py, serviced: false };
-      if (roomKind === 'merchant') { run.room.stock = pickStock(run, 3, 1, true); run.room.sold = {}; }
+      if (roomKind === 'merchant') { run.room.stock = pickStock(run, 3, 1, true, rngFrom(hashSeed(run.seed, run.day, o.depth, 0x4d455243))); run.room.sold = {}; }
       run.phase = 'room';
       log(run, roomKind === 'spring' ? '샘이 있는 방이에요.' : '상인 방이에요. 상인 심 씨가 물건을 펼쳐 놨어요.');
     }
@@ -2062,7 +2082,7 @@ var Core = (function () {
     run.cash += net; run.stats.earned += net;
     var pay = paymentFor(run.day, run);
     var quote = null;
-    if (reason === 'collapse') quote = (d.embersOn ? TEXT.collapseEmber : pick(TEXT.collapse, run.metaRng)).replace('{n}', fmt(lost));
+    if (reason === 'collapse') quote = (d.embersOn ? TEXT.collapseEmber : pick(TEXT.collapse, rngFrom(hashSeed(run.seed, run.day, 0x434f4c)))).replace('{n}', fmt(lost));
     var np = nextPayment(run), line = '';
     if (np) {
       var short = np.amount - run.cash;
@@ -2103,12 +2123,12 @@ var Core = (function () {
     run.cash -= pay.amount; run.paid += pay.amount; run.stamps++;
     P.after = run.cash;
     var mulNext = stage(run).valueMul;   // 도장이 찍힌 뒤의 시세(내일부터)
-    P.quote = pick((pays(run).length === 5 ? TEXT.pay5 : TEXT.pay)[i].ok, rng).replace('{amt}', fmt(pay.amount)).replace('{left}', fmt(run.cash)).replace('{mul}', mulNext);
+    P.quote = pick(payText(run, i).ok, rng).replace('{amt}', fmt(pay.amount)).replace('{left}', fmt(run.cash)).replace('{mul}', mulNext);
     var np = pays(run)[i];
     if (np) {
       var muts = (run.mutationPlan[np.day] || []).slice();
       P.next = { name: np.name, amount: np.amount, day: np.day, mutations: muts };
-      P.fixed = [pays(run).length === 5 ? TEXT.payFixed.stamp2.replace('{n}', run.stamps).replace('{change}', stageChangeText(run)) : TEXT.payFixed.stamp.replace('{n}', run.stamps).replace('{mul}', mulNext),
+      P.fixed = [is5(run) ? TEXT.payFixed.stamp2.replace('{n}', run.stamps).replace('{change}', stageChangeText(run)) : TEXT.payFixed.stamp.replace('{n}', run.stamps).replace('{mul}', mulNext),
                  (muts.length > 1 ? TEXT.payFixed.next2 : muts.length ? TEXT.payFixed.next1 : TEXT.payFixed.next0).replace('{name}', stampNames(run)[i]).replace('{amt}', fmt(np.amount)).replace('{day}', np.day)];
       if (P.loanTaken) P.fixed.push(TEXT.short.loanLine.replace('{n}', fmt(P.loanTaken)));
     }
@@ -2117,7 +2137,7 @@ var Core = (function () {
   function failPay(run) {
     var P = run.payment, rng = rngFrom(hashSeed(run.seed, run.day, 3));
     P.ok = false; P.pending = false; P.short = Math.max(0, P.amount - run.cash); P.before = run.cash; P.after = run.cash;
-    P.quote = pick((pays(run).length === 5 ? TEXT.pay5 : TEXT.pay)[P.idx].fail, rng).replace('{short}', fmt(P.short));
+    P.quote = pick(payText(run, P.idx).fail, rng).replace('{short}', fmt(P.short));
   }
   function loanInfo(run) {   // 심 씨 외상: 한 판에 한 번, 마지막 도장은 안 돼요. 모자란 돈을 받고 다음 도장에 1.5배를 함께 내요
     var P = run.payment;
@@ -2148,9 +2168,10 @@ var Core = (function () {
   function afterPayment(run) {
     if (run.phase !== 'payment') return { ok: false };
     var P = run.payment;
-    if (P.pending) { if (run.cash >= P.amount) completePay(run); else { failPay(run); return finish(run, false); } }
-    if (!P.ok) return finish(run, false);
-    if (run.day >= CONFIG.days || run.stamps >= pays(run).length) return finish(run, true);
+    if (P.pending) { if (run.cash >= P.amount) completePay(run); else { failPay(run); return finish(run, !!run.endless); } }
+    if (!P.ok) return run.endless ? finish(run, true) : finish(run, false);   // 끝없는 갱에서 못 내면 거기까지(이미 완납한 판)
+    if (run.endless) addEndlessPay(run);
+    else if (run.day >= CONFIG.days || run.stamps >= pays(run).length) return finish(run, true);
     if (feat('stampReward')) {   // 도장 선물: 셋 중 하나 또는 금고 돈
       run.giftOpts = rewardOpts(run); run.giftCash = CONFIG.stampReward.cash[Math.min(run.stamps, CONFIG.stampReward.cash.length) - 1] || 0;
       run.giftDone = false; run.giftNext = 'shop'; run.giftKind = 'stamp'; run.phase = 'gift';
@@ -2159,6 +2180,21 @@ var Core = (function () {
     openShop(run);
     return { ok: true };
   }
+  // ---------- 끝없는 갱 ----------
+  function addEndlessPay(run) {   // 다음 끝없는 도장: 사흘 뒤, 직전 도장의 1.5배
+    var P = pays(run), last = P[P.length - 1], E = CONFIG.endless;
+    if (last.day > run.day) return;
+    P.push({ day: last.day + E.every, name: TEXT.endless.name, amount: Math.round(last.amount * E.mul / E.round) * E.round, endless: true });
+  }
+  function continueEndless(run) {   // 마지막 도장을 찍은 판만. 판 끝 화면에서 고르면 날이 이어져요
+    if (run.phase !== 'final' || !run.final || !run.final.success || run.endless || run.tutorial) return { ok: false };
+    run.endless = { from: run.day };
+    run.final = null; run.phase = 'payment';
+    addEndlessPay(run);
+    log(run, TEXT.endless.begin, 'good');
+    return afterPayment(run);
+  }
+  function endlessMines(run) { var E = CONFIG.endless; return run.endless ? Math.min(E.minesMax, Math.max(0, run.stamps - 5) * E.minesPerStamp) : 0; }
   // 계약 해지 화면 비교 한 줄(02 6.2): 해지된 납부 구간의 수입과 그 납부를 낸 판의 평균
   function voidCompare(run, P) {
     var PP = pays(run), i = P && P.idx ? P.idx : Math.min(PP.length, run.stamps + 1), from = i === 1 ? 1 : PP[i - 2].day + 1, to = PP[i - 1].day;
@@ -2172,7 +2208,7 @@ var Core = (function () {
   function finish(run, success) {
     var rng = rngFrom(hashSeed(run.seed, 99));
     var P = run.payment;
-    run.final = { success: success, score: success ? run.cash : 0, cash: run.cash, stamps: run.stamps, day: run.day,
+    run.final = { success: success, score: success ? run.cash : 0, cash: run.cash, stamps: run.stamps, day: run.day, endless: run.endless ? { day: run.day, stamps: Math.max(0, run.stamps - 5) } : null,
                   short: P ? P.short : 0,
                   compare: success ? null : voidCompare(run, P),
                   body: success ? null : [TEXT.voidBody[0], run.stamps > 0 ? TEXT.voidBody[1] : null, TEXT.voidBody[2]].filter(Boolean).map(function (s) { return s.replace('{day}', run.day).replace('{short}', fmt(P ? P.short : 0)).replace('{n}', run.stamps).replace('{total}', pays(run).length); }) };
@@ -2181,8 +2217,7 @@ var Core = (function () {
   }
 
   // ---------- 상점 ----------
-  function pickStock(run, nTools, nCons, merchant) {
-    var rng = run.metaRng;
+  function pickStock(run, nTools, nCons, merchant, rng) {   // 상점 진열: (시드, 날, 다시 보기 횟수)로 따로 뽑아 내 플레이에 흔들리지 않아요
     var avail = toolPool().filter(function (t) { return t.kind === 'passive' && !owns(run, t.id); });
     var tools = [];   // 희귀도 가중치로 겹치지 않게 뽑는다(05 5.1)
     while (tools.length < nTools && avail.length) {
@@ -2195,7 +2230,7 @@ var Core = (function () {
   function openShop(run) {
     var stock;
     if (run.tutorial && run.day === 1) stock = CONFIG.tutorialShopDay1.slice();   // R50
-    else stock = pickStock(run, CONFIG.shop.tools, CONFIG.shop.cons, false);
+    else stock = pickStock(run, CONFIG.shop.tools, CONFIG.shop.cons, false, rngFrom(hashSeed(run.seed, run.day, 0x53484f50, 0)));
     run.shop = { stock: stock, sold: {}, rerolls: 0, fuse: fusionsReady(run) };
     run.phase = 'shop';
   }
@@ -2256,7 +2291,7 @@ var Core = (function () {
   function placeBox(run, f, depth) {
     var d = run.d, R = CONFIG.relic;
     if (!feat('relicBox') || f.tutorial || (d.stats.boxes || 0) > 0 || d.chunkSpec || depth < R.minDepth || run.day < R.minDay) return;   // 하루에 하나 캘 때까지 층마다 확률로 묻혀요
-    var rng = rngFrom(hashSeed(run.seed, run.day, d.floorIdx, 0x424f58));
+    var rng = rngFrom(hashSeed(run.seed, run.day, depth, 0x424f58));
     var pity = run.day >= R.pityDay && !run.stats.boxes;   // 둘째 도장 날까지 하나도 못 주웠으면 다음 층에 꼭
     if (!pity && rng() >= R.chance) return;
     var T = f.cells.filter(function (c) { return c.haz === 'treasure' && !c.removed && covered(c) && !c.chunk && !c.mark; });
@@ -2268,7 +2303,7 @@ var Core = (function () {
   // 바랜 분필 자국: 앞서 다녀간 광부가 남긴 X(지뢰)와 O(보물). 늘 맞고, 지우거나 바꿀 수 없어요
   function placeFaded(run, f) {
     if (!feat('fadedChalk') || f.tutorial) return;
-    var d = run.d, P = keepWith(run, 'faded') ? keepWith(run, 'faded').faded : CONFIG.fadedChalk, rng = rngFrom(hashSeed(run.seed, run.day, d.floorIdx, 0x46414445));
+    var d = run.d, P = keepWith(run, 'faded') ? keepWith(run, 'faded').faded : CONFIG.fadedChalk, rng = rngFrom(hashSeed(run.seed, run.day, f.depth, 0x46414445));
     var nO = P.o[Math.floor(rng() * P.o.length)], nX = P.x[Math.floor(rng() * P.x.length)], n = 0;
     function pick(list, k, m) {
       for (var i = 0; i < k && list.length; i++) { var j = Math.floor(rng() * list.length), c = list.splice(j, 1)[0]; c.mark = m; c.faded = m; if (m === 1) c.givenX = true; n++; }
@@ -2288,7 +2323,7 @@ var Core = (function () {
     run.stats.boxes++; d.stats.boxes = (d.stats.boxes || 0) + 1;
     curFloorRec(run).box = true;
     if (!o.scorch) streakUp(run, 1 + (o.extraStep || 0));   // 보물처럼 콤보가 올라요(그을리면 안 올라요). 돈은 없어요
-    var rng = rngFrom(hashSeed(run.seed, run.day, d.floorIdx, 0x4f505453));
+    var rng = rngFrom(hashSeed(run.seed, run.day, f.depth, 0x4f505453));
     var kAvail = KEEPSAKES.filter(function (k) { return (run.keeps || []).indexOf(k.id) < 0; });
     if (feat('keepsake') && !o.scorch && kAvail.length && rng() < CONFIG.keepsake.share) {   // 가끔은 도구 대신 유품 하나
       run.boxOffer = { keep: kAvail[Math.floor(rng() * kAvail.length)].id, opts: [], scorch: false, quote: TEXT.keep.kwak };
@@ -2362,7 +2397,7 @@ var Core = (function () {
   function reroll(run) {
     if (run.phase !== 'shop' || run.cash < rerollPrice(run)) return { ok: false };
     run.cash -= rerollPrice(run); run.shop.rerolls++;
-    var fresh = pickStock(run, CONFIG.shop.tools, 0, false);
+    var fresh = pickStock(run, CONFIG.shop.tools, 0, false, rngFrom(hashSeed(run.seed, run.day, 0x53484f50, run.shop.rerolls)));
     for (var i = 0; i < CONFIG.shop.tools; i++) { run.shop.stock[i] = fresh[i] || null; delete run.shop.sold[i]; }
     return { ok: true };
   }
@@ -2392,7 +2427,7 @@ var Core = (function () {
   return {
     W: W, H: H, newRun: newRun, prepareDay: prepareDay, chooseOrder: chooseOrder, startDay: startDay,
     move: move, hit: hit, mark: mark, chord: chord, chordInfo: chordInfo, rateText: rateText, stampNames: stampNames, payments: pays, applyPreset: applyPreset, poolList: poolList, toolPool: toolPool,
-    dailySeed: function (dateStr) { var p = String(dateStr).split('-').map(Number); return hashSeed(p[0] || 0, p[1] || 0, p[2] || 0, 0xDA11); }, probe: probe, ignite: ignite, useCons: useCons, travelTo: travelTo, approach: approach,
+    dailySeed: function (dateStr) { var p = String(dateStr).split('-').map(Number); return hashSeed(p[0] || 0, p[1] || 0, p[2] || 0, 0xDA11) % SEED_MAX; }, probe: probe, ignite: ignite, useCons: useCons, travelTo: travelTo, approach: approach,
     onStair: onStair, descend: descend, travelCost: travelCost, springChoose: springChoose, merchantService: merchantService, leaveRoom: leaveRoom,
     returnUp: returnUp, afterSettle: afterSettle, afterPayment: afterPayment, buy: buy, sellBack: sellBack, sellPrice: sellPrice, reroll: reroll,
     slotsOf: slotsOf, toolValue: toolValue, canRemove: canRemove, chooseBox: chooseBox, boxPassValue: boxPassValue, fuse: fuse, fusionsReady: fusionsReady,
@@ -2403,7 +2438,7 @@ var Core = (function () {
     hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, igniteCost: igniteCost,
     isBorder: isBorder, owns: owns, mut: mut, gang: gang, canAct: canAct,
     propagated: propagated, toGift: toGift, chooseGift: chooseGift, floorEstimate: floorEstimate, placeGraffiti: placeGraffiti, floorFromMap: floorFromMap, tutorialFloor: tutorialFloor, walkable: walkable, TUT_TEST: TUT_TEST, planRun: planRun,
-    TOOL_BY_ID: TOOL_BY_ID, KEEP_BY_ID: KEEP_BY_ID, KEEPSAKES: KEEPSAKES, keepSum: keepSum, ORDER_BY_ID: ORDER_BY_ID, CHAR_BY_ID: CHAR_BY_ID, charOf: charOf, innate: innate, debugFillCandle: debugFillCandle, debugEndDay: debugEndDay, debugSkipDay: debugSkipDay
+    TOOL_BY_ID: TOOL_BY_ID, KEEP_BY_ID: KEEP_BY_ID, seedCode: seedCode, parseSeed: parseSeed, randomSeed: randomSeed, continueEndless: continueEndless, endlessMines: endlessMines, KEEPSAKES: KEEPSAKES, keepSum: keepSum, ORDER_BY_ID: ORDER_BY_ID, CHAR_BY_ID: CHAR_BY_ID, charOf: charOf, innate: innate, debugFillCandle: debugFillCandle, debugEndDay: debugEndDay, debugSkipDay: debugSkipDay
   };
 })();
 

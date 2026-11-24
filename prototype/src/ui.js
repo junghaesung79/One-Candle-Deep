@@ -94,8 +94,10 @@ function startNewRun(tutorial, o) {
   if (run && run.phase !== 'final' && (run.d || run.day > 1)) countRun(false);   // 진행 중인 판을 버리면 진 판으로 세요
   var grade = tutorial ? 1 : Math.max(1, Math.min(settings.gradeOpen || 1, o.grade || settings.grade || 1));
   var daily = !tutorial && o.daily ? todayStr() : null;
-  var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : (Date.now() & 0x7fffffff);
+  var seedSet = !tutorial && !daily && o.seed != null;   // 시드를 넣은 판
+  var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : seedSet ? o.seed : Core.randomSeed();
   run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: settings.char });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
+  run.seedSet = seedSet;
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
   ui.shownAt = performance.now(); ui.mode = null; ui.aim = null;
@@ -773,8 +775,8 @@ function updateHUD() {
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
   // 판: 날짜(달력·설정 단추는 같은 줄)
-  $('runDay').innerHTML = '<span class="px">' + run.day + '</span>일째 <span class="muted" style="font-weight:400">/ ' + CONFIG.days + '</span>';
-  $('runLeft').textContent = (CONFIG.days - run.day + 1) + '일 남음';
+  $('runDay').innerHTML = dayHead();
+  $('runLeft').textContent = dayLeft();
   var hintH = hintText();   // 마우스를 올린 칸에서 할 일. 촛불 막대의 미리 보기(ui.preCost)도 여기서 정해요
   // 오늘 주머니 / 금고
   var pocketShow = d ? Math.max(0, Math.round(d.pocket - ui.pocketPending)) : 0;
@@ -953,6 +955,15 @@ function stampIdx(day) { var P = Core.payments(run); for (var i = 0; i < P.lengt
 function stampNm(day) { var i = stampIdx(day); return i >= 0 ? Core.stampNames(run)[i] : ''; }
 var NUM_KO = ['', '한', '두', '세', '네', '다섯', '여섯'];
 function gradeName(g) { return CONFIG.gradeNames[(g || 1) - 1] || CONFIG.gradeNames[0]; }
+// 머리 줄 날짜: 15일 판은 "n일째 / 15", 끝없는 갱은 "n일째 · 끝없는 갱"
+function dayHead() { return '<span class="px">' + run.day + '</span>일째 <span class="muted" style="font-weight:400">' + (run.endless ? '· ' + esc(TEXT.endless.tag) : '/ ' + CONFIG.days) + '</span>'; }
+function dayLeft() { if (!run.endless) return (CONFIG.days - run.day + 1) + '일 남음'; var g = Core.goalInfo(run); return g ? '도장까지 ' + g.daysLeft + '일' : ''; }
+function seedLine() { return esc(TEXT.seed.label) + ' ' + Core.seedCode(run.seed) + ' · ' + CONFIG.genVersion + (run.seedSet ? ' · ' + esc(TEXT.seed.mark) : ''); }
+function copySeed(btn) {   // 클립보드가 막혀 있으면 글자를 골라 둬요
+  var code = Core.seedCode(run.seed), done = function () { if (btn) btn.textContent = TEXT.seed.copied; };
+  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(code).then(done, function () {}); return; } } catch (e) {}
+  done();
+}
 function bestKey() { return run.daily ? 'daily:' + run.daily : 'grade:' + (run.grade || 1); }
 // 캐릭터 고르기(권리증 화면 오른쪽). 첫 판은 광부로만 해요
 function skillRow(k, sk, extra) { return '<div class="skRow"><span class="mk ' + k + '">' + (k === 'x' ? 'X' : 'O') + '</span><b>' + esc(sk.name) + '</b>' + (extra ? ' <span class="muted">' + extra + '</span>' : '') + '</div>'; }
@@ -1021,6 +1032,7 @@ function renderOverlay() {
       (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '<button id="oCodex">도감</button></span>') +
       '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
       (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
+      (!run.tutorial && !run.daily ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">' + esc(TEXT.seed.label) + '</span><input id="seedIn" spellcheck="false" autocomplete="off" placeholder="' + esc(TEXT.seed.hint) + '" style="width:150px" value="' + (run.seedSet ? Core.seedCode(run.seed) : '') + '"><button id="oSeed">' + esc(TEXT.seed.apply) + '</button><span class="note">지금 ' + Core.seedCode(run.seed) + ' · ' + CONFIG.genVersion + '</span></div>' : '') +
       (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + charPickHtml() + '</div>';
   } else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
@@ -1194,7 +1206,7 @@ function paymentHtml() {
       P.next.mutations.forEach(function (m, i) { h += '<div class="panel fadein" style="animation-delay:' + (2400 + i * 200) + 'ms;padding:6px 10px;margin-top:4px;font-size:14px">' + iconHtml('muts.' + m, 20) + ' <b>' + MUTATIONS[m].name + '</b> · <span class="muted">구 실장:</span> "' + esc(MUTATIONS[m].warn) + '"</div>'; });
     }
   }
-  h += '<div style="margin-top:14px;text-align:right"><button class="primary" id="oPay">' + (P.ok ? (run.day >= CONFIG.days ? '권리증 받기' : CONFIG.features.stampReward ? '도장 선물 고르기' : '상점으로') : '다음') + '</button></div></div>';
+  h += '<div style="margin-top:14px;text-align:right"><button class="primary" id="oPay">' + (P.ok ? (!run.endless && run.day >= CONFIG.days ? '권리증 받기' : CONFIG.features.stampReward ? '도장 선물 고르기' : '상점으로') : '다음') + '</button></div></div>';
   return h;
 }
 function finalHtml() {
@@ -1202,24 +1214,28 @@ function finalHtml() {
   countRun(!!F.success);
   var hist = run.history, mx = Math.max.apply(null, hist.map(function (x) { return x.income; }).concat([1]));
   var chart = '<div class="chart">';
-  for (var i = 0; i < CONFIG.days; i++) { var hi = hist[i], pay = !!Core.paymentFor(i + 1); chart += hi ? '<i class="' + (hi.collapsed ? 'col ' : '') + (pay ? 'pay' : '') + '" title="' + hi.day + '일째: ' + hi.income + '" style="height:' + Math.max(4, hi.income / mx * 86) + 'px"></i>' : '<i style="background:transparent' + (pay ? ';outline:1px dashed #5d5868' : '') + '"></i>'; }
+  for (var i = 0; i < Math.max(CONFIG.days, hist.length); i++) { var hi = hist[i], pay = !!Core.paymentFor(i + 1); chart += hi ? '<i class="' + (hi.collapsed ? 'col ' : '') + (pay ? 'pay' : '') + '" title="' + hi.day + '일째: ' + hi.income + '" style="height:' + Math.max(4, hi.income / mx * 86) + 'px"></i>' : '<i style="background:transparent' + (pay ? ';outline:1px dashed #5d5868' : '') + '"></i>'; }
   chart += '</div><div class="note">날마다 수입 (테두리 = 도장 찍는 날, 빗금 = 쓰러진 날)</div>';
   var st = '가장 깊이 간 층 지하 ' + run.stats.deepest + ' · 보물 ' + run.stats.treasures + ' · 발파 ' + run.stats.blasts + ' · 쓰러진 날 ' + run.stats.collapses + (CONFIG.features.perfect ? ' · 완벽한 층 ' + (run.stats.perfect || 0) : '');
   if (F.success) {
     if (!settings.bestBy) settings.bestBy = {};
-    var bk = bestKey(), best = settings.bestBy[bk] || (bk === 'grade:1' ? settings.best || 0 : 0), isNew = F.score > best;
-    if (isNew) { settings.bestBy[bk] = F.score; if (bk === 'grade:1') settings.best = F.score; }
+    var bk = F.endless ? 'endless:' + (run.grade || 1) : bestKey(), fv = F.endless ? F.endless.day : F.score;   // 끝없는 갱은 버틴 날로 따로 겨뤄요
+    var best = settings.bestBy[bk] || (bk === 'grade:1' ? settings.best || 0 : 0), isNew = fv > best;
+    if (isNew) { settings.bestBy[bk] = fv; if (bk === 'grade:1') settings.best = fv; }
     var unlocked = !run.daily && !run.tutorial && (run.grade || 1) < 3 && (settings.gradeOpen || 1) <= (run.grade || 1) && !ui.unlockShown;
     if (!run.daily && (run.grade || 1) >= (settings.gradeOpen || 1) && (run.grade || 1) < 3) { settings.gradeOpen = (run.grade || 1) + 1; }
     if (unlocked) ui.unlockShown = true;
     saveSettings();
     var mini = '<div class="deedCard" style="display:flex;gap:14px;align-items:center;padding:10px 16px;flex-wrap:wrap"><b>' + gradeName(run.grade) + ' 권리증</b>' + Core.payments(run).map(function (p, i) { return '<span style="display:flex;align-items:center;gap:6px"><span class="stamp" style="width:34px;height:34px;font-size:11px">도장</span>' + Core.stampNames(run)[i] + '</span>'; }).join('') + '</div>';
-    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:800px"><h2>15일째 · 그믐 · 마지막 도장을 찍었어요. ' + gradeName(run.grade) + '은 이제 내 거예요</h2>' + mini +
-      '<div style="font-size:20px;margin:14px 0">남긴 돈 (이번 판 점수) <b class="px acc" style="font-size:26px">' + fmt(F.score) + '</b></div>' +
-      '<div class="sub">' + (run.daily ? TEXT.daily + ' ' + run.daily + ' · ' : '') + (best ? '이 광산 최고 점수 ' + fmt(best) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' +
+    var EN = F.endless;
+    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:800px"><h2>' + (EN ? esc(TEXT.endless.title.replace('{day}', EN.day)) : '15일째 · 그믐 · 마지막 도장을 찍었어요. ' + gradeName(run.grade) + '은 이제 내 거예요') + '</h2>' + (EN ? '<div class="sub">' + esc(TEXT.endless.sub.replace('{n}', EN.stamps)) + (run.payment && run.payment.quote ? ' · 중개인 구 실장: "' + esc(run.payment.quote) + '"' : '') + '</div>' : mini) +
+      (EN ? '<div style="font-size:20px;margin:14px 0">버틴 날 <b class="px acc" style="font-size:26px">' + EN.day + '</b>일째 <span class="sub" style="font-size:14px">남긴 돈 ' + fmt(F.score) + '</span></div>' : '<div style="font-size:20px;margin:14px 0">남긴 돈 (이번 판 점수) <b class="px acc" style="font-size:26px">' + fmt(F.score) + '</b></div>') +
+      '<div class="sub">' + (run.daily ? TEXT.daily + ' ' + run.daily + ' · ' : '') + (best ? (EN ? '이 광산 끝없는 갱 최고 ' + best + '일째' : '이 광산 최고 점수 ' + fmt(best)) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' +
       (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸어요. 새 광맥 하나가 더 나오고 값이 올라요. 권리증 화면에서 골라요</div>' : '') + chart + '<div style="margin-top:6px;font-size:14px">' + st + '</div>' +
       '<div class="panel" style="padding:8px 12px;margin-top:10px"><div class="note">권리증 뒷면, 작은 글씨</div><div>' + esc(TEXT.deedBack) + '</div><div class="sub" style="margin-top:4px">중개인 구 실장: "' + esc(TEXT.deedNext) + '"</div></div>' +
-      '<div style="margin-top:14px;text-align:right"><button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
+      '<div class="note" style="margin-top:10px">' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button></div>' +
+      (!EN && !run.tutorial ? '<div class="quote" style="margin-top:10px">중개인 구 실장: "' + esc(TEXT.endless.ask) + '"</div>' : '') +
+      '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">' + (!EN && !run.tutorial ? '<button id="oEndless">' + esc(TEXT.endless.button) + '</button>' : '') + '<button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
   } else {
     var paid = Core.payments(run).slice(0, run.stamps).map(function (p, i) { return Core.stampNames(run)[i] + ' ' + fmt(p.amount); }).join(', ') || '없어요';
     h = '<div class="dim" style="background:#0b0a10"></div><div class="dlg" style="width:720px"><h2 style="color:#e5484d">계약 해지</h2>' +
@@ -1227,6 +1243,7 @@ function finalHtml() {
       '<div style="font-size:24px;font-weight:700;color:#e5484d;margin:10px 0">' + fmt(F.short) + ' 모자랐어요</div>' +
       (F.compare ? '<div style="font-size:15px;margin-bottom:6px">' + esc(F.compare) + '</div>' : '') +
       '<h3>이번 판 기록</h3><div style="font-size:14px">낸 돈: ' + paid + '<br>' + st + '</div>' + chart +
+      '<div class="note" style="margin-top:10px">' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button></div>' +
       '<div style="margin-top:14px;text-align:right"><button class="primary" id="oAgain">다시 계약하기</button></div></div>';
   }
   ui.finalAt = performance.now();
@@ -1284,7 +1301,7 @@ function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추). 화�
     '<h3 style="margin-top:14px">기록</h3><div class="note">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '<br>' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button><button id="oOpening" style="flex:1">오프닝 만화 다시 보기</button></div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oCodex" style="flex:1">도구 도감</button></div>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · 시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · ' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button> · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
 function openingHtml() {
@@ -1395,6 +1412,9 @@ function bindOverlay() {
   on('oDay', goNextDay); on('oLeave', function () { Core.leaveRoom(run); afterAction(); });
   on('oService', function () { Core.merchantService(run); drainFx(); renderOverlay(); });
   on('oAgain', function () { startNewRun(false, { grade: run.grade, daily: !!run.daily }); });
+  on('oEndless', function () { if (Core.continueEndless(run).ok) { ui.shownAt = performance.now(); renderOverlay(); ui.hudDirty = true; } });
+  on('oSeedCopy', function () { copySeed(this); });
+  on('oSeed', function () { var sv = Core.parseSeed(($('seedIn') || {}).value); startNewRun(false, { seed: sv, grade: run.grade }); });
   on('oDaily', function () { startNewRun(false, { daily: true }); });
   on('oNormal', function () { startNewRun(false); });
   on('oGiftCash', function () { giftGo(-1); });
@@ -1710,6 +1730,7 @@ function clickCell(p) {
 // ---------- 입력 ----------
 // 키보드(R93): 판 위 조작(이동·캐기·분필·발파)은 마우스로만. 키는 창 넘기기·고르기와 Esc·Tab·R만 남긴다
 document.addEventListener('keydown', function (e) {
+  var tg = e.target && e.target.tagName; if (tg === 'INPUT' || tg === 'TEXTAREA') { if (e.key === 'Enter' && e.target.id === 'seedIn') { e.preventDefault(); var sb = $('oSeed'); if (sb) sb.click(); } return; }   // 시드 칸에 글을 쓰는 동안은 단축키를 쓰지 않아요
   if (ui.sweep) { e.preventDefault(); if (!e.repeat) endSweep(); return; }
   if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
   var code = e.code;
@@ -1815,7 +1836,7 @@ function frame(now) {
 }
 function updateHUDSafe() {
   if (!run.d) { // 아침 화면: 머리만
-    $('runDay').innerHTML = '<span class="px">' + run.day + '</span>일째 <span class="muted" style="font-weight:400">/ ' + CONFIG.days + '</span>'; $('runLeft').textContent = (CONFIG.days - run.day + 1) + '일 남음';
+    $('runDay').innerHTML = dayHead(); $('runLeft').textContent = dayLeft();
     $('vaultTxt').innerHTML = '금고 <b class="px" style="font-size:14px">' + fmt(run.cash) + '</b>'; $('goalTxt').innerHTML = goalLine(run);
     return;
   }

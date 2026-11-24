@@ -1,0 +1,840 @@
+{
+ "version": "2.2",
+ "seeds": {
+  "1": [
+   {
+    "day": 1,
+    "floors": [
+     "13a93b51",
+     "40ad356c",
+     "23229cba",
+     "f4b70b01",
+     "adfd823d"
+    ],
+    "shop": "fuse,crown,sieve,powder"
+   },
+   {
+    "day": 2,
+    "floors": [
+     "a1d90ec3",
+     "4b1cb812",
+     "81433620",
+     "f0dc38bf",
+     "3ef1ecf9"
+    ],
+    "shop": "regular,lens,betchalk,powder"
+   },
+   {
+    "day": 3,
+    "floors": [
+     "612ed823",
+     "2f2c683f",
+     "5e0798ad",
+     "56ae4f4d",
+     "954688b0"
+    ],
+    "shop": "sieve,belt,regular,powder"
+   },
+   {
+    "day": 4,
+    "floors": [
+     "1b9aa166",
+     "e4caf354",
+     "1149abcd",
+     "1dba8e63",
+     "9601b366"
+    ],
+    "shop": "crown,lastcard,fuse,powder"
+   },
+   {
+    "day": 5,
+    "floors": [
+     "4fa81576",
+     "6dc41cd5",
+     "fbc4b3df",
+     "96b736c7",
+     "c76b07e4"
+    ],
+    "shop": "sieve,gloves,crown,powder"
+   },
+   {
+    "day": 6,
+    "floors": [
+     "ba48e448",
+     "58c9a8a7",
+     "88e67f31",
+     "93aec9b9",
+     "4aeeba2e"
+    ],
+    "shop": "refiner,amulet,regular,powder"
+   },
+   {
+    "day": 7,
+    "floors": [
+     "e9fb1784",
+     "b022d295",
+     "16601127",
+     "d5aaaa75",
+     "acbf579e"
+    ],
+    "shop": "gloves,amulet,lens,powder"
+   },
+   {
+    "day": 8,
+    "floors": [
+     "edd0b562",
+     "314da6cf",
+     "0a0e5327",
+     "7902971f",
+     "2b3d1aa4"
+    ],
+    "shop": "tongs,gloves,sieve,powder"
+   },
+   {
+    "day": 9,
+    "floors": [
+     "fe068d3d",
+     "13aa286b",
+     "e2e1d8fc",
+     "974c7945",
+     "c8b37d1b"
+    ],
+    "shop": "lens,crown,sieve,powder"
+   },
+   {
+    "day": 10,
+    "floors": [
+     "7c418ded",
+     "fb15b173",
+     "3c0e2331",
+     "d8ef9c7f",
+     "9eeb13c9"
+    ],
+    "shop": "gloves,amulet,lastcard,powder"
+   },
+   {
+    "day": 11,
+    "floors": [
+     "956d786f",
+     "71e0e60d",
+     "b5b88bfb",
+     "cfbac6a8",
+     "260c4952"
+    ],
+    "shop": "lastcard,wedge,lens,powder"
+   },
+   {
+    "day": 12,
+    "floors": [
+     "e4b9c042",
+     "cf920ddd",
+     "9e55659f",
+     "0dccc4c9",
+     "ca584509"
+    ],
+    "shop": "gloves,regular,amulet,powder"
+   },
+   {
+    "day": 13,
+    "floors": [
+     "dd9fc45a",
+     "190d4b0c",
+     "1b588dc1",
+     "d7cf7ad6",
+     "985f8063"
+    ],
+    "shop": "amulet,gloves,lens,powder"
+   },
+   {
+    "day": 14,
+    "floors": [
+     "9efbf577",
+     "fdd65a6e",
+     "1207def8",
+     "98df574d",
+     "fc022aa6"
+    ],
+    "shop": "regular,fuse,lastcard,powder"
+   },
+   {
+    "day": 15,
+    "floors": [
+     "d10c6def",
+     "3ddd3212",
+     "0ecdb499",
+     "e22e3180",
+     "6623e29b"
+    ],
+    "shop": ""
+   }
+  ],
+  "2": [
+   {
+    "day": 1,
+    "floors": [
+     "7e4ee3e4",
+     "1b95d0fb",
+     "9b8695c7",
+     "957caa39",
+     "00b93d6e"
+    ],
+    "shop": "crown,tapper,regular,powder"
+   },
+   {
+    "day": 2,
+    "floors": [
+     "4d6ce13b",
+     "de533791",
+     "ea12b3fe",
+     "87c45b95",
+     "d3e7010d"
+    ],
+    "shop": "sieve,betchalk,regular,powder"
+   },
+   {
+    "day": 3,
+    "floors": [
+     "758d8268",
+     "ebed4bbf",
+     "ae24a0ef",
+     "f90a45ac",
+     "67ee9f4c"
+    ],
+    "shop": "betchalk,wedge,lastcard,powder"
+   },
+   {
+    "day": 4,
+    "floors": [
+     "61a042ba",
+     "1c70868d",
+     "c4a99766",
+     "88690ac6",
+     "fe90739a"
+    ],
+    "shop": "gloves,fuse,amulet,powder"
+   },
+   {
+    "day": 5,
+    "floors": [
+     "fc6a6625",
+     "7fde9cb0",
+     "ba3a70a9",
+     "4d37749d",
+     "5ef7a16d"
+    ],
+    "shop": "wedge,sieve,amulet,powder"
+   },
+   {
+    "day": 6,
+    "floors": [
+     "dc663f08",
+     "4800a232",
+     "94509349",
+     "4b979995",
+     "1129668f"
+    ],
+    "shop": "fuse,belt,crown,powder"
+   },
+   {
+    "day": 7,
+    "floors": [
+     "ec45b65d",
+     "bac5b5fb",
+     "ad7a564e",
+     "30743fa5",
+     "32621229"
+    ],
+    "shop": "gloves,fuse,sieve,powder"
+   },
+   {
+    "day": 8,
+    "floors": [
+     "dac0cfeb",
+     "48e28852",
+     "f2c7c73c",
+     "5c705f25",
+     "c937c229"
+    ],
+    "shop": "sieve,betchalk,amulet,powder"
+   },
+   {
+    "day": 9,
+    "floors": [
+     "96a767df",
+     "06752a97",
+     "a8faf9d7",
+     "8fb30062",
+     "21149da9"
+    ],
+    "shop": "fuse,gloves,lens,powder"
+   },
+   {
+    "day": 10,
+    "floors": [
+     "7f2e8153",
+     "99f29933",
+     "376e4d5d",
+     "ec5b7aa8",
+     "f21749f6"
+    ],
+    "shop": "betchalk,tapper,lens,powder"
+   },
+   {
+    "day": 11,
+    "floors": [
+     "5ff34be7",
+     "80a4d362",
+     "b8389eef",
+     "303388a2",
+     "62c3572a"
+    ],
+    "shop": "lastcard,tapper,fuse,powder"
+   },
+   {
+    "day": 12,
+    "floors": [
+     "0390f33d",
+     "9bc989ee",
+     "5838fe2a",
+     "e54d604f",
+     "f69f38a0"
+    ],
+    "shop": "fuse,crown,tongs,powder"
+   },
+   {
+    "day": 13,
+    "floors": [
+     "7576ea4f",
+     "3b4bdbec",
+     "0607553f",
+     "8ff853f3",
+     "b0d968cd"
+    ],
+    "shop": "fuse,amulet,sieve,powder"
+   },
+   {
+    "day": 14,
+    "floors": [
+     "8b26e145",
+     "8a86ba0b",
+     "a8a08f3f",
+     "2a36e914",
+     "78e31a76"
+    ],
+    "shop": "crown,fuse,betchalk,powder"
+   },
+   {
+    "day": 15,
+    "floors": [
+     "f732b737",
+     "e66471cb",
+     "9e82f724",
+     "bc33671a",
+     "ad5a044e"
+    ],
+    "shop": ""
+   }
+  ],
+  "3": [
+   {
+    "day": 1,
+    "floors": [
+     "2ba09470",
+     "38a693f1",
+     "36de0f45",
+     "592ee4f9",
+     "7e614aef"
+    ],
+    "shop": "crown,betchalk,fuse,powder"
+   },
+   {
+    "day": 2,
+    "floors": [
+     "cc83a5dd",
+     "98253d6c",
+     "245f426b",
+     "982cf372",
+     "d3e88eb6"
+    ],
+    "shop": "crown,tapper,wedge,powder"
+   },
+   {
+    "day": 3,
+    "floors": [
+     "018f93fc",
+     "94d30c5d",
+     "43e0ecb6",
+     "0843ceed",
+     "be3154c2"
+    ],
+    "shop": "amulet,crown,gloves,powder"
+   },
+   {
+    "day": 4,
+    "floors": [
+     "3f6fc055",
+     "1c1faecb",
+     "355594ea",
+     "6fa1f3b6",
+     "977071e3"
+    ],
+    "shop": "tongs,betchalk,lastcard,powder"
+   },
+   {
+    "day": 5,
+    "floors": [
+     "fc328359",
+     "ed2d4f0f",
+     "b703ed71",
+     "259974e2",
+     "587df4a2"
+    ],
+    "shop": "belt,wedge,sieve,powder"
+   },
+   {
+    "day": 6,
+    "floors": [
+     "a1d6c9a7",
+     "fd64dd3a",
+     "cf4b46f6",
+     "d6f55b53",
+     "3f5fcfe5"
+    ],
+    "shop": "amulet,crown,tapper,powder"
+   },
+   {
+    "day": 7,
+    "floors": [
+     "a671abdc",
+     "2ef2c40f",
+     "00b68ee7",
+     "471cbcef",
+     "39a42bad"
+    ],
+    "shop": "lens,sieve,amulet,powder"
+   },
+   {
+    "day": 8,
+    "floors": [
+     "452a77bd",
+     "99057ac2",
+     "bdd1556f",
+     "b563e2e7",
+     "65b3983d"
+    ],
+    "shop": "tapper,tongs,amulet,powder"
+   },
+   {
+    "day": 9,
+    "floors": [
+     "4ea6d27b",
+     "40eda469",
+     "4f9bd364",
+     "bb5dbbf6",
+     "c675f092"
+    ],
+    "shop": "sieve,tapper,amulet,powder"
+   },
+   {
+    "day": 10,
+    "floors": [
+     "6188c43a",
+     "87707757",
+     "0c8620c1",
+     "ffed750c",
+     "a29aff7e"
+    ],
+    "shop": "refiner,amulet,betchalk,powder"
+   },
+   {
+    "day": 11,
+    "floors": [
+     "64268ea8",
+     "057c1498",
+     "2f0961d3",
+     "099a811c",
+     "f0deb637"
+    ],
+    "shop": "gloves,amulet,tapper,powder"
+   },
+   {
+    "day": 12,
+    "floors": [
+     "1145cf72",
+     "80651574",
+     "9e1c4e6e",
+     "aa261b74",
+     "7dd63027"
+    ],
+    "shop": "crown,gloves,refiner,powder"
+   },
+   {
+    "day": 13,
+    "floors": [
+     "7ea8909b",
+     "aadb8709",
+     "1d764ce3",
+     "5dcb682a",
+     "9e18a19c"
+    ],
+    "shop": "sieve,crown,belt,powder"
+   },
+   {
+    "day": 14,
+    "floors": [
+     "ec5f5ad2",
+     "ff4ee865",
+     "6acc00b0",
+     "f3e97488",
+     "0d62b9be"
+    ],
+    "shop": "belt,amulet,refiner,powder"
+   },
+   {
+    "day": 15,
+    "floors": [
+     "b4ce0fed",
+     "2872782e",
+     "fbb565c4",
+     "1ec71e91",
+     "e5a03bc4"
+    ],
+    "shop": ""
+   }
+  ],
+  "12345": [
+   {
+    "day": 1,
+    "floors": [
+     "98c540b6",
+     "2302407c",
+     "defe67a1",
+     "0268713f",
+     "8322238e"
+    ],
+    "shop": "tapper,gloves,sieve,powder"
+   },
+   {
+    "day": 2,
+    "floors": [
+     "39e08aca",
+     "e410c4e2",
+     "99099e50",
+     "32cc409a",
+     "cae81c38"
+    ],
+    "shop": "fuse,regular,wedge,powder"
+   },
+   {
+    "day": 3,
+    "floors": [
+     "57c27b29",
+     "bc2903ac",
+     "757695e4",
+     "541d8d5b",
+     "76805f6d"
+    ],
+    "shop": "regular,crown,lastcard,powder"
+   },
+   {
+    "day": 4,
+    "floors": [
+     "56bc2c8e",
+     "bf54d826",
+     "5014625a",
+     "e2994b17",
+     "433660f5"
+    ],
+    "shop": "betchalk,regular,fuse,powder"
+   },
+   {
+    "day": 5,
+    "floors": [
+     "1e254b0d",
+     "595b33ac",
+     "486cb5f5",
+     "81832cf9",
+     "aa35c942"
+    ],
+    "shop": "amulet,tapper,betchalk,powder"
+   },
+   {
+    "day": 6,
+    "floors": [
+     "0030c508",
+     "eadf4b0e",
+     "d7016587",
+     "8d2e0750",
+     "94144b05"
+    ],
+    "shop": "lens,wedge,gloves,powder"
+   },
+   {
+    "day": 7,
+    "floors": [
+     "bbf43cfe",
+     "cc6ad9d8",
+     "497b1f09",
+     "b9c87ff8",
+     "c6e136b8"
+    ],
+    "shop": "belt,gloves,tongs,powder"
+   },
+   {
+    "day": 8,
+    "floors": [
+     "f73fec4a",
+     "4777110b",
+     "a1f5e1ed",
+     "972843ff",
+     "2b32f9e0"
+    ],
+    "shop": "tapper,wedge,gloves,powder"
+   },
+   {
+    "day": 9,
+    "floors": [
+     "2a50d06e",
+     "357986cd",
+     "350a4068",
+     "2163e645",
+     "89bac259"
+    ],
+    "shop": "regular,tongs,gloves,powder"
+   },
+   {
+    "day": 10,
+    "floors": [
+     "518f8a90",
+     "492eddf3",
+     "54c65b2d",
+     "3deb7a57",
+     "14078ed9"
+    ],
+    "shop": "crown,gloves,regular,powder"
+   },
+   {
+    "day": 11,
+    "floors": [
+     "c0f2e05c",
+     "ec873280",
+     "8c312fc2",
+     "baa51b94",
+     "46d0fdd6"
+    ],
+    "shop": "gloves,crown,fuse,powder"
+   },
+   {
+    "day": 12,
+    "floors": [
+     "eac6602e",
+     "724c22ca",
+     "fa193e5c",
+     "5d05978f",
+     "8e35517d"
+    ],
+    "shop": "wedge,crown,fuse,powder"
+   },
+   {
+    "day": 13,
+    "floors": [
+     "7e2057d4",
+     "b3553682",
+     "d18628cb",
+     "17ea587d",
+     "0cc2669c"
+    ],
+    "shop": "fuse,wedge,regular,powder"
+   },
+   {
+    "day": 14,
+    "floors": [
+     "debc0375",
+     "ceebe355",
+     "13cbeca7",
+     "d4865b2f",
+     "b783449e"
+    ],
+    "shop": "tapper,lens,fuse,powder"
+   },
+   {
+    "day": 15,
+    "floors": [
+     "ce7d24c0",
+     "be5dde17",
+     "cf7b8e18",
+     "78e6af10",
+     "2b91bc4f"
+    ],
+    "shop": ""
+   }
+  ],
+  "4294967295": [
+   {
+    "day": 1,
+    "floors": [
+     "a7dbcf78",
+     "78c20e98",
+     "50e59a79",
+     "53e4164d",
+     "df17b9cc"
+    ],
+    "shop": "wedge,amulet,fuse,powder"
+   },
+   {
+    "day": 2,
+    "floors": [
+     "ed822313",
+     "f30d2906",
+     "eae66fbc",
+     "cd761bc7",
+     "d1771fdf"
+    ],
+    "shop": "wedge,lens,fuse,powder"
+   },
+   {
+    "day": 3,
+    "floors": [
+     "17762f8e",
+     "089ad575",
+     "4246caaa",
+     "c0c5e412",
+     "0de4aa24"
+    ],
+    "shop": "fuse,gloves,sieve,powder"
+   },
+   {
+    "day": 4,
+    "floors": [
+     "615cd8eb",
+     "151153ab",
+     "c09f95f0",
+     "1fe41aaf",
+     "8c3d734b"
+    ],
+    "shop": "lens,fuse,gloves,powder"
+   },
+   {
+    "day": 5,
+    "floors": [
+     "c9ce3808",
+     "7d7c0c03",
+     "d20de543",
+     "38f8496e",
+     "3ddb1b93"
+    ],
+    "shop": "sieve,fuse,betchalk,powder"
+   },
+   {
+    "day": 6,
+    "floors": [
+     "9ea6310e",
+     "f62c6e80",
+     "4fac1db9",
+     "e63b07d0",
+     "384a3d75"
+    ],
+    "shop": "amulet,gloves,wedge,powder"
+   },
+   {
+    "day": 7,
+    "floors": [
+     "5dea11f0",
+     "fd29a332",
+     "eb45fba2",
+     "5b1b7eb7",
+     "c8978d7b"
+    ],
+    "shop": "crown,sieve,gloves,powder"
+   },
+   {
+    "day": 8,
+    "floors": [
+     "65cb84e2",
+     "202d719a",
+     "b61bddb5",
+     "52f7c7f6",
+     "194ffdb2"
+    ],
+    "shop": "belt,gloves,amulet,powder"
+   },
+   {
+    "day": 9,
+    "floors": [
+     "b56a2a63",
+     "058a1867",
+     "edebec50",
+     "d26db4fd",
+     "85e92db4"
+    ],
+    "shop": "crown,sieve,wedge,powder"
+   },
+   {
+    "day": 10,
+    "floors": [
+     "ee89564a",
+     "3c296f12",
+     "375eb1ae",
+     "bffa227f",
+     "86ab08af"
+    ],
+    "shop": "amulet,wedge,fuse,powder"
+   },
+   {
+    "day": 11,
+    "floors": [
+     "75fe2197",
+     "b26d2230",
+     "3f503dfa",
+     "47747863",
+     "22cf179b"
+    ],
+    "shop": "regular,amulet,fuse,powder"
+   },
+   {
+    "day": 12,
+    "floors": [
+     "8db63d39",
+     "2de48287",
+     "9ca81b7e",
+     "6b7b02db",
+     "c768812e"
+    ],
+    "shop": "sieve,wedge,amulet,powder"
+   },
+   {
+    "day": 13,
+    "floors": [
+     "5f4a571b",
+     "f2cc1a96",
+     "d604cfd4",
+     "c2286fb2",
+     "00e25f56"
+    ],
+    "shop": "wedge,gloves,crown,powder"
+   },
+   {
+    "day": 14,
+    "floors": [
+     "eac84d21",
+     "5c2038fe",
+     "045785ff",
+     "3efabe7e",
+     "bb430b3b"
+    ],
+    "shop": "regular,fuse,refiner,powder"
+   },
+   {
+    "day": 15,
+    "floors": [
+     "44e96570",
+     "c2c3de9e",
+     "83f1a656",
+     "467a389c",
+     "2fca9a31"
+    ],
+    "shop": ""
+   }
+  ]
+ }
+}
