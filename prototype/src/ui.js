@@ -258,6 +258,7 @@ function drainFx() {
       case 'boxMelt': anim.pops.push({ x: e.x, y: e.y, t0: now + 150, kind: 'fizzle' }); break;
       case 'stair': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'stair' }); break;
       case 'locked': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'locked' }); break;
+      case 'chalkDust': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'dust' }); break;
       case 'numChange': anim.numBlink[e.y * BW + e.x] = now + 360; break;
       case 'awake': addShake(3, 600); anim.stopUntil = Math.max(anim.stopUntil, now + 200); break;
       case 'chunkPiece': break;
@@ -459,7 +460,7 @@ function drawBoard(now) {
   for (y = 0; y < BH; y++) for (x = 0; x < BW; x++) {
     c = f.cells[y * BW + x]; X = x * T; Y = y * T; v = cellVisual(c, now);
     if (v.covered) {
-      if (c.mark === 1) g.drawImage(SPR.chalkX, X, Y, T, T); else if (c.mark === 2) g.drawImage(SPR.chalkO, X, Y, T, T);
+      if (c.mark === 1) g.drawImage(c.faded ? SPR.chalkXFaded : SPR.chalkX, X, Y, T, T); else if (c.mark === 2) g.drawImage(c.faded ? SPR.chalkOFaded : SPR.chalkO, X, Y, T, T);   // 바랜 자국은 흐리고 군데군데 지워진 분필
       if (c.probe === 'mine' && c.mark === 1) { g.strokeStyle = '#e5484d'; g.lineWidth = 2; g.strokeRect(X + 2, Y + 2, T - 4, T - 4); }   // 두드려 보기로 확인된 X
       if (c.probe) drawProbe(g, X, Y, c.probe);
       else if (c.fizzle) drawProbe(g, X, Y, 'safe');
@@ -535,6 +536,8 @@ function drawBoard(now) {
         g.globalAlpha = al2; g.fillStyle = grd; g.fillRect(PX + 8, PY + T - hgt, T - 16, hgt);
         var up2 = Math.min(1, k / 200), sz2 = 40 + 36 * up2; g.drawImage(SPR.icons.box, PX + 24 - sz2 / 2, PY + 24 - 22 * up2 - sz2 / 2, sz2, sz2); g.globalAlpha = 1;
       }
+    } else if (p.kind === 'dust') {   // 바랜 자국을 문지르면 분필 가루만 날려요
+      if (k < 500) { var da = 1 - k / 500; g.fillStyle = 'rgba(200,192,176,' + (0.8 * da).toFixed(2) + ')'; for (var di = 0; di < 7; di++) { var dx = ((di * 37) % 13) - 6, dy = -k / 40 - ((di * 23) % 7); g.fillRect(PX + T / 2 + dx * (1 + k / 250), PY + T / 2 + dy, 2, 2); } }
     } else if (p.kind === 'locked') {
       if (k < 120) { g.strokeStyle = '#e5484d'; g.lineWidth = 2; g.strokeRect(PX + 2 + (Math.floor(k / 30) % 2 ? 2 : -2), PY + 2, T - 4, T - 4); }
     }
@@ -1765,7 +1768,7 @@ board.addEventListener('mousedown', function (e) {
   if (e.button === 2) {   // 오른쪽 클릭: 고르기 상태면 취소, 아니면 분필 순환(거리 제한 없음)
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
     ui.dayClicks = (ui.dayClicks || 0) + 1;
-    var c = Core.cellAt(run.d.floor, p.x, p.y); if (c.cover !== 'open') { Core.mark(run, p.x, p.y); ui.chalkHintDone = true; } afterAction(); return;
+    var c = Core.cellAt(run.d.floor, p.x, p.y); if (c.cover !== 'open') { if (Core.mark(run, p.x, p.y).faded) { var fq = stageXY(p.x, p.y); addFly({ x: Math.max(160, Math.min(650, fq.x)), y: fq.y - 30, showAt: 0, flyAt: null, fadeAt: 1400, size: 13, rise: 8, color: '#c8c0b0', steps: [{ t: 0, h: esc(TEXT.faded.locked) }] }); } else ui.chalkHintDone = true; } afterAction(); return;
   }
   if (e.button !== 0) return;
   ui.dayClicks = (ui.dayClicks || 0) + 1;

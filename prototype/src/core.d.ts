@@ -99,7 +99,7 @@ export interface CoreApi {
   shownStair(f: Floor): number;
   hashSeed(...parts: number[]): number;
   hit(run: Run, x: number, y: number): ActResult;
-  mark(run: Run, x: number, y: number, to: number): unknown;
+  mark(run: Run, x: number, y: number, to?: number): { ok: boolean; mark?: number; faded?: boolean };
   probe(run: Run, x: number, y: number): unknown;
   ignite(run: Run, x: number, y: number, free?: boolean): ActResult;
   [k: string]: any;

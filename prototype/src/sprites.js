@@ -55,6 +55,10 @@ function iconHtml(name, size, cls) {
   var O = blank();
   for (var a = 0; a < 64; a++) { var t = a / 64 * Math.PI * 2; var ox = Math.round(7.5 + Math.cos(t) * 4.6), oy = Math.round(7.5 + Math.sin(t) * 4.6); O[oy][ox] = 'w'; if (ox + 1 < 16) O[oy][ox + 1] = 'w'; }
   SPR.chalkO = mkSprite(rows(O), { w: '#e6e1d6' });
+  // 바랜 분필 자국: 같은 꼴을 흐린 색으로, 군데군데 지워지게
+  function faded(r) { return r.map(function (line, y) { return line.split('').map(function (ch, x) { if (ch !== 'w') return ch; var h = (x * 7 + y * 13) % 9; return h === 0 || h === 4 ? '.' : (x + y) % 3 === 0 ? 'v' : 'u'; }).join(''); }); }
+  var FADE_PAL = { u: '#a39b8a', v: '#7c7568' };
+  SPR.chalkXFaded = mkSprite(faded(CHALK), FADE_PAL); SPR.chalkOFaded = mkSprite(faded(rows(O)), FADE_PAL);
   var ST2 = ["oooooooooookdhhh", "oxxxxxxxxxxkdppp", "oxxxxxxxxxxkdPPP", "oxxxxxxkkkkkdPPP", "oxxxxxxkdhhhdPPP", "oxxxxxxkdpppPPPP", "oxxxxxxkdPPPPPPP", "oxxkkkkkdPPPPPPP", "oxxkdhhhdPPPPPPP", "oxxkdpppPPPPPPPP", "oxxkdPPPPPPPPPPP", "kkkkdPPPPPPPPPPP", "hhhhdPPPPPPPPPPP", "ppppPPPPPPPPPPPP", "PPPPPPPPPPPPPPPP", "PPPPPPPPPPPPPPPP"];
   SPR.stair = mkSprite(ST2, { x: '#14100c', o: '#2a2018', k: '#0b0806', h: '#c9b49c', p: '#a8927a', P: '#7d6a55', d: '#5a4a3a' });
   SPR.scorch = mkSprite(["................", "................", "................", "......y..y......", "....yyyyyy.y....", "...yyxxxxyyy....", "..yyxxrxxxxy....", "..yxxrorxxxyy...", "..yxxxrxxrxxy...", "..yyxxxxxxxy....", "...yyxxxxyyy....", "....yyyyyy......", "......y.........", "................", "................", "................"], { y: '#3b2a1e', x: '#22242c', r: '#c4432b', o: '#ffb347' });

@@ -224,7 +224,7 @@ describe('규칙 단위 검사', () => {
     // 지뢰 판정 한 줄과 기록 장치
     {
       const r = Core.newRun(9311, { record: true }); Core.startDay(r); const ff = r.d.floor;
-      ff.cells.forEach(c => { if (c.cover !== 'open') c.mark = 0; });
+      ff.cells.forEach((c: any) => { if (c.cover !== 'open') { c.mark = 0; c.faded = 0; } });
       // 숫자로 확실한 지뢰를 찾아 친다(없으면 확실하지 않은 지뢰)
       const D = Core.deduce(ff);
       const known = D.mine.map((i: number) => ff.cells[i]).find((c: any) => c.haz === 'mine');
@@ -330,6 +330,19 @@ describe('규칙 단위 검사', () => {
       check(Core.takeLoan(rl).ok && rl.payment.ok && rl.stamps === 1 && Core.payments(rl)[1].amount === next0 + 150 && rl.loanUsed, 'loan stamps now and adds 1.5x to the next stamp');
       const rn = Core.newRun(6205); Core.debugSkipDay(rn); Core.debugSkipDay(rn); Core.startDay(rn); rn.d.pocket = 100; Core.returnUp(rn); Core.afterSettle(rn); Core.afterPayment(rn);
       check(rn.phase === 'final' && !rn.final.success, 'refusing the loan ends the contract'); }
+    // 바랜 분필 자국: 층마다 O 0~1개, X 0~2개. 늘 맞고, 오른쪽 클릭으로 안 바뀌어요
+    { const cntO = [0, 0], cntX = [0, 0, 0]; let wrong = 0, extra = 0, locked = true;
+      for (let s = 7000; s < 7300; s++) {
+        const r = Core.newRun(s); Core.startDay(r); const f = r.d.floor;
+        const fo = f.cells.filter((c: any) => c.faded === 2), fx = f.cells.filter((c: any) => c.faded === 1);
+        if (fo.length > 1 || fx.length > 2) extra++; else { cntO[fo.length]++; cntX[fx.length]++; }
+        wrong += fo.filter((c: any) => c.haz !== 'treasure' || c.mark !== 2 || c.box || c.chunk).length + fx.filter((c: any) => c.haz !== 'mine' || c.mark !== 1).length;
+        const any = fo[0] || fx[0];
+        if (any) { const m0 = any.mark, res = Core.mark(r, any.x, any.y); if (res.ok || !res.faded || any.mark !== m0) locked = false; }
+      }
+      check(extra === 0 && wrong === 0, 'faded marks: at most one O and two X per floor, always right');
+      check(cntO[1] > 60 && cntO[1] < 140 && cntX.every(n => n > 60 && n < 140), 'faded marks: O about 1 in 3 floors, X 0/1/2 about equally');
+      check(locked, 'right-click does not change a faded mark'); }
     // 둘레 한꺼번에 열기
     { const r = Core.newRun(6105); Core.startDay(r); const f = r.d.floor;
       const num = f.cells.find(c => c.cover === 'open' && Core.numAt(f, c) > 0 && Core.neighbors(f, c.x, c.y).some(q => q.cover !== 'open' && !q.haz && !q.stair));

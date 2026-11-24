@@ -128,7 +128,8 @@ class Bot {
     const D = this.deduce(run);
     const cell = i => f.cells[i];
     const ok = c => c.cover !== 'open' && !this.tried.has(c);
-    const tre = D.tre.map(cell).filter(ok);
+    const reach = c => Core.neighbors(f, c.x, c.y).some(n => n.cover === 'open');   // 바랜 O는 아직 닿을 수 없는 곳에 있을 수 있어요
+    const tre = D.tre.map(cell).filter(c => ok(c) && reach(c));
     const mines = D.mine.map(cell).filter(ok);
     const chunkHere = !!(f.chunk && !f.chunk.done);
     const chunkFloor = chunkHere && !CONFIG.features.chunkShown;   // 덩이 자리를 모르면 '지뢰'가 '지뢰 또는 덩이'라 X·발파를 쓰지 않는다
