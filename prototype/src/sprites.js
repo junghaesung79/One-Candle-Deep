@@ -49,7 +49,22 @@ function iconHtml(name, size, cls) {
   var MINER = ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "..oYYYYYYYYYYo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"];
   var MIP = { o: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', f: '#f0c39a', F: '#c9936a', e: '#1a1420', r: '#c4432b', d: '#3e5f8a' };
   SPR.miner = mkSprite(MINER, MIP);
-  SPR.minerBy = {}; CHARACTERS.forEach(function (c) { SPR.minerBy[c.id] = mkSprite(MINER, Object.assign({}, MIP, { r: c.color })); });   // 캐릭터마다 셔츠 색만 달라요
+  // 캐릭터마다 모습이 달라요: 광부 헬멧과 곡괭이, 해체공 고글과 집게, 노름꾼 헌팅캡과 카드, 측량사 넓은 모자와 줄자 막대, 폭파공 머리띠와 화약
+  var MINER_BY = {
+    miner: ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "ppoYYYYYYYYYYo..", "pw.offffffffo...", ".w.ofeffffefo...", ".w.offffffffo...", ".w..oFFFFFFo....", ".woorrrrrrrroo..", ".wrroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    defuser: ["................", ".....oooooo.....", "....occccccoo...", "...occccccccco..", "k.koooooooooo...", "k.koffffffffo...", "kkooGGooooGGoo..", ".k.offffffffo...", ".k..oFFFFFFo....", ".koorrrrrrrroo..", ".krroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    gambler: ["................", "..........oo....", "....oooooowwo...", "...occcccowpwo..", "..occccccccccco.", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrwwrrroo..", ".orrorrwwrrorro.", ".offorrwwrroffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    surveyor: ["...............w", "......oooo.....s", ".....occcco....w", "....occccccco..s", ".oooooooooooooow", "...offffffffo..s", "...owewffwewo..w", "...offffffffo..s", "....oFFFFFFo...w", "..oorrrrrrrroo.s", ".orroddddddorrow", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    blaster: ["................", "................", "....oooooooo....", "...ohhhhhhhho...", "...oRRRRRRRRoRR.", "...offffffffoR..", "...ofeffffefo...", ".y.offkfffkfo...", "DD..oFFFFFFo....", "DDoorrrrrrrroo..", "DDrroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+  };
+  var MINER_PAL = {
+    miner: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', r: '#c4432b', d: '#3e5f8a', p: '#8a8fa0', w: '#8a5a3a' },
+    defuser: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', c: '#2f5a36', G: '#9fd8e0', r: '#4f8a4a', d: '#6a4a2a', k: '#8a8fa0' },
+    gambler: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', c: '#5a2f6a', w: '#efe7d6', p: '#c4432b', r: '#8e4fa8', d: '#2a2633' },
+    surveyor: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', c: '#2a5a5a', w: '#efe7d6', s: '#c4432b', r: '#3e8a8a', d: '#5a4a3a' },
+    blaster: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', h: '#3a2a20', R: '#c4432b', k: '#6a6070', D: '#e5484d', y: '#ffd25a', r: '#e0782b', d: '#4a3a2a' },
+  };
+  SPR.minerBy = {}; CHARACTERS.forEach(function (c) { SPR.minerBy[c.id] = MINER_BY[c.id] ? mkSprite(MINER_BY[c.id], MINER_PAL[c.id]) : mkSprite(MINER, Object.assign({}, MIP, { r: c.color })); });
   var CHALK = ["................", "................", "................", "...ww......ww...", "....ww....ww....", ".....ww..ww.....", "......wwww......", ".......ww.......", "......wwww......", ".....ww..ww.....", "....ww....ww....", "...ww......ww...", "..ww........ww..", "................", "................", "................"];
   SPR.chalkX = mkSprite(CHALK, { w: '#e6e1d6' });
   var O = blank();
