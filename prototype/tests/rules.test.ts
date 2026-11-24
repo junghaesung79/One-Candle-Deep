@@ -311,13 +311,15 @@ describe('규칙 단위 검사', () => {
         check(!Core.chooseBox(rb, 0).ok, 'full slots: must drop one');
         const drop = rb.owned[0], dv = Core.toolValue(rb, drop, 'site'), pk = rb.d.pocket, pick0 = rb.boxOffer.opts[0];
         const cb = Core.chooseBox(rb, 0, drop);
-        check(cb.ok && rb.owned.includes(pick0) && !rb.owned.includes(drop) && rb.d.pocket === pk + dv && dv === Math.floor(Core.TOOL_BY_ID[drop].price * 0.25 / 10) * 10 && !rb.boxOffer, 'swap: dropped tool goes to Kwak at a quarter of the price');
+        check(cb.ok && rb.owned.includes(pick0) && !rb.owned.includes(drop) && rb.d.pocket === pk + dv && dv === Math.floor(Core.TOOL_BY_ID[drop].price * 0.25 / 10) * 10 && !rb.boxOffer && rb.boxed[pick0], 'swap: dropped tool goes to Kwak at a quarter of the price, picked tool marked as from a toolbox');
       }
       // 합친 도구: 재료 둘을 가진 밤 상점에서 합쳐요. 재료 효과도 그대로
-      const rq = Core.newRun(6206); Core.debugSkipDay(rq); Core.startDay(rq); rq.owned = ['fuse', 'refiner']; Core.debugEndDay(rq); Core.afterSettle(rq);
+      const rq = Core.newRun(6206); Core.debugSkipDay(rq); Core.startDay(rq); rq.owned = ['fuse', 'refiner']; rq.boxed = { fuse: true }; Core.debugEndDay(rq); Core.afterSettle(rq);
       check(rq.phase === 'shop' && rq.shop.fuse.length === 0, 'no fusion on a night without a stamp');
-      const rf = Core.newRun(6202); Core.debugSkipDay(rf); Core.debugSkipDay(rf); Core.startDay(rf); rf.owned = ['fuse', 'refiner']; rf.d.pocket = 1000; Core.returnUp(rf); Core.afterSettle(rf); Core.afterPayment(rf); Core.chooseGift(rf, -1);
-      check(rf.phase === 'shop' && rf.shop.fuse.includes('bigblast'), 'fusion offered at the shop on a stamp night');
+      const shopParts = Core.newRun(6202); Core.debugSkipDay(shopParts); Core.debugSkipDay(shopParts); Core.startDay(shopParts); shopParts.owned = ['fuse', 'refiner']; shopParts.d.pocket = 1000; Core.returnUp(shopParts); Core.afterSettle(shopParts); Core.afterPayment(shopParts); Core.chooseGift(shopParts, -1);
+      check(shopParts.phase === 'shop' && shopParts.shop.fuse.length === 0, 'no fusion when neither part came from a toolbox');
+      const rf = Core.newRun(6202); Core.debugSkipDay(rf); Core.debugSkipDay(rf); Core.startDay(rf); rf.owned = ['fuse', 'refiner']; rf.boxed = { refiner: true }; rf.d.pocket = 1000; Core.returnUp(rf); Core.afterSettle(rf); Core.afterPayment(rf); Core.chooseGift(rf, -1);
+      check(rf.phase === 'shop' && rf.shop.fuse.includes('bigblast'), 'fusion offered at the shop on a stamp night when one part came from a toolbox');
       check(Core.fuse(rf, 'bigblast').ok && rf.owned.join() === 'bigblast' && Core.owns(rf, 'fuse') && Core.owns(rf, 'refiner'), 'fused tool replaces both and keeps their effects');
       const rc = Core.newRun(6203); Core.startDay(rc); rc.owned = ['deadcrown']; rc.d.hp = 1;
       check(Core.streakCapIdx(rc) === 10 && CONFIG.streakLadder[10] === 6, 'dead crown: x6 at 1 HP');

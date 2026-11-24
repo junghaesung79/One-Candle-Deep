@@ -67,7 +67,7 @@ var CONFIG = {
               sellBack: true, probeBase: true, gravel: 'cell', startGift: true, stampReward: false, chord: false, chunkShown: false, perfect: false,
               relicBox: false, toolSell: false, fusion: false, loan: false },
   // 도구 경험(reviews/14 15장): 판 위 옛 연장함, 팔기, 합친 도구, 심 씨 돈 외상. v22 프리셋에서 켜요
-  relic: { chance: 0.25, fuseNight: 'stamp', bigStreak: true, minDepth: 2, minDay: 2, pityDay: 7, n: 2, rarity: { '일반': 30, '고급': 45, '희귀': 25 }, junk: 40,
+  relic: { chance: 0.25, fuseNight: 'stamp', fuseFrom: 'box', fuseMax: 0, bigStreak: true, minDepth: 2, minDay: 2, pityDay: 7, n: 2, rarity: { '일반': 30, '고급': 45, '희귀': 25 }, junk: 40,
            sellSite: 0.25, sellShop: 0.5, sellBonus: 0.25, beltSlots: 2, loanMul: 1.5 },
   chainGravel: { min: 8, per: 1 },
   ruleTune: {},
@@ -356,7 +356,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   // 도장 날 금고가 모자랄 때(구 실장은 합니다체, 심 씨는 반말)
   short: { quote: '{short} 모자랍니다. 오늘 밤 안에 채우시면 도장 찍습니다.', sell: '도구를 팔아 채우기', loanAsk: '모자란 {short}, 내가 빌려줄게. 다음 도장 날 {repay} 같이 갚아.', loan: '심 씨에게 빌리기: {short} 받고 다음 도장에 {repay}',
            loanUsed: '심 씨 외상은 한 판에 한 번이에요', lastNo: '마지막 도장은 빌릴 수 없어요', giveUp: '계약 해지', payNow: '도장 찍기', loanLine: '심 씨 빚 {n}이(가) 다음 도장에 붙었어요' },
-  fuse: { talk: '이 둘은 합칠 수 있겠네. 공짜로 해 주지.', button: '합치기', done: '곽 씨가 {a} {b} 합쳐 {name} 만들었어요' },
+  fuse: { talk: '옛 연장이 섞였으니 이 둘은 합칠 수 있겠네. 공짜로 해 주지.', hint: '곽 씨: "이건 옛 연장과 만나면 무언가와 합쳐질 것 같네."', boxHint: '곽 씨: "옛 연장이군. 무언가와 합쳐질 것 같네."', recipe: '합치기: {mate} 합치면 {name} · 둘 중 하나는 연장함에서 나온 것', old: '연장함에서 나온 옛 연장', button: '합치기', done: '곽 씨가 {a} {b} 합쳐 {name} 만들었어요' },
   chunkShownFloor: '큰 덩이 층 · 금빛 테두리가 덩이 자리예요. 숫자는 덩이를 칸마다 따로 세요',
   stageChange: { mul: '내일부터 캔 값 ×{mul}', deep: '내일부터 갱이 한 층 깊어져요(지뢰와 보물이 늘어요)', same: '캔 값은 그대로예요' },
   daily: '오늘의 광산',
@@ -1035,7 +1035,7 @@ var Core = (function () {
       shop: null, settle: null, payment: null, final: null, gang: null, orders: [], order: null,
       log: [], logSeq: 0, fx: [], history: [], eventCounts: {},
       stats: { deepest: 0, treasures: 0, collapses: 0, mines: 0, chainMax: 0, earned: 0, blasts: 0, perfect: 0, chords: 0, boxes: 0, sold: 0, fused: 0 },
-      boxOffer: null, loanUsed: false, loan: null,
+      boxOffer: null, boxed: {}, loanUsed: false, loan: null,
       metaRng: rngFrom(hashSeed(seed, 777)),
       mutationPlan: {}
     };
@@ -2211,7 +2211,7 @@ var Core = (function () {
     run.owned.push(id); run.paidFor[id] = paid || 0;
     if (run.d) (t.fusion || []).concat([id]).forEach(function (k) { var q = TOOL_BY_ID[k]; if (q.hooks && q.hooks.on_day_start) q.hooks.on_day_start.call(q, toolCtx(run, q), {}); });   // 오늘 하루 한 번짜리도 바로 준비
   }
-  function removeTool(run, id) { var k = run.owned.indexOf(id); if (k >= 0) run.owned.splice(k, 1); delete run.paidFor[id]; }
+  function removeTool(run, id) { var k = run.owned.indexOf(id); if (k >= 0) run.owned.splice(k, 1); delete run.paidFor[id]; if (run.boxed) delete run.boxed[id]; }
   function canRemove(run, id, adding) {   // 넓은 연장 띠를 빼면 칸이 줄어요. 남은 도구가 칸에 들어가야 해요
     if (run.owned.indexOf(id) < 0) return false;
     if (id !== 'belt') return true;
@@ -2268,7 +2268,7 @@ var Core = (function () {
         money = toolValue(run, dropId, 'site'); removeTool(run, dropId); addMoney(run, money); run.stats.sold++;
         log(run, TEXT.box.dropped.replace('{name}', josa(TOOL_BY_ID[dropId].name, '을', '를')).replace('{n}', fmt(money)));
       }
-      addTool(run, id, 0);
+      addTool(run, id, 0); (run.boxed = run.boxed || {})[id] = true;   // 연장함에서 나온 옛 연장: 합치기 재료가 돼요
       log(run, TEXT.box.took.replace('{name}', josa(TOOL_BY_ID[id].name, '을', '를')), 'good');
     }
     run.boxOffer = null;
@@ -2279,7 +2279,12 @@ var Core = (function () {
   function fusionsReady(run) {
     if (!feat('fusion')) return [];
     if (CONFIG.relic.fuseNight === 'stamp' && !(run.payment && run.payment.ok && run.payment.idx && pays(run)[run.payment.idx - 1].day === run.day)) return [];   // 곽 씨는 도장 찍은 밤에만 와요
-    return TOOLS.filter(function (t) { return t.fusion && (!t.sets || t.sets.indexOf(CONFIG.toolSet) >= 0) && run.owned.indexOf(t.id) < 0 && t.fusion.every(function (p) { return run.owned.indexOf(p) >= 0; }); }).map(function (t) { return t.id; });
+    if (CONFIG.relic.fuseMax && run.stats.fused >= CONFIG.relic.fuseMax) return [];
+    return TOOLS.filter(function (t) { return t.fusion && (!t.sets || t.sets.indexOf(CONFIG.toolSet) >= 0) && run.owned.indexOf(t.id) < 0 && t.fusion.every(function (p) { return run.owned.indexOf(p) >= 0; }) && fuseSourceOk(run, t); }).map(function (t) { return t.id; });
+  }
+  // 재료 출처: 'box'면 재료 하나는 연장함에서 나온 옛 연장이어야 해요
+  function fuseSourceOk(run, t) {
+    return CONFIG.relic.fuseFrom !== 'box' || t.fusion.some(function (p) { return run.boxed && run.boxed[p]; });
   }
   function fuse(run, id) {
     if (run.phase !== 'shop' || !run.shop || (run.shop.fuse || []).indexOf(id) < 0) return { ok: false };

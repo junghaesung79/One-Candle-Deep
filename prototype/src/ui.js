@@ -1428,8 +1428,9 @@ function synergyLine(t) {
   var out = same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
   if (CONFIG.features.fusion) {   // 합쳐지는 재료: 만들어 본 적이 있으면 짝과 결과를, 없으면 귀띔만
     var fu = TOOLS.filter(function (q) { return q.fusion && q.fusion.indexOf(t.id) >= 0; })[0];
-    if (fu) { var mate = Core.TOOL_BY_ID[fu.fusion[0] === t.id ? fu.fusion[1] : fu.fusion[0]]; out += '<br><span class="acc">' + (codex.seen[fu.id] ? '합치기: ' + esc(mate.name) + '와(과) 합치면 ' + esc(fu.name) : '곽 씨: "이건 무언가와 합쳐질 것 같네."') + '</span>'; }
+    if (fu) { var mate = Core.TOOL_BY_ID[fu.fusion[0] === t.id ? fu.fusion[1] : fu.fusion[0]]; out += '<br><span class="acc">' + esc(codex.seen[fu.id] ? TEXT.fuse.recipe.replace('{mate}', Core.josa(mate.name, '과', '와')).replace('{name}', fu.name) : TEXT.fuse.hint) + '</span>'; }
   }
+  if (run.boxed && run.boxed[t.id] && run.owned.indexOf(t.id) >= 0) out += '<br><span class="note">' + esc(TEXT.fuse.old) + '</span>';
   return out;
 }
 // 옛 연장함: 캔 자리에서 둘 중 하나를 골라요. 칸이 가득이면 하나를 내려놓고(곽 씨가 4분의 1 값에 받아 감), 싫으면 통째로 곽 씨에게 넘겨요
@@ -1444,7 +1445,7 @@ function boxHtml() {
     B.opts.forEach(function (id, i) {
       var t = Core.TOOL_BY_ID[id];
       h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + firstTag(id) + iconHtml('icons.' + t.icon, 40) +
-        '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div></div>';
+        '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
     });
     h += '</div>';
   } else h += '<div class="note" style="margin-top:10px">쓸 만한 도구는 이미 다 가졌어요</div>';
@@ -1461,6 +1462,7 @@ function boxHtml() {
     (B.opts.length ? '<button class="primary" id="oBoxTake"' + (full && !ui.boxDrop ? ' disabled' : '') + '>' + (full ? '바꿔서 가져가기' : '가져가기') + '</button>' : '') + '</span></div></div>';
   return h;
 }
+function isPart(id) { return TOOLS.some(function (q) { return q.fusion && q.fusion.indexOf(id) >= 0; }); }
 function boxGo(i) {
   if (performance.now() - ui.shownAt < 400) return;
   var id = i >= 0 ? run.boxOffer.opts[i] : null;
@@ -1480,7 +1482,7 @@ function codexHtml() {
   all.forEach(function (t) {
     var seen = !!codex.seen[t.id];
     h += '<div class="panel codexCell' + (seen ? '' : ' unseen') + '">' + iconHtml('icons.' + t.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(t.name) : '???') + '</div>' +
-      '<div class="note">' + (t.fusion ? '합친 도구' : axisName(t) + ' · ' + t.rarity) + '</div>' + (seen ? '<div class="d">' + esc(t.desc) + '</div>' : '<div class="d muted">' + (t.fusion ? '두 도구를 합치면 나와요' : '아직 못 얻었어요') + '</div>') + '</div></div>';
+      '<div class="note">' + (t.fusion ? '합친 도구' : axisName(t) + ' · ' + t.rarity) + '</div>' + (seen ? '<div class="d">' + esc(t.desc) + '</div>' : '<div class="d muted">' + (t.fusion ? '두 도구를 합치면 나와요. 하나는 연장함에서 나온 것이어야 해요' : '아직 못 얻었어요') + '</div>') + '</div></div>';
   });
   h += '</div><div style="text-align:right;margin-top:12px"><button class="primary" id="oCodexClose">닫기</button></div></div>';
   return h;
