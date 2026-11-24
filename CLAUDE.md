@@ -16,7 +16,7 @@
 | docs/00_overview.md, 08_feedback_status.md, 09_prototype_guide.md | Word 기획서에만 있던 기획 요약, 부록 B(피드백·검수 처리), 부록 C(프로토타입 안내)를 옮긴 것 |
 | docs/history.md | 작업 기록: 대화 중 중요한 방향과 결정을 날짜별로 한 줄씩. 세세하게 쓰지 않아요 |
 | docs/decisions.md | 팀장 결정 기록(R1~R111). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
-| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md)(근거 자료) |
+| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md), 타이틀과 이어하기 고찰(17_title_save.md)(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
 | prototype/ | 웹 프로토타입. Vite + TypeScript 프로젝트예요(package.json) |
 | prototype/src/ | ES 모듈: core.js 규칙(DOM 없음), ui.js 화면, sprites.js 그림, main.js 진입점. core.d.ts 는 규칙 모듈의 타입 선언 |
@@ -88,6 +88,7 @@ npm run build        # dist/index.html 파일 하나로 빌드. 더블클릭으�
 ```
 
 - 디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김
+- 켜면 타이틀부터예요. 진행 중인 판은 브라우저 저장소(ocd2_run)에 통째로 저장돼 '이어하기'로 돌아가요. 처음 켠 상태로 보려면 ocd2_run, ocd2_settings, ocd2_codex 를 지워요
 - 개발 서버에서만 `window.__ocd`(run, Core, afterAction)로 상태를 읽을 수 있어요. 화면 점검 스크립트용이고 빌드에는 빠져요
 - 봇 재사용: `import { load, playRun, POLICY } from './bot/bot.js'` (정책: cautious 신중, normal 보통, greedy 욕심). `load()` 는 규칙 모듈 하나를 같이 써서, CONFIG를 고치면 같은 프로세스의 다음 판에도 남아요
 - 규칙은 src/core.js 한 곳에만 있어요. 화면, 봇, 테스트가 모두 같은 모듈을 import 해요

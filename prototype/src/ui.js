@@ -105,20 +105,58 @@ function bestLine() {
 }
 function startNewRun(tutorial, o) {
   o = o || {};
-  if (run && run.phase !== 'final' && (run.d || run.day > 1)) countRun(false);   // 진행 중인 판을 버리면 진 판으로 세요
+  if (inProgress(run)) countRun(false);   // 진행 중인 판을 버리면 진 판으로 세요
+  clearSave(); ui.title = false;
   var grade = tutorial ? 1 : Math.max(1, Math.min(settings.gradeOpen || 1, o.grade || settings.grade || 1));
   var daily = !tutorial && o.daily ? todayStr() : null;
   var seedSet = !tutorial && !daily && o.seed != null;   // 시드를 넣은 판
   var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : seedSet ? o.seed : Core.randomSeed();
   run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: charOpen(settings.char || 'miner') ? settings.char : 'miner' });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   run.seedSet = seedSet;
-  sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
-  ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
-  ui.shownAt = performance.now(); ui.mode = null; ui.aim = null;
+  resetView();
   ui.opening = tutorial && !settings.openingSeen ? 0 : null;   // R52: 첫 판만 자동
-  anim.pend = {}; anim.pops = [];
   renderOverlay(); ui.hudDirty = true;
 }
+function resetView() {
+  sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
+  ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
+  ui.shownAt = performance.now(); ui.mode = null; ui.aim = null; ui.judge = null;
+  anim.pend = {}; anim.pops = [];
+}
+
+// ---------- 판 저장과 이어하기(01 18장) ----------
+// 판 상태는 함수 없는 자료라서 통째로 적어요. 판이 끝나면 지워요. 규칙 판본이나 프리셋이 다르면 이어하지 않아요
+var RUN_KEY = 'ocd2_run', SAVE_V = 1;
+var UI_KEEP = ['logFrom', 'dayClicks', 'dayRecorded', 'giftLine', 'bubblesSeen', 'rulesSeen', 'seenMine', 'firstBreakDone', 'pairHints'];
+function inProgress(r) { return !!r && r.phase !== 'final' && !!(r.d || r.day > 1); }
+function clearSave() { try { localStorage.removeItem(RUN_KEY); } catch (e) {} }
+function saveRun() {
+  if (!run) return;
+  if (run.phase === 'final') { clearSave(); return; }
+  if (!inProgress(run)) return;
+  var u = {}; UI_KEEP.forEach(function (k) { u[k] = ui[k]; }); u.dayMs = ui.dayT0 ? Date.now() - ui.dayT0 : 0;
+  var fx = run.fx; run.fx = [];
+  try { localStorage.setItem(RUN_KEY, JSON.stringify({ v: SAVE_V, gen: CONFIG.genVersion, preset: CONFIG.preset, at: Date.now(), run: run, ui: u })); } catch (e) {}
+  run.fx = fx;
+}
+function loadSave() {
+  try {
+    var s = JSON.parse(localStorage.getItem(RUN_KEY) || 'null');
+    if (s && s.v === SAVE_V && s.gen === CONFIG.genVersion && s.preset === CONFIG.preset && inProgress(s.run)) return s;
+  } catch (e) {}
+  return null;
+}
+function resumeRun(s) {
+  run = s.run; run.fx = []; ui.title = false; ui.save = null;
+  resetView();
+  UI_KEEP.forEach(function (k) { if (s.ui && k in s.ui) ui[k] = s.ui[k]; });
+  ui.dayT0 = s.ui && s.ui.dayMs ? Date.now() - s.ui.dayMs : 0;
+  ui.lastCandle = run.d ? run.d.candle : null; ui.opening = null;
+  afterAction.lastPhase = run.phase;
+  renderOverlay(); ui.hudDirty = true;
+}
+window.addEventListener('pagehide', saveRun);
+document.addEventListener('visibilitychange', function () { if (document.hidden) saveRun(); });
 function beginDay() {
   if (run.orders.length && !run.order) Core.chooseOrder(run, ui.sel || 0);
   var before = run.logSeq;
@@ -1034,9 +1072,10 @@ function playlogDownload() {
   } catch (e) {}
 }
 function renderOverlay() {
-  if (run && run.phase === 'settle') recordDay();
-  var p = run.phase, h = '';
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
+  if (ui.title) { OV.innerHTML = titleHtml() + (ui.sub === 'codex' ? codexHtml() : ''); OV.className = 'show'; bindOverlay(); return; }
+  if (run.phase === 'settle') recordDay();
+  var p = run.phase, h = '';
   if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
   else if (ui.sub === 'codex') h = codexHtml();
   else if (p === 'deed') {
@@ -1065,6 +1104,7 @@ function renderOverlay() {
   OV.className = h ? 'show' : '';
   if (h && p !== 'mine') clearBubbles();
   bindOverlay();
+  saveRun();
 }
 function boardHtml() {
   var np = Core.nextPayment(run), pay = Core.paymentFor(run.day), G = Core.goalInfo(run);
@@ -1335,7 +1375,66 @@ function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추). 화�
     '<h3 style="margin-top:14px">기록</h3><div class="note">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '<br>' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button><button id="oOpening" style="flex:1">오프닝 만화 다시 보기</button></div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oCodex" style="flex:1">도구 도감</button></div>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · ' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button> · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · ' + seedLine() + ' <button id="oSeedCopy">' + esc(TEXT.seed.copy) + '</button> · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><span style="display:flex;gap:8px;flex:none"><button id="oTitle">타이틀로</button><button class="primary" id="oClose">계속하기</button></span></div></div>';
+}
+// ---------- 타이틀(reviews/17): 켤 때 한 번 지나가요. 메뉴는 쓸 일이 생기면 하나씩 늘어요 ----------
+function showTitle() {
+  if (run) saveRun();
+  run = null; ui.title = true; ui.save = loadSave(); ui.sub = null; ui.opening = null;
+  resetView(); clearBubbles();
+  renderOverlay();
+}
+function saveLine(sv) {
+  var r = sv.run, fv = r.d && r.d.floorsVisited && r.d.floorsVisited[r.d.floorsVisited.length - 1];
+  var where = r.phase === 'mine' || r.phase === 'room' ? (fv ? '지하 ' + fv.depth + '층' : '갱 안') : r.phase === 'shop' || r.phase === 'settle' || r.phase === 'payment' ? '밤' : '아침';
+  var goal = goalLine(r).replace(/<[^>]+>/g, '');
+  return (r.tutorial ? '첫 판 · ' : '') + r.day + '일째 ' + where + (r.endless ? ' · ' + TEXT.endless.tag : '') + (goal ? ' · ' + goal : '');
+}
+function titleHtml() {
+  var sv = ui.save, st = settings.stats || {}, fresh = !settings.tutorialDone && !sv;
+  var h = '<div class="title"><canvas id="titleCv" width="320" height="180"></canvas><div class="tMenu"><div class="tName">원 캔들 딥</div><div class="tEn px">ONE CANDLE DEEP</div><div class="tBtns">';
+  if (sv) h += '<button class="primary tBig" id="tCont">이어하기<span class="tSub">' + esc(saveLine(sv)) + '</span></button>';
+  h += '<button id="tNew"' + (sv ? '' : ' class="primary tBig"') + '>' + (fresh ? '시작하기' : '새 판') + '</button>';
+  if (st.plays || Object.keys(codex.seen).length) h += '<button id="tCodex">도감</button>';
+  if (settings.openingSeen) h += '<button id="tOpening">오프닝 다시 보기</button>';
+  h += '</div>' + (st.plays ? '<div class="note tStat">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '</div>' : '') + '</div>' +
+    '<div class="note tVer">2차 프로토타입 · 규칙 ' + (CONFIG.preset === 'v21' ? 'v2.1' : 'v2.2 시험') + '</div></div>';
+  return h;
+}
+function titleNew() {
+  var sv = ui.save;
+  function go() { if (sv) run = sv.run; startNewRun(!settings.tutorialDone); }
+  if (sv) askConfirm('이어하던 판(' + sv.run.day + '일째)을 버리고 새 판을 시작할까요? 버린 판은 진 판으로 세요.', go, { yes: '새 판 시작', no: '그만두기' });
+  else go();
+}
+// 그림: 밤의 갱구와 촛불 하나. 판을 하며 열린 사람들이 갱구 앞에 하나씩 늘어요
+var TITLE_STARS = (function () { var a = [], q = 7; for (var i = 0; i < 46; i++) { q = (q * 1103515245 + 12345) >>> 0; var x = (q >>> 8) % 320; q = (q * 1103515245 + 12345) >>> 0; a.push([x, (q >>> 8) % 92, i]); } return a; })();
+function pxCircle(g, cx, cy, r) { for (var dy = -r; dy <= r; dy++) { var w = Math.floor(Math.sqrt(r * r - dy * dy)); g.fillRect(cx - w, cy + dy, w * 2 + 1, 1); } }
+function drawTitle(now) {
+  var cv = $('titleCv'); if (!cv) return;
+  var g = cv.getContext('2d'), t = now / 1000, x, y, i;
+  var SKY = ['#0b0a10', '#0e0c14', '#121018', '#17141e'];
+  for (i = 0; i < 4; i++) rc(g, SKY[i], 0, i * 30, 320, 30);
+  for (i = 1; i < 4; i++) for (x = i % 2; x < 320; x += 2) rc(g, SKY[i], x, i * 30 - 1, 1, 1);
+  TITLE_STARS.forEach(function (st) { var tw = Math.sin(t * 0.7 + st[2] * 1.7) > 0.75; rc(g, tw ? '#a59fb3' : st[2] % 3 ? '#3a3542' : '#5d5868', st[0], st[1], 1, 1); });
+  for (x = 0; x < 320; x++) { y = 102 + Math.round(6 * Math.sin(x / 23) + 3 * Math.sin(x / 9 + 1)); rc(g, '#141119', x, y, 1, 132 - y); }   // 먼 산
+  for (x = 150; x < 320; x++) { y = x < 236 ? Math.round(132 - (x - 150) * 0.72) : Math.round(70 + (x - 236) * 0.1); rc(g, '#1f1b26', x, y, 1, 132 - y); }   // 갱구가 난 언덕
+  [[176, 118], [196, 104], [268, 92], [292, 110], [304, 84], [262, 120], [184, 126]].forEach(function (q) { rc(g, '#29243a', q[0], q[1], 3, 1); rc(g, '#17141e', q[0], q[1] + 1, 3, 1); });
+  rc(g, '#1d1a24', 0, 132, 320, 48); rc(g, '#2a2633', 0, 132, 320, 1);
+  for (y = 136; y < 180; y += 7) { var l0 = Math.round(220 - (y - 132) * 0.5), r0 = Math.round(242 + (y - 132) * 0.5); rc(g, '#2a2018', l0 - 2, y, r0 - l0 + 5, 2); }   // 침목
+  for (y = 132; y < 180; y++) { rc(g, '#3a3542', Math.round(220 - (y - 132) * 0.5), y, 1, 1); rc(g, '#3a3542', Math.round(242 + (y - 132) * 0.5), y, 1, 1); }   // 레일
+  rc(g, '#0b0a10', 213, 93, 36, 39);   // 갱구 안
+  rc(g, '#5a3d28', 208, 93, 5, 39); rc(g, '#3d2a1c', 212, 93, 1, 39); rc(g, '#5a3d28', 249, 93, 5, 39); rc(g, '#3d2a1c', 253, 93, 1, 39);
+  rc(g, '#5a3d28', 204, 88, 54, 5); rc(g, '#3d2a1c', 204, 92, 54, 1); rc(g, '#7a5538', 204, 88, 54, 1);
+  var fl = Math.floor(now / 90), n = Math.sin(fl * 12.9898) * 43758.5453; n -= Math.floor(n);   // 불꽃은 90 ms마다 한 번 떨려요
+  var R = 50 + Math.round(n * 3 - 1);
+  g.fillStyle = 'rgba(255,190,110,0.022)'; [1, 0.84, 0.69, 0.55, 0.42, 0.3, 0.19].forEach(function (k) { pxCircle(g, 228, 118, Math.round(R * k)); });   // 빛은 겹겹이 옅게
+  openChars().forEach(function (id, k) { var sp = SPR.minerBy[id]; if (sp) g.drawImage(sp, 192 - k * 15, 132 - sp.height); });
+  rc(g, '#34303f', 222, 128, 12, 4); rc(g, '#2a2633', 222, 131, 12, 1);   // 받침돌
+  rc(g, '#efe7d6', 227, 121, 3, 7); rc(g, '#c9c3d6', 229, 121, 1, 7); rc(g, '#1a120b', 228, 120, 1, 1);
+  var hgt = n > 0.66 ? 5 : n > 0.33 ? 4 : 3;
+  rc(g, '#ff8a3d', 227, 120 - hgt, 3, hgt); rc(g, '#ffd25a', 228, 119 - hgt, 1, hgt); if (n > 0.5) rc(g, '#ff8a3d', 228, 118 - hgt, 1, 1);
+  for (i = 0; i < 6; i++) { var ph = (t * 0.12 + i * 0.167) % 1; rc(g, 'rgba(255,210,90,' + (0.7 * (1 - ph)).toFixed(2) + ')', 228 + Math.round(Math.sin(t * 0.8 + i * 2.1) * 5), Math.round(113 - ph * 46), 1, 1); }   // 떠오르는 불티
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
 function openingHtml() {
@@ -1474,6 +1573,11 @@ function bindOverlay() {
   on('oRestartTut', function () { askConfirm('첫 판 안내(정해진 층)로 새로 시작할까요?', function () { startNewRun(true); }); });
   on('oGiveUp', function () { askConfirm('판을 포기할까요? 계약 해지가 돼요.', function () { ui.sub = null; run.payment = { short: Math.max(0, (Core.nextPayment(run) || { amount: 0 }).amount - run.cash) }; run.final = { success: false, score: 0, stamps: run.stamps, day: run.day, short: run.payment.short, body: ['판을 포기했어요. 갱구는 잠겼고 다음 보름에 다시 열려요.'] }; run.phase = 'final'; renderOverlay(); }); });
   on('oClose', function () { ui.sub = null; renderOverlay(); });
+  on('oTitle', showTitle);
+  on('tCont', function () { var sv = loadSave(); if (sv) resumeRun(sv); else { ui.save = null; renderOverlay(); } });
+  on('tNew', titleNew);
+  on('tCodex', function () { ui.sub = 'codex'; renderOverlay(); });
+  on('tOpening', function () { ui.opening = 0; renderOverlay(); });
   on('oCalDim', function () { ui.sub = null; renderOverlay(); });
   var q = OV.querySelectorAll('[data-order]');
   for (var i = 0; i < q.length; i++) q[i].onclick = function () { ui.sel = +this.dataset.order; renderOverlay(); };
@@ -1664,6 +1768,7 @@ $('cmodalOk').onclick = function (e) { e.stopPropagation(); closeConfirm(true); 
 // ---------- 행동 래퍼 ----------
 function afterAction() {
   drainFx();
+  saveRun();
   var ph = run.phase;
   if (ph !== 'mine') { ui.sub = null; ui.mode = null; }
   if (afterAction.lastPhase === 'mine' && ph === 'settle' && run.d && run.d.endReason !== 'return' && !ui.sweep) {   // 촛불이 다 타거나 쓰러짐: 공개 뒤에 정산 창
@@ -1778,6 +1883,12 @@ document.addEventListener('keydown', function (e) {
   if (confirmOpen()) { if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); } else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); } return; }
   var code = e.code;
   if (['F2', 'F3', 'F4', 'F8', 'F9', 'Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].indexOf(code) >= 0) e.preventDefault();
+  if (ui.title && !run) {   // 타이틀: Enter·Space는 맨 위 단추, Esc는 도감·만화를 닫아요
+    if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); else if (code === 'Escape') openingEnd(); return; }
+    if (ui.sub === 'codex') { if (code === 'Escape') { ui.sub = null; renderOverlay(); } return; }
+    if ((code === 'Enter' || code === 'Space') && !e.repeat) { var tb = $(ui.save ? 'tCont' : 'tNew'); if (tb) tb.click(); }
+    return;
+  }
   if (!run) return;
   if (['ShiftLeft', 'ShiftRight', 'ControlLeft', 'AltLeft', 'MetaLeft'].indexOf(code) < 0 && !e.repeat) flushAll();   // 연출 건너뛰기
   // 디버그(개발용)
@@ -1833,6 +1944,7 @@ document.addEventListener('keydown', function (e) {
 });
 OV.addEventListener('click', function (e) {
   if (ui.sweep) { endSweep(); return; }
+  if (!run && ui.opening != null && !e.target.closest('button')) { openingNext(); return; }
   if (!run || e.target.closest('button') || e.target.closest('[data-order]') || e.target.closest('[data-fork]') || e.target.closest('[data-buy]') || e.target.closest('[data-gift]')) return;
   flushAll();
   if (ui.opening != null) { openingNext(); return; }
@@ -1864,6 +1976,7 @@ board.addEventListener('mousedown', function (e) {
 
 // ---------- 루프 ----------
 function frame(now) {
+  if (ui.title && !run) drawTitle(now);
   if (run) {
     runSched(now);
     if (ui.sweep && now - ui.sweep.t0 > sweepTotal()) endSweep();
@@ -1886,7 +1999,7 @@ function updateHUDSafe() {
   updateHUD();
 }
 fitStage();
-startNewRun(!settings.tutorialDone);
+showTitle();   // 켤 때는 타이틀부터(reviews/17)
 // 개발 서버에서만: 화면 점검 스크립트가 상태를 읽는 손잡이(빌드에는 빠져요)
 if (import.meta.env && import.meta.env.DEV) window.__ocd = { get run() { return run; }, Core: Core, afterAction: afterAction };
 requestAnimationFrame(frame);

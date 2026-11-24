@@ -521,12 +521,13 @@ function playRun(env, seed, opts) {
   opts = opts || {};
   const Core = env.Core, bot = new Bot(env, Object.assign({ botSeed: seed }, opts));
   const tut = opts.tutorial != null ? !!opts.tutorial : !!bot.o.tutorial;
-  const run = Core.newRun(seed, { tutorial: tut, grade: opts.grade || 1, char: opts.char });
+  let run = Core.newRun(seed, { tutorial: tut, grade: opts.grade || 1, char: opts.char });
   if (opts.mutations) run.mutationPlan = Object.assign({}, opts.mutations);
   if (opts.startTools) opts.startTools.forEach(id => { run.owned.push(id); run.paidFor[id] = Core.TOOL_BY_ID[id].price; });
   const days = [], pays = [];
   let guard = 0;
   while ((run.phase !== 'final' || (opts.endless && run.final && run.final.success && !run.endless && Core.continueEndless(run).ok)) && guard++ < (opts.endless ? 600 : 200)) {   // endless: 마지막 도장 뒤 끝없는 갱으로
+    if (opts.roundTrip) run = JSON.parse(JSON.stringify(run));   // 판 저장 시험: 단계마다 저장했다 되살려도 같은 판이어야 해요
     if (run.boxOffer) { bot.takeBox(run); continue; }   // 옛 연장함 고르기가 먼저(하루가 같은 순간에 끝났을 수도 있어요)
     if (run.phase === 'deed' && !run.giftDone && run.giftOpts && run.giftOpts.length && !opts.noGift) {   // 중개소 선물(R43): 구매 선호 순서에서 가장 앞
       let gi = 0, gr = 1e9; run.giftOpts.forEach((id, i) => { const r = TOOL_PREF.indexOf(id); if (r >= 0 && r < gr) { gr = r; gi = i; } });

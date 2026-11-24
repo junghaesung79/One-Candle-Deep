@@ -24,5 +24,13 @@ describe('봇 한 판', () => {
   });
   it('첫 판(고정 층) 경로가 끝까지 가요', () => { for (let s = 0; s < 3; s++) finishes(0, { tutorial: true }); });
   it('v2.1 프리셋도 끝까지 가요', () => { env.Core.applyPreset('v21'); try { for (let s = 1; s <= 5; s++) finishes(1000 + s, { policy: 'normal' }); } finally { env.Core.applyPreset('v22'); } });
+  it('판 저장: 단계마다 저장했다 되살려도 같은 판이에요', () => {
+    for (let s = 1; s <= 6; s++) {
+      const opts = { policy: 'normal', endless: s % 2 === 0, char: ['miner', 'defuser', 'gambler', 'surveyor', 'blaster'][s % 5] } as RunOptions;
+      const a = playRun(env, 7000 + s, opts), b = playRun(env, 7000 + s, { ...opts, roundTrip: true });
+      expect(JSON.stringify(b.final)).toBe(JSON.stringify(a.final));
+      expect(b.days.map(d => d.income)).toEqual(a.days.map(d => d.income));
+    }
+  });
   it('등급 2·3 광산도 끝까지 가요', () => { for (let s = 1; s <= 3; s++) { finishes(1100 + s, { policy: 'normal', grade: 2 } as any); finishes(1200 + s, { policy: 'normal', grade: 3 } as any); } });
 });

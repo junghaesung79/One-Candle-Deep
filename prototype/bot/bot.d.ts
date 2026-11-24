@@ -3,7 +3,7 @@ import type * as CoreModule from '../src/core.js';
 
 export type Env = typeof CoreModule;
 export type Policy = 'cautious' | 'normal' | 'greedy';
-export interface RunOptions { policy?: Policy; tutorial?: boolean; lazy?: boolean; spend?: boolean; noGift?: boolean; mutations?: Record<number, string[]>; startTools?: string[]; grade?: number; rewardCash?: boolean; noChord?: boolean; [k: string]: unknown }
+export interface RunOptions { policy?: Policy; tutorial?: boolean; lazy?: boolean; spend?: boolean; noGift?: boolean; mutations?: Record<number, string[]>; startTools?: string[]; grade?: number; rewardCash?: boolean; noChord?: boolean; roundTrip?: boolean; endless?: boolean; [k: string]: unknown }
 export interface RunResult { final: any; days: any[]; run: any; bot: Record<string, number>; buys: any[]; pays: any[] }
 
 export declare function load(): Env;
