@@ -910,7 +910,7 @@ function bindSlotEvents() {
   var us = $('toolsBox').querySelectorAll('[data-use]');
   for (i = 0; i < us.length; i++) {
     us[i].onclick = function () { var u = this.dataset.use; if (u === 'probe') toggleMode(u); else toggleMode('cons', +u); };
-    if (us[i].dataset.tip) { us[i].onmouseenter = function () { ui.desc = '<b>두드려 보기</b><br>옆 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요'; ui.hudDirty = true; }; us[i].onmouseleave = function () { ui.desc = null; ui.hudDirty = true; }; }
+    if (us[i].dataset.tip) { us[i].onmouseenter = function () { ui.desc = '<b>두드려 보기</b><br>고른 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요'; ui.hudDirty = true; }; us[i].onmouseleave = function () { ui.desc = null; ui.hudDirty = true; }; }
   }
 }
 // 버튼 줄 아래 한 줄: 마우스를 올린 칸 설명(01 2.5)

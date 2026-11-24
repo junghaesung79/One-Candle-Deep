@@ -223,7 +223,7 @@ var TOOLS = [
   { id: 'wedge', axis: '발파', rarity: '고급', name: '울림 쐐기', short: '쐐기', price: 220, kind: 'passive', icon: 'wedge', sets: ['21', '22'],
     desc: '보물이나 지뢰를 없애 숫자가 0이 되면, 그 칸 주변 두 칸까지 안전한 칸이 열려요' },
   { id: 'tapper', axis: '발파', rarity: '일반', name: '청진 망치', short: '망치', price: 120, kind: 'passive', icon: 'tapper', sets: ['22'],
-    desc: '하루 두 번 두드려 보기를 쓸 수 있어요(한 번에 촛불 2). 옆 칸이 지뢰인지 아닌지 알려 줘요' },
+    desc: '하루 두 번 두드려 보기를 쓸 수 있어요(한 번에 촛불 2). 고른 칸이 지뢰인지 아닌지 알려 줘요' },
   // 두루 쓰는 도구(도구 경험 정리, v22)
   { id: 'belt', axis: '', rarity: '희귀', name: '넓은 연장 띠', short: '연장 띠', price: 260, kind: 'passive', icon: 'belt', sets: ['22'],
     desc: '도구 칸이 두 칸 늘어요' },
@@ -393,9 +393,9 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
     '체력': '지뢰를 치면 1 줄어요. 0이 되면 쓰러져서 오늘 주머니의 절반을 잃어요. 다음 날 다시 차요',
     '광맥': '그 층에 보물이 묻힌 규칙이에요. 규칙을 알면 숫자만으로는 모르는 칸이 보물인지 지뢰인지 가릴 수 있어요',
     '발파': 'X를 그은 칸에 불을 붙여요(촛불 4). 지뢰면 다치지 않고 터져서 주변이 열려요. 보물이면 녹아 없어져요',
-    '두드려 보기': '옆 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요',
+    '두드려 보기': '고른 칸 하나가 지뢰인지 아닌지 알려 줘요. 촛불이 2 들어요',
     '가진 도구': '갖고만 있어도 효과가 나는 도구예요. 칸이 가득이면 팔거나 바꿔서 자리를 만들어요',
-    '옛 연장함': '지하 2층부터 가끔 보물 자리에 묻혀 있어요. 숫자에는 보물로 세요. 캐면 도구 하나를 고르고, 불에 닿으면 녹아요',
+    '옛 연장함': '지하 2층부터 가끔 보물 자리에 묻혀 있어요. 숫자에는 보물로 세요. 캐면 도구 하나를 고르거나 유품을 챙기고, 불에 닿으면 녹아요',
     '버튼으로 쓰는 것': '버튼을 누르고 판에서 칸을 골라 써요. 화약 같은 물건은 한 번 쓰면 없어져요',
     '남은 보물·지뢰': '이 층에 아직 묻혀 있는 보물과 지뢰의 수예요. 다 세면 마지막 칸도 알 수 있어요',
     '큰 덩이': '도장 찍는 날 묻히는 큰 보물이에요. 금빛 테두리 안 칸을 다 캐야 값을 받아요',
@@ -1757,7 +1757,7 @@ var Core = (function () {
     var d = run.d;
     if (!canAct(run) || d.embersOn) return { ok: false };
     var c = cellAt(d.floor, x, y);
-    if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, '두드려 볼 칸 옆으로 가세요.'); return { ok: false }; }
+    if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, TEXT.ops.noPath); return { ok: false }; }
     if (d.probes <= 0) { log(run, '오늘은 더 두드려 볼 수 없어요.'); return { ok: false }; }
     if (c.probe) { log(run, '이미 두드려 본 칸이에요.'); return { ok: false }; }
     if (d.candle < CONFIG.probeCost) { log(run, '촛불이 모자라요. 두드려 보기는 촛불 2.'); return { ok: false, short: true }; }
@@ -1782,7 +1782,7 @@ var Core = (function () {
     var d = run.d;
     if (!canAct(run) || d.embersOn) { if (d && d.embersOn) log(run, TEXT.ember.noFire); return { ok: false }; }
     var f = d.floor, c = cellAt(f, x, y);
-    if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, '터뜨릴 X 칸 옆으로 가세요.'); return { ok: false }; }
+    if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, TEXT.ops.noPath); return { ok: false }; }
     if (c.mark !== 1) { log(run, TEXT.ops.needX); return { ok: false, noX: true }; }
     var cost = free ? 0 : igniteCost(run);
     if (d.candle < cost) { log(run, '촛불이 모자라요. 발파는 촛불 ' + cost); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
