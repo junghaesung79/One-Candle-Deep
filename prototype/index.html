@@ -88,6 +88,16 @@
   .slot { width: 48px; height: 48px; background: #2a2633; border: 2px solid #34303f; box-sizing: border-box; display: flex; align-items: center; justify-content: center; position: relative; transition: transform 0.08s; }
   .slot.empty { border-style: dashed; background: transparent; }
   .slot.pop { transform: translateY(-3px); border-color: #ffd25a; }
+  /* 도구 경험 정리: 처음 보는 도구 도장, 연장함 알림, 도감 */
+  .firstStamp { position: absolute; top: 6px; right: 6px; border: 2px solid #c4432b; color: #e5484d; font-size: 11px; font-weight: 700; padding: 0 4px; transform: rotate(8deg); background: rgba(20,18,26,0.6); }
+  #candleBox.flick { animation: flick 0.9s ease-out; }
+  @keyframes flick { 0% { filter: brightness(1); } 15% { filter: brightness(1.9); } 30% { filter: brightness(0.7); } 45% { filter: brightness(1.6); } 100% { filter: brightness(1); } }
+  .card .firstStamp { right: auto; left: 2px; top: 2px; font-size: 10px; }
+  .codexGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .codexCell { display: flex; gap: 8px; padding: 8px 10px; align-items: flex-start; }
+  .codexCell .n { font-weight: 700; font-size: 14px; }
+  .codexCell .d { font-size: 12px; line-height: 16px; margin-top: 2px; }
+  .codexCell.unseen img { filter: brightness(0) opacity(0.5); }
   .uslot { width: 96px; height: 40px; line-height: 14px; font-size: 12px; background: #2a2633; border: 2px solid #34303f; box-sizing: border-box; display: flex; align-items: center; gap: 4px; padding: 0 6px; font-weight: 700; color: #f1ece2; cursor: pointer; }
   .uslot .k { display: none; }
   .uslot.on { border-color: #ffd25a; background: #3a3220; color: #ffd25a; }

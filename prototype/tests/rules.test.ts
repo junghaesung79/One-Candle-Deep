@@ -266,7 +266,7 @@ describe('규칙 단위 검사', () => {
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
       check(CONFIG.rulePool.join() === 'pair,border,lonely' && r.plan.firstRule.slice(1).every((x: string) => ['pair', 'border', 'lonely'].includes(x)), 'three veins (plain only day 1)');
-      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 12 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match'].includes(t.id)), '12 tools in v22 set'); }
+      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 14 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown'].includes(t.id)), '14 tools in v22 set, no fused tools in the pool'); }
     // 촛불이 다 타면 그 자리에서 하루 끝(불씨 없음)
     { const r = Core.newRun(6102); Core.startDay(r); const f = r.d.floor;
       const c = f.cells.find(q => q.cover !== 'open' && !q.haz && !q.stair && Core.neighbors(f, q.x, q.y).some(n => n.cover === 'open'));
@@ -287,8 +287,47 @@ describe('규칙 단위 검사', () => {
       check(g.ok && r.cash === c0 + gc && gc > 0 && r.phase === 'shop', 'take cash instead of a tool');
       const r2 = Core.newRun(6104); Core.debugSkipDay(r2); Core.debugSkipDay(r2); Core.startDay(r2); r2.d.pocket = 1000; Core.returnUp(r2); Core.afterSettle(r2); Core.afterPayment(r2);
       const g2 = Core.chooseGift(r2, 0);
-      check(g2.ok && r2.owned.includes(g2.id) && r2.phase === 'shop' && !Core.sellBack(r2, g2.id).ok, 'take a tool; no selling back');
+      const sv = Core.sellPrice(r2, g2.id), cs = r2.cash;
+      check(g2.ok && r2.owned.includes(g2.id) && r2.phase === 'shop' && sv === Math.floor(Core.TOOL_BY_ID[g2.id].price * 0.5 / 10) * 10 && Core.sellBack(r2, g2.id).ok && r2.cash === cs + sv && !r2.owned.includes(g2.id), 'take a tool; sell it for half the shop price');
       check(Core.rateText(r2).indexOf('도장 1개') === 0, 'rate text'); }
+    // 도구 경험: 도구 칸 8, 옛 연장함, 합친 도구, 심 씨 외상
+    { const r = Core.newRun(6201); check(Core.slotsOf(r) === 8, 'eight tool slots');
+      r.owned.push('belt'); check(Core.slotsOf(r) === 10, 'belt adds two slots'); r.owned.length = 0;
+      // 연장함: 지하 2층 이상, 2일째부터. 묻힌 칸은 숫자에 보물로 세고, 캐면 둘 중 하나를 골라요
+      let rb: any = null, fb: any = null;
+      for (let sd = 6300; sd < 6600 && !fb; sd++) {
+        const q = Core.newRun(sd); Core.debugSkipDay(q); Core.startDay(q);
+        for (let k = 0; k < 6 && !fb; k++) { q.d.floor.stair.found = true; q.d.floor.forkOptions = Core.forkOptions(q, q.d.floor.depth + 1); q.d.px = q.d.floor.stair.x; q.d.py = q.d.floor.stair.y; q.d.candle = 80; Core.descend(q, 0); if (q.d.floor.box) { rb = q; fb = q.d.floor; } }
+      }
+      check(!!fb && fb.depth >= 2, 'a box shows up on some floor at depth 2+');
+      if (fb) {
+        const bc = Core.cellAt(fb, fb.box.x, fb.box.y);
+        check(bc.haz === 'treasure' && bc.box && bc.cover !== 'open', 'box sits in a covered treasure cell');
+        const nb = Core.neighbors(fb, bc.x, bc.y)[0]; nb.cover = 'open'; nb.haz = null; rb.d.px = nb.x; rb.d.py = nb.y;
+        const p0 = rb.d.pocket, s0 = rb.d.streak; Core.hit(rb, bc.x, bc.y);
+        check(!!rb.boxOffer && rb.boxOffer.opts.length === 2 && rb.d.pocket === p0 && rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
+        rb.owned = ['gloves', 'lens', 'lastcard', 'crown', 'amulet', 'betchalk', 'fuse', 'wedge'].filter(id => !rb.boxOffer.opts.includes(id)).slice(0, 8);
+        while (rb.owned.length < 8) rb.owned.push(['tapper', 'sieve', 'tongs', 'refiner'].find(id => !rb.owned.includes(id) && !rb.boxOffer.opts.includes(id)));
+        check(!Core.chooseBox(rb, 0).ok, 'full slots: must drop one');
+        const drop = rb.owned[0], dv = Core.toolValue(rb, drop, 'site'), pk = rb.d.pocket, pick0 = rb.boxOffer.opts[0];
+        const cb = Core.chooseBox(rb, 0, drop);
+        check(cb.ok && rb.owned.includes(pick0) && !rb.owned.includes(drop) && rb.d.pocket === pk + dv && dv === Math.floor(Core.TOOL_BY_ID[drop].price * 0.25 / 10) * 10 && !rb.boxOffer, 'swap: dropped tool goes to Kwak at a quarter of the price');
+      }
+      // 합친 도구: 재료 둘을 가진 밤 상점에서 합쳐요. 재료 효과도 그대로
+      const rq = Core.newRun(6206); Core.debugSkipDay(rq); Core.startDay(rq); rq.owned = ['fuse', 'refiner']; Core.debugEndDay(rq); Core.afterSettle(rq);
+      check(rq.phase === 'shop' && rq.shop.fuse.length === 0, 'no fusion on a night without a stamp');
+      const rf = Core.newRun(6202); Core.debugSkipDay(rf); Core.debugSkipDay(rf); Core.startDay(rf); rf.owned = ['fuse', 'refiner']; rf.d.pocket = 1000; Core.returnUp(rf); Core.afterSettle(rf); Core.afterPayment(rf); Core.chooseGift(rf, -1);
+      check(rf.phase === 'shop' && rf.shop.fuse.includes('bigblast'), 'fusion offered at the shop on a stamp night');
+      check(Core.fuse(rf, 'bigblast').ok && rf.owned.join() === 'bigblast' && Core.owns(rf, 'fuse') && Core.owns(rf, 'refiner'), 'fused tool replaces both and keeps their effects');
+      const rc = Core.newRun(6203); Core.startDay(rc); rc.owned = ['deadcrown']; rc.d.hp = 1;
+      check(Core.streakCapIdx(rc) === 10 && CONFIG.streakLadder[10] === 6, 'dead crown: x6 at 1 HP');
+      // 심 씨 외상: 모자라면 빌려서 도장을 찍고, 다음 도장에 1.5배가 붙어요. 한 판에 한 번
+      const rl = Core.newRun(6204); Core.debugSkipDay(rl); Core.debugSkipDay(rl); Core.startDay(rl); rl.d.pocket = 200; Core.returnUp(rl); Core.afterSettle(rl);
+      const L = Core.loanInfo(rl), next0 = Core.payments(rl)[1].amount;
+      check(rl.phase === 'payment' && rl.payment.pending && L.ok && L.short === 100 && L.repay === 150, 'short on stamp day: pending with a loan offer');
+      check(Core.takeLoan(rl).ok && rl.payment.ok && rl.stamps === 1 && Core.payments(rl)[1].amount === next0 + 150 && rl.loanUsed, 'loan stamps now and adds 1.5x to the next stamp');
+      const rn = Core.newRun(6205); Core.debugSkipDay(rn); Core.debugSkipDay(rn); Core.startDay(rn); rn.d.pocket = 100; Core.returnUp(rn); Core.afterSettle(rn); Core.afterPayment(rn);
+      check(rn.phase === 'final' && !rn.final.success, 'refusing the loan ends the contract'); }
     // 둘레 한꺼번에 열기
     { const r = Core.newRun(6105); Core.startDay(r); const f = r.d.floor;
       const num = f.cells.find(c => c.cover === 'open' && Core.numAt(f, c) > 0 && Core.neighbors(f, c.x, c.y).some(q => q.cover !== 'open' && !q.haz && !q.stair));

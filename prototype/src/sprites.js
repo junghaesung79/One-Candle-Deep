@@ -127,6 +127,13 @@ function iconHtml(name, size, cls) {
   SPR.icons.amulet = mkSprite(["....oo....", "...o..o...", "..o....o..", ".wwwwwwww.", ".wrrrrrrw.", ".wwwrrwww.", ".wwrwwrww.", ".wwwrrwww.", ".wwwwwwww.", ".........."], { o: '#9a6532', w: '#efe7d6', r: '#c4432b' });
   SPR.icons.tapper = mkSprite(["..gggggg..", "..gGGGGg..", "..gggggg..", "....ww....", "....ww....", "....ww....", "....ww....", "....ww....", "...wwww...", ".........."], { g: '#7c8292', G: '#b8c1d6', w: '#9a6532' });
   SPR.icons.nugget = SPR.nugget; SPR.icons.gem = SPR.gem;
+  // 도구 경험 정리: 옛 연장함, 넓은 연장 띠, 심 씨 단골 장부, 합친 도구 셋
+  SPR.icons.box = mkSprite(["..........", "...oooo...", "..o....o..", "oooooooooo", "obbbbbbbbo", "obBBByBBbo", "obbbyybbbo", "obbbbbbbbo", "oooooooooo", ".........."], { o: '#3d2a1c', b: '#80583a', B: '#9a6532', y: '#ffd25a' });
+  SPR.icons.belt = mkSprite(["..........", "..........", "kkkkkkkkkk", "bbbobbobbb", "bbobyobbbb", "bbbobbobbb", "kkkkkkkkkk", "..o..o..o.", "..o..o..o.", ".........."], { k: '#3d2a1c', b: '#9a6532', o: '#454956', y: '#f2c14e' });
+  SPR.icons.regular = mkSprite([".oooooooo.", ".ojjjjjjo.", ".ojyyjjjo.", ".ojjjjjjo.", ".ojyyyjjo.", ".ojjjjjjo.", ".ojjjjrro.", ".ojjjjrro.", ".oooooooo.", ".........."], { o: '#6b5a3f', j: '#efe7d6', y: '#c9a35a', r: '#c4432b' });
+  SPR.icons.bigblast = mkSprite(["y...y...y.", ".k..k..k..", "..k.k.k...", "...kkk....", "rrrrrrrrr.", "rRRRRRRRr.", "rRyyRRRRr.", "rRRRRyyRr.", "rrrrrrrrr.", ".........."], { r: '#7a2f28', R: '#c4432b', k: '#3a3542', y: '#ffd25a' });
+  SPR.icons.moontongs = mkSprite(["ww......ww", ".ww....ww.", "..ww..ww..", "...wwww...", "....ww....", "...w..w...", "..w.yy.w..", ".w.yhhy.w.", "w...yy...w", ".........."], { w: '#c9c3d6', y: '#5fe0e8', h: '#e8f4ff' });
+  SPR.icons.deadcrown = mkSprite(["y..y..y...", "yy.yy.yy..", "yhyyhyyhy.", "yyyyyyyyy.", "oooooooooo", ".orrrrrro.", ".orwrrwro.", ".orrrrrro.", "..oooooo..", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', r: '#c4432b', w: '#efe7d6' });
 })();
 
 // 오른쪽 패널 단추 그림(12×12): 달력, 설정

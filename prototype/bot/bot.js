@@ -29,7 +29,7 @@ const POLICY = {
 
 const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, plain: 1 };
 // 구매 선호(보통·욕심). 측정으로 정한 순서(05 문서 8.3)
-const TOOL_PREF = ['refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'gloves', 'tapper', 'lastcard', 'betchalk'];
+const TOOL_PREF = ['bigblast', 'moontongs', 'deadcrown', 'refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'belt', 'gloves', 'tapper', 'lastcard', 'betchalk', 'regular'];   // 합친 도구는 내려놓지 않아요
 const ORDER_PREF = ['reach5', 'deepStreak', 'gems2', 'bigNum', 'chain20', 'streak3', 'floor5', 'noProbe', 'blast4', 'chalkO', 'chain3', 'clean3', 'emberT', 'keep20', 'noMine', 'xRight'];
 
 class Bot {
@@ -60,6 +60,7 @@ class Bot {
     this.floorRef = null;
     while ((run.phase === 'mine' || run.phase === 'room') && guard++ < 3000) {
       run.fx.length = 0;
+      if (run.boxOffer) { this.takeBox(run); continue; }
       if (run.phase === 'room') { this.room(run); continue; }
       this.trackFloor(run);
       if (!this.step(run)) { this.leaveFloor(run.d.floor); Core.returnUp(run); break; }
@@ -262,6 +263,11 @@ class Bot {
       g = gamble(d.hp >= 3 ? o.endThr : Math.max(o.endThr, this.o.thr.hp2));
       if (g) return this.dig(run, g, 'gambles');
     }
+    // 옛 연장함이 묻힌 층: 내려가기 전에 조금 더 건다(사람은 알림을 보고 이 층을 더 판다는 가정)
+    if (stairKnown && f.box && f.box.state === 'buried' && o.boxHunt !== false && d.hp >= 2 && !rush) {
+      g = gamble(Math.max(0.3, (o.endThr || this.thr(run)) - 0.15));
+      if (g) { this.m.boxHunt = (this.m.boxHunt || 0) + 1; return this.dig(run, g, 'gambles'); }
+    }
     if (stairKnown) {
       if (d.candle >= nextCost) {
         const opts = f.forkOptions;
@@ -446,6 +452,33 @@ class Bot {
     if (L) return L.indexOf(id) >= 0;
     return true;
   }
+  // 옛 연장함: 가장 앞 순위를 고르고, 칸이 가득이면 가진 것 가운데 가장 뒤 순위와 바꿔요(새 것이 더 앞일 때만). 아니면 곽 씨에게 넘겨요
+  takeBox(run) {
+    const Core = this.Core, B = run.boxOffer;
+    let bi = -1, br = 1e9; B.opts.forEach((id, i) => { const r = this.rank(id); if (r < br) { br = r; bi = i; } });
+    if (bi < 0) { Core.chooseBox(run, -1); return; }
+    if (run.owned.length < Core.slotsOf(run)) { Core.chooseBox(run, bi); this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); return; }
+    const worst = this.worstOwned(run, true);
+    if (worst && this.rank(worst) > br) { Core.chooseBox(run, bi, worst); this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); }
+    else Core.chooseBox(run, -1);
+  }
+  worstOwned(run, adding) {
+    let w = null, wr = -1;
+    for (const id of run.owned) { if (!this.Core.canRemove(run, id, adding)) continue; const r = this.rank(id); if (r > wr) { wr = r; w = id; } }
+    return w;
+  }
+  // 도장 날 금고가 모자라면: 조금 모자라면 덜 아끼는 도구부터 팔고, 많이 모자라면 심 씨에게 빌려요(빌릴 수 없으면 팔 수 있는 만큼 팔아요)
+  rescue(run) {
+    const Core = this.Core, P = run.payment;
+    const L = Core.loanInfo(run), short = P.amount - run.cash;
+    const sellSum = run.owned.filter(id => Core.canRemove(run, id, false)).reduce((a, id) => a + Core.sellPrice(run, id), 0);
+    if (this.o.noLoan || !L || !L.ok || (sellSum >= short && short <= P.amount * 0.25)) {
+      while (run.cash < P.amount) { const w = this.worstOwned(run, false); if (!w) break; Core.sellBack(run, w); this.m.sold = (this.m.sold || 0) + 1; }
+      if (run.cash >= P.amount) { Core.payNow(run); return; }
+    }
+    const L2 = Core.loanInfo(run);
+    if (L2 && L2.ok && !this.o.noLoan) { Core.takeLoan(run); this.m.loans = (this.m.loans || 0) + 1; }
+  }
   rank(id) {
     const L = this.o.buyList || TOOL_PREF;
     const r = L.indexOf(id);
@@ -453,6 +486,7 @@ class Bot {
   }
   shop(run) {
     const Core = this.Core;
+    for (const id of (run.shop.fuse || []).slice()) { if (Core.fuse(run, id).ok) this.m.fused = (this.m.fused || 0) + 1; }   // 합칠 수 있으면 늘 합쳐요
     if (!this.o.spend) return;
     const st = run.shop.stock;
     let order = st.map((id, i) => ({ id, i })).filter(x => x.id && !run.shop.sold[x.i]);
@@ -466,7 +500,7 @@ class Bot {
         continue;
       }
       if (!this.wants(run, x.id)) continue;
-      if (run.owned.length >= this.CONFIG.shop.passiveSlots) break;
+      if (run.owned.length >= Core.slotsOf(run)) break;
       if (this.canSpend(run, Core.priceOf(run, x.id, false))) { const r = Core.buy(run, x.i); if (r.ok) this.buys.push({ day: run.day, id: x.id }); }
     }
   }
@@ -491,13 +525,14 @@ function playRun(env, seed, opts) {
   const days = [], pays = [];
   let guard = 0;
   while (run.phase !== 'final' && guard++ < 200) {
+    if (run.boxOffer) { bot.takeBox(run); continue; }   // 옛 연장함 고르기가 먼저(하루가 같은 순간에 끝났을 수도 있어요)
     if (run.phase === 'deed' && !run.giftDone && run.giftOpts && run.giftOpts.length && !opts.noGift) {   // 중개소 선물(R43): 구매 선호 순서에서 가장 앞
       let gi = 0, gr = 1e9; run.giftOpts.forEach((id, i) => { const r = TOOL_PREF.indexOf(id); if (r >= 0 && r < gr) { gr = r; gi = i; } });
       Core.toGift(run); Core.chooseGift(run, gi); continue;
     }
     if (run.phase === 'gift') {   // 도장 선물: 다음 도장까지 여유가 있으면 도구, 모자라면 금고 돈
       let gi = -1;
-      if (run.owned.length < env.CONFIG.shop.passiveSlots && run.giftOpts.length && (bot.o.buy === 'naive' || bot.canSpend(run, 0))) {
+      if (run.owned.length < Core.slotsOf(run) && run.giftOpts.length && (bot.o.buy === 'naive' || bot.canSpend(run, 0))) {
         if (bot.o.buy === 'naive') gi = Math.floor(bot.rng() * run.giftOpts.length);
         else { let gr = 1e9; run.giftOpts.forEach((id, i) => { const r = bot.rank(id); if (r < gr) { gr = r; gi = i; } }); }
       }
@@ -518,6 +553,7 @@ function playRun(env, seed, opts) {
       continue;
     }
     if (run.phase === 'settle') { Core.afterSettle(run); continue; }
+    if (run.phase === 'payment' && run.payment.pending) bot.rescue(run);
     if (run.phase === 'payment') { pays.push({ day: run.day, before: run.payment.before, amount: run.payment.amount, ok: run.payment.ok }); Core.afterPayment(run); continue; }
     if (run.phase === 'shop') { bot.shop(run); Core.nextDay(run); continue; }
     throw new Error('unknown phase ' + run.phase);

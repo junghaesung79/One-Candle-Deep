@@ -1,4 +1,4 @@
-import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES, CHARACTERS } from './core.js';
+import { Core, CONFIG, TEXT, RULES, MUTATIONS, TUTORIAL, TREASURE_NAMES, CHARACTERS, TOOLS } from './core.js';
 import { SPR, iconHtml } from './sprites.js';
 
 // ================= 화면, 입력, 연출 (배치·시간: 03_art_ui.md v0.3 3.6, 6장) =================
@@ -8,6 +8,12 @@ try { var sv = JSON.parse(localStorage.getItem('ocd2_settings') || 'null'); if (
 // 주소 뒤에 ?preset=v21 을 붙이면 2차 기획 v2.1 규칙으로 해 볼 수 있어요(플레이테스트 비교용)
 try { var qpreset = new URLSearchParams(location.search).get('preset'); if (qpreset) Core.applyPreset(qpreset); } catch (e) {}
 function saveSettings() { try { localStorage.setItem('ocd2_settings', JSON.stringify(settings)); } catch (e) {} }
+// 도감(Balatro처럼 처음엔 이름이 가려져 있고, 얻을 때마다 열려요). 이 브라우저에 남아요
+var CODEX_KEY = 'ocd2_codex';
+var codex = (function () { try { return JSON.parse(localStorage.getItem(CODEX_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+if (!codex.seen) codex.seen = {};
+function codexMark(ids) { var ch = false; ids.forEach(function (id) { if (id && !codex.seen[id]) { codex.seen[id] = 1; ch = true; } }); if (ch) { try { localStorage.setItem(CODEX_KEY, JSON.stringify(codex)); } catch (e) {} } }
+function firstTag(id) { return codex.seen[id] ? '' : '<span class="firstStamp">처음</span>'; }
 
 var T = 48, BW = CONFIG.W, BH = CONFIG.H, BOX = 44, BOY = 64;   // 판 왼쪽 위(무대 좌표)
 var ui = { sub: null, sel: 0, debugReveal: false, hover: null, shownAt: 0, rHold: null, hudDirty: true, desc: null,
@@ -231,6 +237,16 @@ function drainFx() {
       }
       case 'relit': ui.hudDirty = true; break;
       case 'probe': anim.pops.push({ x: e.x, y: e.y, t0: now + 180, kind: 'probe' }); break;
+      case 'box': {   // 옛 연장함: 멈춤, 빛기둥, 칸 위 글자. 솟는 걸 본 뒤 고르는 창
+        anim.stopUntil = Math.max(anim.stopUntil, now + CONFIG.fx.boxStop); addShake(3, 220);
+        anim.pops.push({ x: e.x, y: e.y, t0: now + 60, kind: 'boxLift', scorch: e.scorch });
+        var bq = stageXY(e.x, e.y);
+        addFly({ x: Math.max(110, Math.min(700, bq.x)), y: bq.y - 40, showAt: 120, flyAt: 900, size: 18, color: '#ffd25a', steps: [{ t: 120, h: iconHtml('icons.box', 28) + '<span class="tname t3">옛 연장함</span>' }] });
+        after(700, function () { if (run.boxOffer) { ui.shownAt = performance.now(); renderOverlay(); } });
+        break;
+      }
+      case 'boxHere': blinkEl('candleBox', 'flick', 900); break;
+      case 'boxMelt': anim.pops.push({ x: e.x, y: e.y, t0: now + 150, kind: 'fizzle' }); break;
       case 'stair': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'stair' }); break;
       case 'locked': anim.pops.push({ x: e.x, y: e.y, t0: now, kind: 'locked' }); break;
       case 'numChange': anim.numBlink[e.y * BW + e.x] = now + 360; break;
@@ -479,7 +495,7 @@ function drawBoard(now) {
   drawPickFlame(g, d.px * T + 34, d.py * T + 2, d.streak, now);
   keyLabels.forEach(function (k) { drawCellLabel(g, f, k[0], k[1], k[2]); });
   // 튀어 오르는 것들
-  anim.pops = anim.pops.filter(function (p) { return now - p.t0 < 1000; });
+  anim.pops = anim.pops.filter(function (p) { return now - p.t0 < 1000; });   // 옛 연장함 빛기둥(950 ms)도 이 안에 끝나요
   anim.pops.forEach(function (p) {
     var k = now - p.t0; if (k < 0) return;
     var PX = p.x * T, PY = p.y * T;
@@ -502,6 +518,13 @@ function drawBoard(now) {
         var up = Math.min(1, k / 160), sz = 44 + 40 * up, cy = PY + 24 - 18 * up, al = k < 650 ? 1 : 1 - (k - 650) / 200;
         g.globalAlpha = al * 0.35; g.fillStyle = p.tier === 2 ? '#5fe0e8' : '#ffd25a'; g.beginPath(); g.arc(PX + 24, cy, sz * 0.42, 0, 7); g.fill();
         g.globalAlpha = al; g.drawImage(SPR.tier[p.tier], PX + 24 - sz / 2, cy - sz / 2, sz, sz); g.globalAlpha = 1;
+      }
+    } else if (p.kind === 'boxLift') {   // 옛 연장함: 칸에서 위로 빛기둥, 상자가 솟아요
+      if (k < 950) {
+        var al2 = k < 700 ? 1 : 1 - (k - 700) / 250, hgt = Math.min(1, k / 180) * PY + T;
+        var grd = g.createLinearGradient(0, PY + T, 0, PY + T - hgt); grd.addColorStop(0, p.scorch ? 'rgba(165,159,179,0.55)' : 'rgba(255,210,90,0.6)'); grd.addColorStop(1, 'rgba(255,210,90,0)');
+        g.globalAlpha = al2; g.fillStyle = grd; g.fillRect(PX + 8, PY + T - hgt, T - 16, hgt);
+        var up2 = Math.min(1, k / 200), sz2 = 40 + 36 * up2; g.drawImage(SPR.icons.box, PX + 24 - sz2 / 2, PY + 24 - 22 * up2 - sz2 / 2, sz2, sz2); g.globalAlpha = 1;
       }
     } else if (p.kind === 'locked') {
       if (k < 120) { g.strokeStyle = '#e5484d'; g.lineWidth = 2; g.strokeRect(PX + 2 + (Math.floor(k / 30) % 2 ? 2 : -2), PY + 2, T - 4, T - 4); }
@@ -719,7 +742,7 @@ function goalLine(run) {   // 02 6.1: "다음 도장까지 120 · 3일째"
   var G = Core.goalInfo(run); if (!G) return '';
   if (G.daysLeft === 0) return G.left > 0 ? '<span class="warnTxt">오늘 도장 찍는 날</span> · <b class="acc">' + fmt(G.left) + '</b> 모자라요' : '<span class="acc">오늘 도장 찍는 날</span> · 다음 도장 채움';
   if (G.left <= 0) return '<span class="acc">다음 도장 채움</span> · ' + G.day + '일째';
-  return '다음 도장까지 <b class="acc">' + fmt(G.left) + '</b> · ' + G.day + '일째';
+  return '다음 도장까지 <b class="acc">' + fmt(G.left) + '</b> · ' + G.day + '일째' + (run.loan && run.loan.day === G.day ? ' <span class="note">(심 씨 빚 ' + fmt(run.loan.amount) + ' 포함)</span>' : '');
 }
 function updateHUD() {
   var d = run.d, f = d && d.floor;
@@ -732,7 +755,8 @@ function updateHUD() {
     $('signName').innerHTML = esc(R.name) + (f.chunk && !f.chunk.done ? ' <span class="badge gold">' + (CONFIG.features.chunkShown ? '큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ') · 금빛 테두리' : '이 층 어딘가에 큰 덩이 (' + f.chunk.w + '×' + f.chunk.h + ')') + '</span>' : '') + (f.chunk && f.chunk.done ? ' <span class="badge gold">덩이 캠</span>' : '');
     $('signText').textContent = R.sign;
     var rem = CONFIG.countsShown ? Core.remaining(f) : null;   // 재미 보고서 1주차: 이 층에 남은 보물·지뢰 수
-    $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> ' + (CONFIG.stairShown ? '계단 열림' : '계단 찾음') + '</span>') : iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> ' + (CONFIG.stairShown ? '계단 닫힘' : '계단 못 찾음') + '</span>');   // 그림만으로는 뜻을 알 수 없어 늘 글자를 붙여요
+    var boxH = f.box && f.box.state === 'buried' ? '<span data-term="옛 연장함" class="boxGlyph" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:13px;color:#ffd25a">' + iconHtml('icons.box', 20) + '연장함</span>' : '';   // 이 층에 옛 연장함이 묻혀 있어요(어느 칸인지는 안 보여요)
+    $('stairSt').innerHTML = (rem ? '<span data-term="남은 보물·지뢰" style="display:inline-flex;align-items:center;gap:2px;margin-right:10px;font-size:14px">' + iconHtml('gem', 20) + '<b class="px">' + rem.t + '</b><span style="width:6px"></span>' + iconHtml('mine', 20) + '<b class="px">' + rem.m + '</b></span>' : '') + boxH + (f.stair && f.stair.found ? (f.stair.blocked ? iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> 막힘</span>' : iconHtml('icons.stairs', 24) + '<span style="font-size:12px;color:#c9b49c"> ' + (CONFIG.stairShown ? '계단 열림' : '계단 찾음') + '</span>') : iconHtml('icons.stairsDim', 24) + '<span style="font-size:12px;color:#a59fb3"> ' + (CONFIG.stairShown ? '계단 닫힘' : '계단 못 찾음') + '</span>');   // 그림만으로는 뜻을 알 수 없어 늘 글자를 붙여요
   } else { $('floorName').textContent = '지상'; $('signIc').innerHTML = ''; $('signName').textContent = ''; $('signText').textContent = ''; $('stairSt').innerHTML = ''; }
   $('mutIcons').innerHTML = (d && d.mutations || []).map(function (m) { return '<span title="' + esc(MUTATIONS[m].name + ': ' + MUTATIONS[m].today) + '">' + iconHtml('muts.' + m, 24) + '</span>'; }).join('');
   // 판: 날짜(달력·설정 단추는 같은 줄)
@@ -807,14 +831,16 @@ function updateHUD() {
     });
   }
   // 도구 칸
-  $('ownLbl').textContent = '가진 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots;
+  codexMark(run.owned.concat(Core.innate(run)));
+  var nSl = Core.slotsOf(run), slW = Math.min(48, Math.floor((408 - 4 * (nSl - 1)) / nSl)), slSt = ' style="width:' + slW + 'px;height:' + slW + 'px"';   // 칸이 늘면 작아져요(한 줄)
+  $('ownLbl').textContent = '가진 도구 ' + run.owned.length + '/' + nSl;
   var os = '';
-  for (var s = 0; s < CONFIG.shop.passiveSlots; s++) {
+  for (var s = 0; s < nSl; s++) {
     var id = run.owned[s];
-    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150; os += '<div class="slot' + (popd ? ' pop' : '') + '" data-tool="' + id + '">' + iconHtml('icons.' + t.icon, 30) + '</div>'; }
-    else os += '<div class="slot empty"></div>';
+    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150; os += '<div class="slot' + (popd ? ' pop' : '') + '" data-tool="' + id + '"' + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
+    else os += '<div class="slot empty"' + slSt + '></div>';
   }
-  if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; bindSlotEvents(); }
+  if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; $('ownSlots').style.gap = '4px'; bindSlotEvents(); }
   // R53 버튼: 두드려 보기·소모품 → 고르기 상태. 발파는 X 칸을 누르면 돼서 버튼이 없어요(R94)
   var md = ui.mode || {};
   var us = d && !d.probesMax && !CONFIG.features.probeBase ? '<div class="uslot off"><span class="muted">빈 칸</span></div>' :   // v22: 두드려 보기는 청진 망치가 있을 때만
@@ -966,13 +992,15 @@ function renderOverlay() {
   if (run && run.phase === 'settle') recordDay();
   var p = run.phase, h = '';
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
-  if (p === 'deed') {
+  if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
+  else if (ui.sub === 'codex') h = codexHtml();
+  else if (p === 'deed') {
     h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1060px;border:none;background:transparent;text-align:left;display:flex;gap:28px;align-items:flex-start"><div style="width:620px;flex:none">' +
       '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0) +
       '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
       '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
       '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:14px">' +
-      (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '</span>') +
+      (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '<button id="oCodex">도감</button></span>') +
       '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
       (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
       (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + charPickHtml() + '</div>';
@@ -1096,6 +1124,7 @@ function settleHtml() {
     h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>지하 ' + fl.depth + '층 (' + RULES[fl.rule].name + ')' + (fl.perfect ? ' <span class="badge gold">완벽한 층</span>' : '') + '</span><span>' + fmt(fl.value) + '</span></div>'; delay += 120;
   });
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
+  if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
   if (S.lines.order) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>주문 보수</span><span>' + fmt(S.lines.order) + '</span></div>'; delay += 120; }
   ui.settleT0 = performance.now(); ui.settleDur = delay + 1100;
   h += '<div style="display:flex;align-items:center;gap:14px;margin:14px 0;font-size:17px">' + iconHtml('pouch', 32) + '<span>오늘 주머니 <b class="px" id="sPocket">' + fmt(S.gross) + '</b></span>' +
@@ -1125,11 +1154,23 @@ function paymentHtml() {
   ui.payT0 = performance.now();
   var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:680px"><h2>' + run.day + '일째 밤 · ' + stampNm(run.day) + ' 찍는 날</h2>';
   h += '<div class="quote">중개인 구 실장: "' + esc(P.quote) + '"</div>';
+  if (P.pending) {   // 오늘 밤 안에 채우면 도장을 찍어요: 도구를 팔거나 심 씨에게 빌려요
+    var shortNow = Math.max(0, P.amount - run.cash), L = Core.loanInfo(run);
+    h += '<div style="font-size:20px;margin:12px 0">' + iconHtml('coins', 28) + ' <span class="px">' + fmt(run.cash) + '</span> / ' + stampNm(run.day) + ' ' + fmt(P.amount) + ' · ' + (shortNow > 0 ? '<span style="font-size:26px;font-weight:700;color:#e5484d">' + fmt(shortNow) + ' 모자라요</span>' : '<b class="acc">채웠어요</b>') + '</div>';
+    if (CONFIG.features.toolSell && run.owned.length) {
+      h += '<h3>' + esc(TEXT.short.sell) + ' <span class="note">심 씨가 상점 값의 ' + (Core.owns(run, 'regular') ? '75%' : '절반') + '에 사요</span></h3><div style="display:flex;gap:6px;flex-wrap:wrap">';
+      run.owned.forEach(function (id) { var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false); h += '<button data-psell="' + id + '"' + (rm ? '' : ' disabled') + ' style="display:flex;align-items:center;gap:4px;padding:4px 8px">' + iconHtml('icons.' + t.icon, 18) + esc(t.short) + ' <span class="note">+' + fmt(Core.sellPrice(run, id)) + '</span></button>'; });
+      h += '</div>';
+    }
+    if (L) h += '<div class="panel" style="padding:8px 12px;margin-top:12px">' + (L.ok ? '<div class="sub">상인 심 씨: "' + esc(TEXT.short.loanAsk.replace('{short}', fmt(L.short)).replace('{repay}', fmt(L.repay))) + '"</div><div style="text-align:right;margin-top:6px"><button id="oLoan">' + esc(TEXT.short.loan.replace('{short}', fmt(L.short)).replace('{repay}', fmt(L.repay))) + '</button></div>' : '<span class="note">' + esc(L.last ? TEXT.short.lastNo : L.used ? TEXT.short.loanUsed : '') + '</span>') + '</div>';
+    h += '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px"><button id="oPay">' + TEXT.short.giveUp + '</button><button class="primary" id="oPayNow"' + (shortNow > 0 ? ' disabled' : '') + '>' + TEXT.short.payNow + '</button></div></div>';
+    return h;
+  }
   if (P.ok) h += '<div style="font-size:20px;margin:12px 0;display:flex;align-items:center;gap:10px">' + iconHtml('coins', 28) + ' <span class="px" id="pVault">' + fmt(P.before) + '</span> − ' + stampNm(run.day) + ' ' + fmt(P.amount) + ' = <b class="px acc">' + fmt(P.after) + '</b></div>';
   else h += '<div style="font-size:20px;margin:12px 0">' + iconHtml('coins', 28) + ' <span class="px">' + fmt(P.before) + '</span> / ' + stampNm(run.day) + ' ' + fmt(P.amount) + ' · <span id="pShort" style="font-size:28px;font-weight:700;color:#e5484d">' + fmt(P.short) + ' 모자라요</span></div>';
   h += '<div style="position:relative">' + deedHtml(run.stamps, P.ok) + (P.ok ? '' : '<div class="voidLine" style="top:39%;animation-delay:1100ms"></div><div class="voidLine" style="top:62%;animation-delay:1250ms"></div><div class="voidLine" style="top:85%;animation-delay:1400ms"></div>') + '</div>';
   if (P.ok && P.next) {
-    h += '<div class="fadein" style="animation-delay:2100ms;margin-top:12px;font-size:16px;line-height:24px"><b class="acc">' + esc(P.fixed[0]) + '</b><br>' + esc(P.fixed[1]) + ' <span class="muted">(' + (P.next.day - run.day) + '일 뒤)</span></div>';
+    h += '<div class="fadein" style="animation-delay:2100ms;margin-top:12px;font-size:16px;line-height:24px"><b class="acc">' + esc(P.fixed[0]) + '</b><br>' + esc(P.fixed[1]) + ' <span class="muted">(' + (P.next.day - run.day) + '일 뒤)</span>' + (P.fixed[2] ? '<br><span class="warnTxt">' + esc(P.fixed[2]) + '</span>' : '') + '</div>';
     if (P.next.mutations.length) {
       h += '<div class="fadein" style="animation-delay:2300ms;font-size:14px;margin-top:6px">' + P.next.day + '일째 광산 변덕 ' + (P.next.mutations.length === 1 ? '하나' : '두 가지') + '</div>';
       P.next.mutations.forEach(function (m, i) { h += '<div class="panel fadein" style="animation-delay:' + (2400 + i * 200) + 'ms;padding:6px 10px;margin-top:4px;font-size:14px">' + iconHtml('muts.' + m, 20) + ' <b>' + MUTATIONS[m].name + '</b> · <span class="muted">구 실장:</span> "' + esc(MUTATIONS[m].warn) + '"</div>'; });
@@ -1188,18 +1229,24 @@ function shopHtml(merchant) {
     var pr = Core.priceOf(run, id, merchant), can = run.cash >= pr, left = run.cash - pr;
     var short = np ? Math.max(0, np.amount - left) : 0;
     var warn = np && np.day === run.day + (merchant ? 0 : 1) && left < np.amount;
-    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '"><div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + t.name +
+    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '" style="position:relative">' + (t.kind === 'passive' ? firstTag(id) : '') + '<div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + t.name +
       ' <span class="muted" style="font-size:12px;font-weight:400">' + axisName(t) + '</span></div><div class="d">' + esc(t.desc) + '</div>' +
       (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자라요</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
   });
   if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 세 자리만 바뀌어요</span></div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했어요)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
-  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + CONFIG.shop.passiveSlots + (merchant || !CONFIG.features.sellBack ? '' : ' · 되팔면 산 값의 절반이에요') + '</div>';
+  var canSell = !merchant && (CONFIG.features.sellBack || CONFIG.features.toolSell);
+  h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:5px;min-height:0"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + Core.slotsOf(run) + (!canSell ? '' : CONFIG.features.toolSell ? ' · 심 씨는 상점 값의 ' + (Core.owns(run, 'regular') ? '75%' : '절반') + '에 사요' : ' · 되팔면 산 값의 절반이에요') + '</div>';
+  if (!merchant && S.fuse && S.fuse.length) S.fuse.forEach(function (fid) {   // 합치기: 재료 둘을 가진 밤
+    var ft = Core.TOOL_BY_ID[fid], a = Core.TOOL_BY_ID[ft.fusion[0]], b = Core.TOOL_BY_ID[ft.fusion[1]];
+    h += '<div class="panel" style="padding:8px 10px;border-color:#a8781c"><div class="sub" style="font-size:13px">구조꾼 곽 씨: "' + esc(TEXT.fuse.talk) + '"</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px">' + iconHtml('icons.' + a.icon, 22) + '+' + iconHtml('icons.' + b.icon, 22) + '→' + iconHtml('icons.' + ft.icon, 26) +
+      '<b style="flex:1">' + esc(ft.name) + '</b><button class="primary" data-fuse="' + fid + '" data-tool="' + fid + '">' + TEXT.fuse.button + '</button></div><div class="d" style="font-size:12px;margin-top:2px">' + esc(ft.desc) + '</div></div>';
+  });
   run.owned.forEach(function (id) {
-    var t = Core.TOOL_BY_ID[id];
-    h += '<div class="card panel" style="padding:5px 8px;cursor:default" data-tool="' + id + '"><div class="ic" style="width:32px;height:32px">' + iconHtml('icons.' + t.icon, 22) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div><div class="d" style="font-size:12px">' + esc(t.desc) + '</div></div>' +
-      (merchant || !CONFIG.features.sellBack ? '' : '<button data-sell="' + id + '">되팔기 +' + Core.sellPrice(run, id) + '</button>') + '</div>';
+    var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false);
+    h += '<div class="card panel" style="padding:2px 8px;cursor:default;min-height:0;align-items:center" data-tool="' + id + '"><div class="ic" style="width:24px;height:24px">' + iconHtml('icons.' + t.icon, 20) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div></div>' +   // 효과는 마우스를 올리면 아래 설명 칸에
+      (!canSell ? '' : '<button data-sell="' + id + '"' + (rm ? '' : ' disabled title="이걸 빼면 칸이 모자라요"') + '>' + (CONFIG.features.toolSell ? '팔기' : '되팔기') + ' +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없어요</div>';
   h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + [(CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기' : '')].concat(run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; })).filter(Boolean).join(' · ') + (run.cons.length ? '' : (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? ' · ' : '') + '한 번 쓰는 물건은 없어요') + '</div>';
@@ -1218,6 +1265,7 @@ function pauseHtml() {   // 설정(Esc 또는 오른쪽 위 톱니 단추). 화�
     '<h3 style="margin-top:14px">이번 판</h3><div style="display:flex;gap:6px"><button id="oRestart" style="flex:1">새 판 시작</button><button id="oRestartTut" style="flex:1">첫 판 안내로 다시</button><button id="oGiveUp" style="flex:1">판 포기</button></div>' +
     '<h3 style="margin-top:14px">기록</h3><div class="note">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '<br>' + esc(playlogSummary()) + '</div>' +
     '<div style="display:flex;gap:6px;margin-top:6px"><button id="oLogGet" style="flex:1">플레이 기록 내려받기</button><button id="oLogClear" style="flex:1">플레이 기록 지우기</button><button id="oOpening" style="flex:1">오프닝 만화 다시 보기</button></div>' +
+    '<div style="display:flex;gap:6px;margin-top:6px"><button id="oCodex" style="flex:1">도구 도감</button></div>' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><span class="note">' + esc(Core.charOf(run).name) + ' · 시드 ' + run.seed + ' · 규칙 ' + (CONFIG.preset === 'v21' ? '2차 기획 v2.1' : 'v2.2 시험') + (run.daily ? ' · ' + TEXT.daily + ' ' + run.daily : '') + '</span><button class="primary" id="oClose">계속하기</button></div></div>';
 }
 // ---------- 오프닝 3컷 만화(R52, 02 6.12). 시안 A 팔레트의 단순한 픽셀 그림 ----------
@@ -1358,23 +1406,93 @@ function bindOverlay() {
   q = OV.querySelectorAll('[data-buy]');
   for (i = 0; i < q.length; i++) q[i].onclick = function () { buyTool(+this.dataset.buy); };
   q = OV.querySelectorAll('[data-sell]');
-  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.sell; askConfirm(Core.TOOL_BY_ID[sid].name + '을(를) 되팔까요? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.sell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 팔까요? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
+  q = OV.querySelectorAll('[data-fuse]');
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var fid = this.dataset.fuse; if (Core.fuse(run, fid).ok) { codexMark([fid]); ui.slotPop[fid] = performance.now(); } ui.hudDirty = true; renderOverlay(); };
+  q = OV.querySelectorAll('[data-boxpick]');
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxSel = +this.dataset.boxpick; renderOverlay(); };
+  q = OV.querySelectorAll('[data-boxdrop]');
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxDrop = this.dataset.boxdrop; renderOverlay(); };
+  on('oBoxTake', function () { boxGo(ui.boxSel || 0); }); on('oBoxPass', function () { boxGo(-1); });
+  on('oCodex', function () { ui.sub = 'codex'; renderOverlay(); }); on('oCodexClose', function () { ui.sub = null; renderOverlay(); });
+  q = OV.querySelectorAll('[data-psell]');   // 도장 날 모자랄 때 도구를 팔아 채우기
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.psell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 팔까요? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
+  on('oLoan', function () { if (Core.takeLoan(run).ok) { ui.payT0 = performance.now(); renderOverlay(); ui.hudDirty = true; } });
+  on('oPayNow', function () { if (Core.payNow(run).ok) { renderOverlay(); ui.hudDirty = true; } });
   q = OV.querySelectorAll('[data-tool]');
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
-  return same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
+  var out = same.length ? '<br><span class="sub">엮임: 같은 ' + axisName(t) + ' ' + same.map(function (id) { return Core.TOOL_BY_ID[id].name; }).join(', ') + '</span>' : '';
+  if (CONFIG.features.fusion) {   // 합쳐지는 재료: 만들어 본 적이 있으면 짝과 결과를, 없으면 귀띔만
+    var fu = TOOLS.filter(function (q) { return q.fusion && q.fusion.indexOf(t.id) >= 0; })[0];
+    if (fu) { var mate = Core.TOOL_BY_ID[fu.fusion[0] === t.id ? fu.fusion[1] : fu.fusion[0]]; out += '<br><span class="acc">' + (codex.seen[fu.id] ? '합치기: ' + esc(mate.name) + '와(과) 합치면 ' + esc(fu.name) : '곽 씨: "이건 무언가와 합쳐질 것 같네."') + '</span>'; }
+  }
+  return out;
+}
+// 옛 연장함: 캔 자리에서 둘 중 하나를 골라요. 칸이 가득이면 하나를 내려놓고(곽 씨가 4분의 1 값에 받아 감), 싫으면 통째로 곽 씨에게 넘겨요
+function boxHtml() {
+  var B = run.boxOffer, full = run.owned.length >= Core.slotsOf(run), pv = Core.boxPassValue(run);
+  if (ui.boxSel == null || ui.boxSel >= B.opts.length) ui.boxSel = 0;
+  if (ui.boxDrop && run.owned.indexOf(ui.boxDrop) < 0) ui.boxDrop = null;
+  var h = '<div class="dim" style="background:rgba(11,10,16,0.78)"></div><div class="dlg" style="width:860px"><h2 style="display:flex;align-items:center;gap:8px">' + iconHtml('icons.box', 30) + esc(TEXT.box.title) + (B.scorch ? ' <span class="badge">그을림</span>' : '') + '</h2>';
+  h += '<div class="quote">구조꾼 곽 씨: "' + esc(B.quote) + '"</div>';
+  if (B.opts.length) {
+    h += '<div style="display:flex;gap:14px;margin-top:10px">';
+    B.opts.forEach(function (id, i) {
+      var t = Core.TOOL_BY_ID[id];
+      h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + firstTag(id) + iconHtml('icons.' + t.icon, 40) +
+        '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div></div>';
+    });
+    h += '</div>';
+  } else h += '<div class="note" style="margin-top:10px">쓸 만한 도구는 이미 다 가졌어요</div>';
+  if (full && B.opts.length) {
+    h += '<div class="note warnTxt" style="margin-top:12px">' + esc(TEXT.box.full) + '</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
+    run.owned.forEach(function (id) {
+      var t = Core.TOOL_BY_ID[id], ok = Core.canRemove(run, id, true);
+      h += '<button data-boxdrop="' + id + '" data-tool="' + id + '"' + (ok ? '' : ' disabled title="이걸 빼면 칸이 모자라요"') + ' class="' + (ui.boxDrop === id ? 'primary' : '') + '" style="display:flex;align-items:center;gap:4px;padding:4px 8px">' + iconHtml('icons.' + t.icon, 18) + esc(t.short) + ' <span class="note">+' + fmt(Core.toolValue(run, id, 'site')) + '</span></button>';
+    });
+    h += '</div>';
+  }
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">카드를 눌러 골라요. 돈은 오늘 주머니로 들어가요</span><span style="display:flex;gap:10px">' +
+    '<button id="oBoxPass">' + esc((B.opts.length ? TEXT.box.pass : TEXT.box.passEmpty).replace('{n}', fmt(pv))) + '</button>' +
+    (B.opts.length ? '<button class="primary" id="oBoxTake"' + (full && !ui.boxDrop ? ' disabled' : '') + '>' + (full ? '바꿔서 가져가기' : '가져가기') + '</button>' : '') + '</span></div></div>';
+  return h;
+}
+function boxGo(i) {
+  if (performance.now() - ui.shownAt < 400) return;
+  var id = i >= 0 ? run.boxOffer.opts[i] : null;
+  var r = Core.chooseBox(run, i, ui.boxDrop);
+  if (!r.ok) { blinkEl('ov', 'x', 1); return; }
+  ui.boxSel = 0; ui.boxDrop = null;
+  if (id) { ui.slotPop[id] = performance.now(); codexMark([id]); }
+  ui.shownAt = performance.now();
+  afterAction(); renderOverlay(); ui.hudDirty = true;
+}
+// 도감: 처음엔 이름이 가려져 있고 얻으면 열려요. 합친 도구도 처음 만들 때 열려요
+function codexHtml() {
+  var all = TOOLS.filter(function (t) { return t.kind === 'passive' && (!t.sets || t.sets.indexOf(CONFIG.toolSet) >= 0); });
+  var seenN = all.filter(function (t) { return codex.seen[t.id]; }).length;
+  var h = '<div class="dim" style="background:rgba(11,10,16,0.85)"></div><div class="dlg" style="width:1000px;max-height:660px;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>도구 도감</h2><span class="muted">' + seenN + ' / ' + all.length + '</span></div>';
+  h += '<div class="note" style="margin-bottom:10px">한 번 얻은 도구는 이름과 효과가 열려요. 이 브라우저에 남아요</div><div class="codexGrid">';
+  all.forEach(function (t) {
+    var seen = !!codex.seen[t.id];
+    h += '<div class="panel codexCell' + (seen ? '' : ' unseen') + '">' + iconHtml('icons.' + t.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(t.name) : '???') + '</div>' +
+      '<div class="note">' + (t.fusion ? '합친 도구' : axisName(t) + ' · ' + t.rarity) + '</div>' + (seen ? '<div class="d">' + esc(t.desc) + '</div>' : '<div class="d muted">' + (t.fusion ? '두 도구를 합치면 나와요' : '아직 못 얻었어요') + '</div>') + '</div></div>';
+  });
+  h += '</div><div style="text-align:right;margin-top:12px"><button class="primary" id="oCodexClose">닫기</button></div></div>';
+  return h;
 }
 function giftHtml() {
-  var stampR = run.giftKind === 'stamp', full = run.owned.length >= CONFIG.shop.passiveSlots;
+  var stampR = run.giftKind === 'stamp', full = run.owned.length >= Core.slotsOf(run);
   var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:900px"><h2>' + (stampR ? TEXT.reward.title + ' · 도장 ' + run.stamps + '개' : TEXT.gift.title) + '</h2>';
   var q = stampR ? TEXT.reward.enter + ' ' + TEXT.reward.cashEnter.replace('{cash}', fmt(run.giftCash)) : run.tutorial ? TEXT.gift.enter : TEXT.gift.enter + ' ' + TEXT.gift.enter2;
   h += '<div class="quote">중개인 구 실장: "' + esc(q) + '"</div>' + (stampR && full ? '<div class="note" style="margin-top:6px">' + esc(TEXT.reward.full) + '</div>' : '') + '<div style="display:flex;gap:14px;margin-top:10px;' + (stampR && full ? 'opacity:0.45' : '') + '">';
   run.giftOpts.forEach(function (id, i) {
     var t = Core.TOOL_BY_ID[id];
-    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px">' + iconHtml('icons.' + t.icon, 40) +
+    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px;position:relative">' + firstTag(id) + iconHtml('icons.' + t.icon, 40) +
       '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' +
       '</div>';
   });
