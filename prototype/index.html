@@ -24,7 +24,7 @@
   #sign .nm { font-size: 15px; font-weight: 700; color: #ffd25a; white-space: nowrap; }
   #sign .tx { font-size: 14px; color: #efe7d6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #sign .badge { margin-left: 6px; }
-  #hdrRight { display: flex; align-items: center; gap: 8px; }
+  #hdrRight { display: flex; align-items: center; justify-content: flex-end; gap: 8px; width: 250px; flex: none; }
   .badge { display: inline-block; font-size: 12px; font-weight: 700; background: #3a0f14; border: 1px solid #c4432b; color: #f1ece2; padding: 0 5px; line-height: 17px; white-space: nowrap; }
   .badge.gold { background: #3a3220; border-color: #a8781c; color: #ffd25a; }
   #tally { left: 20px; top: 64px; width: 16px; height: 528px; image-rendering: pixelated; }
@@ -58,6 +58,7 @@
   #candleBar i { position: absolute; left: 0; top: 0; bottom: 0; background: #ffd25a; transition: width 0.12s linear; }
   #candleBar s { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, #ff9a4d 0 3px, #5a3d28 3px 5px); display: none; }
   #candleBar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #a59fb3; }
+  #candleCost:empty { display: none; }
   #candleCost { font-size: 12.5px; color: #a59fb3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #embersRow { display: none; align-items: center; gap: 3px; margin: 2px 0; }
   #streakBox { height: 52px; padding: 5px 12px; }
@@ -79,9 +80,6 @@
   #vaultBox { padding: 8px 12px 10px; }
   #vaultTxt { font-size: 14px; white-space: nowrap; }
   #goalTxt { font-size: 13px; margin-left: auto; white-space: nowrap; }
-  #payBar { height: 10px; background: #2a2633; position: relative; border: 1px solid #34303f; margin-top: 7px; }
-  #payBar i { position: absolute; top: 0; bottom: 0; left: 0; }
-  #payBar .v { background: #b87333; } #payBar .p { background: repeating-linear-gradient(90deg, #f2c14e 0 4px, transparent 4px 6px); }
   #toolsBox { padding: 6px 12px 8px; }
   .slots { display: flex; gap: 6px; margin-top: 4px; }
   #useWrap { margin-top: 6px; }
@@ -99,7 +97,7 @@
   #candleBox.flick { animation: flick 0.9s ease-out; }
   @keyframes flick { 0% { filter: brightness(1); } 15% { filter: brightness(1.9); } 30% { filter: brightness(0.7); } 45% { filter: brightness(1.6); } 100% { filter: brightness(1); } }
   .codexGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .codexCell { display: flex; gap: 8px; padding: 8px 10px; align-items: flex-start; }
+  .codexCell { display: flex; gap: 8px; padding: 8px 10px; align-items: flex-start; min-height: 88px; box-sizing: border-box; }
   .codexCell .n { font-weight: 700; font-size: 14px; }
   .codexCell .d { font-size: 12px; line-height: 16px; margin-top: 2px; }
   .codexCell.unseen img { filter: brightness(0) opacity(0.5); }
@@ -107,7 +105,8 @@
   .uslot .k { display: none; }
   .uslot.on { border-color: #ffd25a; background: #3a3220; color: #ffd25a; }
   .uslot.off { color: #5d5868; cursor: default; }
-  #charBox { padding: 6px 12px; font-size: 13px; }
+  #charBox { padding: 6px 12px; font-size: 13px; height: 46px; box-sizing: border-box; }
+  #charBox .prow { gap: 8px; }
   .skRow { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .mk { width: 18px; height: 18px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; border: 2px solid; font-family: Consolas, Menlo, monospace; }
   .mk.x { color: #ff8f6b; border-color: #c4432b; } .mk.o { color: #7fe9ef; border-color: #3e8a8a; }
@@ -121,7 +120,6 @@
   #descBox { flex: 1 1 auto !important; min-height: 0; padding: 8px 12px; font-size: 13.5px; line-height: 20px; overflow: hidden; }
   #descBox b { color: #ffd25a; }
   #hint { color: #f1ece2; font-weight: 700; min-height: 20px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #2a2633; }
-  #hint:empty { display: none; }
   #descBody { color: #c9c3d6; }
   /* 달력 */
   .calRow { display: flex; align-items: center; gap: 6px; margin: 6px 0; }
@@ -181,6 +179,24 @@
   .tBtns .tBig { font-size: 20px; padding: 12px 16px; }
   .tSub { display: block; font-size: 13px; font-weight: 400; color: #c9c3d6; margin-top: 4px; }
   .tVer { position: absolute; right: 20px; bottom: 14px; }
+  .pauseDlg { width: 320px; }
+  .pauseBtns { display: flex; flex-direction: column; gap: 8px; }
+  .pauseBtns button { font-size: 16px; padding: 10px 16px; }
+  .setDlg { width: 620px; }
+  .setTabs { display: flex; border-bottom: 2px solid #34303f; margin-bottom: 10px; }
+  .setTabs button { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; padding: 8px 16px; color: #a59fb3; }
+  .setTabs button.on { color: #ffd25a; border-bottom-color: #ffd25a; }
+  .setBody { height: 300px; overflow: auto; }
+  .setBody h3 { margin: 14px 0 4px; }
+  .setRow { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 52px; border-bottom: 1px solid #2a2633; font-size: 15px; }
+  .setRow .note { font-size: 12.5px; margin-top: 2px; }
+  .setCtl { display: flex; gap: 6px; align-items: center; flex: none; }
+  .setTg { width: 56px; }
+  .setTg.on { color: #ffd25a; border-color: #a8781c; }
+  .setNum { width: 34px; text-align: right; font-size: 11px; }
+  .setCtl input[type=range] { width: 180px; accent-color: #ffd25a; }
+  .keyGrid { display: grid; grid-template-columns: 140px 1fr; row-gap: 6px; font-size: 14px; }
+  .keyGrid span:nth-child(odd) { font-family: Consolas, Menlo, monospace; color: #ffd25a; }
   .setup { position: absolute; inset: 0; }
   .suTop { position: absolute; left: 64px; right: 64px; top: 28px; display: flex; justify-content: space-between; align-items: center; }
   .suTabs { display: flex; }
@@ -238,6 +254,9 @@
   .fork .tx { font-size: 15px; color: #efe7d6; line-height: 21px; }
   .fork .hp2 { font-size: 13px; color: #a59fb3; margin-top: 8px; line-height: 18px; }
   .fork .first { position: absolute; right: 8px; top: 8px; }
+  .fork .hp2 { min-height: 36px; }
+  .forkNum { margin-top: 6px; color: #c9c3d6 !important; }
+  .forkExtra { min-height: 26px; margin-top: 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .paper { background: #efe7d6; color: #1a120b; border: 2px solid #5a3d28; padding: 10px 12px; position: relative; cursor: pointer; }
   .paper.sel { outline: 3px solid #ffd25a; }
   .paper .pinI { position: absolute; left: 50%; top: -8px; transform: translateX(-50%); }
@@ -250,6 +269,8 @@
   @keyframes stampFall { 0% { transform: rotate(-12deg) translateY(-60px) scale(1.6); opacity: 0; } 55% { transform: rotate(-12deg) translateY(0) scale(1); opacity: 1; } 70% { transform: rotate(-12deg) scale(1.08); } 100% { transform: rotate(-12deg) scale(1); opacity: 1; } }
   .voidLine { position: absolute; left: 14px; right: 14px; height: 4px; background: #e5484d; transform-origin: left; animation: strike 0.15s linear forwards; transform: scaleX(0); }
   @keyframes strike { to { transform: scaleX(1); } }
+  .recFold { margin-top: 12px; border: 2px solid #34303f; padding: 6px 12px; }
+  .recFold summary { cursor: pointer; font-weight: 700; color: #c9c3d6; }
   .chart { display: flex; align-items: flex-end; gap: 4px; height: 90px; border-bottom: 2px solid #34303f; margin: 8px 0 2px; }
   .chart i { flex: 1; background: #b87333; min-height: 2px; position: relative; }
   .chart i.col { background: repeating-linear-gradient(45deg, #5d5868 0 3px, #2a2633 3px 6px); }
@@ -288,8 +309,8 @@
       </div>
     </div>
     <div id="streakBox" class="panel">
-      <div class="prow" style="height:22px"><canvas id="flameCv" width="10" height="10" style="width:20px;height:20px;image-rendering:pixelated"></canvas><span class="lbl big" data-term="콤보">콤보</span><span id="streakVal" class="px">×1</span></div>
-      <div class="prow" style="margin-top:4px"><div id="streakSteps"></div><div id="streakNext"></div></div>
+      <div class="prow" style="height:22px"><span id="comboIc" style="display:inline-flex;width:20px;height:20px"></span><span class="lbl big" data-term="콤보">콤보</span><span id="streakVal" class="px">×1</span></div>
+      <div class="prow" style="margin-top:4px"><div id="streakSteps"></div></div>
     </div>
     <div id="pocketBox" class="panel">
       <div class="prow"><span id="pouchIc"></span><span class="lbl big" data-term="오늘 주머니">오늘 주머니</span><span id="pocketVal" class="px">0</span></div>
@@ -298,12 +319,10 @@
     </div>
     <div id="vaultBox" class="panel">
       <div class="prow"><span id="coinsIc"></span><span id="vaultTxt" data-term="금고"></span><span id="goalTxt" data-term="도장"></span></div>
-      <div id="payBar"><i class="v"></i><i class="p"></i></div>
     </div>
     <div id="toolsBox" class="panel">
-      <div class="lbl" id="ownLbl" data-term="가진 도구">가진 도구</div>
+      <div class="prow" style="height:22px"><div class="lbl" id="ownLbl" data-term="가진 도구">가진 도구</div><div id="keepRow" style="display:flex;align-items:center;gap:4px;margin-left:auto"></div></div>
       <div class="slots" id="ownSlots"></div>
-      <div id="keepRow" style="display:none;align-items:center;gap:4px;margin-top:4px"></div>
       <div id="useWrap"><div class="lbl" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="slots" id="useSlots"></div></div>
     </div>
     <div id="charBox" class="panel"></div>

@@ -78,7 +78,7 @@ function iconHtml(name, size, cls) {
   SPR.stair = mkSprite(ST2, { x: '#14100c', o: '#2a2018', k: '#0b0806', h: '#c9b49c', p: '#a8927a', P: '#7d6a55', d: '#5a4a3a' });
   SPR.scorch = mkSprite(["................", "................", "................", "......y..y......", "....yyyyyy.y....", "...yyxxxxyyy....", "..yyxxrxxxxy....", "..yxxrorxxxyy...", "..yxxxrxxrxxy...", "..yyxxxxxxxy....", "...yyxxxxyyy....", "....yyyyyy......", "......y.........", "................", "................", "................"], { y: '#3b2a1e', x: '#22242c', r: '#c4432b', o: '#ffb347' });
   SPR.scorchDust = mkSprite(["................", "................", "................", "......y..y......", "....yyyyyy.y....", "...yyxxxxyyy....", "..yyxxxxxxxy....", "..yxxxxxxxxyy...", "..yxxxxxxxxxy...", "..yyxxxxxxxy....", "...yyxxxxyyy....", "....yyyyyy......", "......y.........", "................", "................", "................"], { y: '#4a3222', x: '#22242c' });
-  // 보물 1단계 금 알갱이(R24), 2단계 청록 보석, 3단계 유물
+  // 보물 1단계 금 알갱이(R24), 2단계 청록 보석, 3단계 금잔
   SPR.nugget = mkSprite(["................", "................", "................", "................", "................", ".......oo.......", ".....oohhoo.....", "....ohhyyyyo....", "....ohyyyyyoo...", "...oyyyyyyyyo...", "...oyyyyyyddo...", "....oyyyyddo....", ".....oooooo.....", "................", "................", "................"], { o: '#7a5212', y: '#f2c14e', h: '#fff1b8', d: '#b8862a' });
   SPR.gem = mkSprite(["................", "................", "................", "................", ".......oo.......", "......ohco......", ".....ohhcco.....", "....ohhcccco....", "....occcccdo....", ".....occcdo.....", "......ocdo......", ".......oo.......", "................", "................", "................", "................"], { o: '#0f4a52', h: '#c8fdff', c: '#5fe0e8', d: '#2a8f99' });
   SPR.relic = mkSprite(["................", "................", "...oooooooooo...", "...oyhhyyyyyo...", "...oyhyyryyyo...", "....oyyyyyyo....", ".....oyyyyo.....", "......oyyo......", ".......oo.......", ".......yo.......", "......oyyo......", ".....oyyyyo.....", ".....oooooo.....", "................", "................", "................"], { o: '#7a5212', y: '#f2c14e', h: '#fff1b8', r: '#e5484d' });
@@ -119,35 +119,35 @@ function iconHtml(name, size, cls) {
     nap: mkSprite(["......www.", ".......w..", "......www.", "..........", "..yyyy....", ".yhhhhy...", ".yhhhhy...", "..yyyy....", "..........", ".........."], { w: '#c9c3d6', y: '#a8781c', h: '#ffd25a' }),
     quake: mkSprite(["..........", "..r.......", ".r.r...r..", "r...r.r.r.", ".....r...r", "..........", "..r....r..", ".rrr..rrr.", "..r....r..", ".........."], { r: '#c4432b' })
   };
-  // 도구 아이콘(10×10)
+  // 도구·유물 아이콘(10×10). 비슷한 것끼리 모양이 겹치지 않게: 명함(가로, 겹친 두 장)과 마지막 패(세로, 스페이드), 무쇠 투구(단단)와 금 간 투구(쪼개짐), 굵은 초(뭉툭, 촛농)와 화면의 초
   SPR.icons = {
-    // 유품 아이콘
-    kCandle: mkSprite(["....y.....", "...yhy....", "....y.....", "..wwwwww..", "..wllllw..", "..wllllw..", "..wllllw..", "..wllllw..", "..wllllw..", ".oooooooo."], { y: '#ffd25a', h: '#fff4c2', w: '#c9b49c', l: '#efe7d6', o: '#3d2a1c' }),
-    kHelm: mkSprite(["..........", "...oooo...", "..oggggo..", ".oggyyggo.", ".oggggggo.", ".oggggggo.", "oooooooooo", "o........o", "..........", ".........."], { o: '#3a3542', g: '#8a8fa0', y: '#ffd25a' }),
-    kCrack: mkSprite(["..........", "...oooo...", "..ogrggo..", ".oggrgggo.", ".ogrggggo.", ".oggrgggo.", "oooooooooo", "o........o", "..........", ".........."], { o: '#3a3542', g: '#8a8fa0', r: '#c4432b' }),
+    // 유물 아이콘
+    kCandle: mkSprite(["....y.....", "...yhy....", "...yhy....", "....k.....", ".LLLLLLLL.", "LLLlLLlLwL", "LlLllLllw.", ".lLlllllw.", ".lllllllw.", "oooooooooo"], { y: '#ffd25a', h: '#fff4c2', k: '#1a120b', L: '#fbf4e4', l: '#d9ccb2', w: '#a8927a', o: '#3d2a1c' }),
+    kHelm: mkSprite(["...oooo...", "..oGGggo..", ".oGGgggdo.", ".oGggggdo.", ".oGggggdo.", ".odrddrdo.", "oggggggggo", "oddddddddo", ".oooooooo.", ".........."], { o: '#454956', g: '#9aa0b0', G: '#d9dde6', d: '#6c7182', r: '#2a2633' }),
+    kCrack: mkSprite(["...oo...gg", "..oGGk...g", ".oGGgk....", ".oGgggkoo.", ".oGggkgdo.", ".odrdkddo.", "ogggggkggo", "oddddddkdo", ".oooooooo.", ".........."], { o: '#454956', g: '#7a7680', G: '#a09ca6', d: '#4d4a56', r: '#a0603a', k: '#e5484d' }),
     kWick: mkSprite(["....y.....", "...yhy....", "...yhy....", "....y.....", "....k.....", "..wwwwww..", "..wllllw..", ".oooooooo.", "..........", ".........."], { y: '#ffd25a', h: '#fff4c2', k: '#3d2a1c', w: '#c9b49c', l: '#efe7d6', o: '#3d2a1c' }),
-    kBoots: mkSprite(["..........", "..oo......", "..ob......", "..ob......", "..ob......", "..obbo....", "..obbbboo.", "..obbbbbbo", "..oooooooo", ".........."], { o: '#3d2a1c', b: '#8a5a3a' }),
-    kBook: mkSprite(["..........", ".oooooooo.", ".obbbbbbo.", ".obwwwwbo.", ".obbbbbbo.", ".obwwwbbo.", ".obbbbbbo.", ".oooooooo.", "..........", ".........."], { o: '#3d2a1c', b: '#6a4a2a', w: '#c9b49c' }),
+    kBoots: mkSprite(["..........", "..oooo....", "..obbo....", "w.obbo....", "..obbo....", "w.obbboo..", "..obbbbbo.", "w.obBbbbbo", "..kkkkkkkk", ".........."], { o: '#3d2a1c', b: '#9a6532', B: '#c9894a', k: '#2a1c12', w: '#c9c3d6' }),
+    kBook: mkSprite([".oooooooo.", ".okbbbbbo.", ".okxbbxbo.", ".okbxxbbo.", ".okbxxbbo.", ".okxbbxbo.", ".okbbbbbo.", ".okbbbbbo.", ".owwwwwwo.", ".oooooooo."], { o: '#2a1c12', k: '#4a3222', b: '#80583a', x: '#e6e1d6', w: '#e9dfc8' }),
     kLamp: mkSprite(["....y.....", "...yhy....", "....y.....", "...oko....", "..oggggo..", ".oggggggo.", ".oggggggo.", "..oggggo..", "...oooo...", ".........."], { y: '#ffd25a', h: '#fff4c2', o: '#3d2a1c', k: '#3d2a1c', g: '#a8781c' }),
-    kNet: mkSprite(["..........", ".oooooooo.", ".o.w.w.wo.", ".ow.w.w.o.", ".o.w.w.wo.", ".ow.w.w.o.", "..oooooo..", "....oo....", "....oo....", ".........."], { o: '#5a4a3a', w: '#c9b49c' }),
+    kNet: mkSprite(["..o....o..", "..o....o..", "oooooooooo", "o.w.w.w.wo", ".ow.w.w.o.", ".ochcwhco.", "..ocwcho..", "..ohcwco..", "...oooo...", ".........."], { o: '#5a4a3a', w: '#c9b49c', c: '#6c7182', h: '#9aa0b0' }),
     kPurse: mkSprite(["....rr....", "...r..r...", "..oooooo..", ".obbbbbbo.", "obbbbbbbbo", "obbbybbbbo", "obbbbbbbbo", ".obbbbbbo.", "..oooooo..", ".........."], { r: '#c4432b', o: '#3d2a1c', b: '#8a5a3a', y: '#ffd25a' }),
-    kCard: mkSprite(["..........", "oooooooooo", "owwwwwwwwo", "owkkkwwwwo", "owwwwwwwwo", "owkkkkkkwo", "owkkkkwwwo", "oooooooooo", "..........", ".........."], { o: '#3a3542', w: '#efe7d6', k: '#5d6270' }),
+    kCard: mkSprite(["..........", "..oooooooo", "..oDDDDDDo", "ooooooooDo", "oyywkkwoDo", "oyywwwwoDo", "owwlllwooo", "owwwwwwo..", "oooooooo..", ".........."], { o: '#3a3542', w: '#efe7d6', D: '#b8b0a0', y: '#c4432b', k: '#3a3542', l: '#a59fb3' }),
     kKey: mkSprite(["..........", ".ooo......", "o...o.....", "o...ooooo.", "o...o.o.o.", ".ooo..o...", "..........", "..........", "..........", ".........."], { o: '#b0703a' }),
-    kPrayer: mkSprite(["..oooooo..", ".owwwwwwo.", ".owkkkkwo.", ".owwwwwwo.", ".owkkkwwo.", ".owwwwwwo.", ".owkkkkwo.", ".owwwwwwo.", "..oooooo..", ".........."], { o: '#a8781c', w: '#efe7d6', k: '#8a7a6a' }),
-    ledger: mkSprite([".oooooooo.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".oooooooo.", ".........."], { o: '#3d2a1c', j: '#efe7d6', l: '#a59fb3', r: '#c4432b' }),
-    sheet: mkSprite(["..oooooo..", ".ojjjjjjo.", ".ojxjjjjo.", ".ojjxjjjo.", ".ojxjxjjo.", ".ojjjjjjo.", ".ojllljjo.", ".ojjjjjjo.", ".oooooooo.", ".........."], { o: '#3a3542', j: '#efe7d6', x: '#c4432b', l: '#a59fb3' }),
+    kPrayer: mkSprite(["...yYyY...", "..Y....y..", ".y......Y.", ".Y......y.", ".y......Y.", "..Y....y..", "...yY.Yy..", "....hh....", "....rr....", "...rrrr..."], { y: '#c9a35a', Y: '#8a5a3a', h: '#ffd25a', r: '#c4432b' }),
+    ledger: mkSprite(["..........", "oooo..oooo", "owwwoowwwo", "owllkkllwo", "owwwkkwwwo", "owllkkllwo", "owwwkkwrwo", "owllkkrrwo", "oooooooooo", ".........."], { o: '#3d2a1c', w: '#efe7d6', l: '#a59fb3', k: '#c9c0ad', r: '#c4432b' }),
+    sheet: mkSprite(["...kkkk...", ".bbkkkkbb.", ".bjjjjjjb.", ".bjxjlljb.", ".bjjjjjjb.", ".bjxjlljb.", ".bjjjjjjb.", ".bjxjlljb.", ".bjjjjjjb.", ".bbbbbbbb."], { b: '#8a5a3a', j: '#efe7d6', k: '#9aa0b0', x: '#c4432b', l: '#a59fb3' }),
     powder: mkSprite(["....y.....", "...k......", "...k......", "..oooo....", ".obbbbo...", "obbbbbbo..", "obbbbbbo..", "obbbbbbo..", ".obbbbo...", "..oooo...."], { o: '#1a1420', b: '#5d6270', k: '#9a6532', y: '#ffd25a' }),
     match: mkSprite(["r.r.r.....", "w.w.w.....", "w.w.w.....", "w.w.w.....", "w.w.w.....", "w.w.w.....", "w.w.w.....", "oooooo....", "obbbbo....", "oooooo...."], { r: '#c4432b', w: '#c9894a', o: '#3d2a1c', b: '#80583a' }),
     lens: mkSprite(["..oooo....", ".o....o...", "o.hh...o..", "o.h....o..", "o......o..", "o......o..", ".o....o...", "..oooooww.", "........ww", ".........w"], { o: '#b8c1d6', h: '#e8f4ff', w: '#9a6532' }),
     gloves: mkSprite(["..........", "..g.g.g...", ".ggggggg..", ".gGgGgGg..", ".gggggggg.", ".ggggggggg", ".gggggggg.", "..gggggg..", "..cccccc..", "..cccccc.."], { g: '#9a6532', G: '#c9894a', c: '#6b4a30' }),
-    card: mkSprite(["..oooooo..", ".owwwwwwo.", ".owrwwwwo.", ".owwwwwwo.", ".owwrrwwo.", ".owwrrwwo.", ".owwwwwwo.", ".owwwwrwo.", ".owwwwwwo.", "..oooooo.."], { o: '#3a3542', w: '#efe7d6', r: '#c4432b' }),
-    fuse: mkSprite(["........y.", ".......yhy", "........y.", ".......k..", "......k...", "..rrrrk...", ".rRRRRr...", ".rRRRRr...", ".rRRRRr...", "..rrrr...."], { r: '#7a2f28', R: '#c4432b', k: '#3a3542', y: '#ffd25a', h: '#fff4c2' }),
+    card: mkSprite([".ooooooooo", ".orwwwwwwo", ".owwwkwwwo", ".owwkkkwwo", ".owkkkkkwo", ".owkkkkkwo", ".owwwkwwwo", ".owwkkkwwo", ".owwwwwwro", ".ooooooooo"], { o: '#3a3542', w: '#efe7d6', k: '#1a1420', r: '#c4432b' }),
+    fuse: mkSprite(["........y.", ".......yhy", "..ccccccy.", ".cddddc...", "cdccccdc..", "cdcddcdc..", "cdcddcdc..", "cdccccdc..", ".cddddc...", "..cccc...."], { c: '#c9894a', d: '#6b4a2a', y: '#ffd25a', h: '#fff4c2' }),
     refiner: mkSprite(["oooooooooo", ".occcccco.", "..occcco..", "...occo...", "....oo....", "....oo....", "...yyyy...", "..yhyyyy..", "..yyyyyy..", "...yyyy..."], { o: '#454956', c: '#9aa0b0', y: '#f2c14e', h: '#fff1b8' }),
     sieve: mkSprite(["..........", ".oooooooo.", "o.w.w.w.wo", "ow.w.w.w.o", "o.w.w.w.wo", "ow.w.w.w.o", ".oooooooo.", "....kk....", "....kk....", ".........."], { o: '#6b4a30', w: '#454956', k: '#22242c' }),
     moonsieve: mkSprite(["......ww..", ".......ww.", "........w.", ".......ww.", ".oooooooo.", "o.s.s.s.so", "os.s.s.s.o", "o.s.s.s.so", ".oooooooo.", ".........."], { o: '#6b4a30', s: '#c9c3d6', w: '#f1ece2' }),
-    wedge: mkSprite(["oooooooooo", "ogggggggo.", ".ogggggo..", ".ogggggo..", "..ogggo...", "..ogggo...", "...ogo....", "...ogo....", "....o.....", "y..y..y..."], { o: '#454956', g: '#9aa0b0', y: '#ffd25a' }),
+    wedge: mkSprite([".oooooooo.", ".oGGgggdo.", "..oGggdo..", "y.oGggdo.y", "y..oGdo..y", ".y.oGdo.y.", "ssssoossss", "sSssSSssSs", "ssSssssSss", "ssssssssss"], { o: '#454956', G: '#d9dde6', g: '#9aa0b0', d: '#6c7182', y: '#ffd25a', s: '#5d6270', S: '#2a2633' }),
     betchalk: mkSprite(["..wwww....", ".w....w...", ".w....w...", ".w....w...", "..wwww....", "......ccc.", ".....cccc.", "....cccc..", "...cccc...", "...ccc...."], { w: '#e6e1d6', c: '#c9c3d6' }),
-    tongs: mkSprite(["oo......oo", ".oo....oo.", "..oo..oo..", "...oooo...", "....oo....", "...o..o...", "..o....o..", ".o......o.", "o........o", ".........."], { o: '#9aa0b0' }),
+    tongs: mkSprite(["....gg....", "...gGGg...", "...gG.g...", "....kk....", "...gkkg...", "..gg..gg..", "..rr..rr..", ".rr....rr.", ".rr....rr.", "rr......rr"], { g: '#9aa0b0', G: '#c3c7d2', k: '#454956', r: '#c4432b' }),
     probe: mkSprite([".i..i..i..", ".i..i..i..", ".i..i..i..", ".i..i..i..", ".i..i..i..", ".i..i..i..", "wwwwwwwwww", ".i..i..i..", ".h..h..h..", ".........."], { i: '#c3c7d2', w: '#c4432b', h: '#9aa0b0' }),
     stairs: mkSprite(["......oooo", "......ohhh", "......oppp", "...oooopPP", "...ohhhPPP", "...opppPPP", "ooooPPPPPP", "ohhhPPPPPP", "opppPPPPPP", "oPPPPPPPPP"], { o: '#2a2018', h: '#c9b49c', p: '#a8927a', P: '#7d6a55' }),
     stairsDim: mkSprite(["......oooo", "......ohhh", "......oppp", "...oooopPP", "...ohhhPPP", "...opppPPP", "ooooPPPPPP", "ohhhPPPPPP", "opppPPPPPP", "oPPPPPPPPP"], { o: '#25212d', h: '#3a3542', p: '#34303f', P: '#2a2633' }),
@@ -155,25 +155,31 @@ function iconHtml(name, size, cls) {
     merchant: mkSprite(["....oo....", "...o..o...", "..oooooo..", ".offfffo..", ".ofyyyfo..", ".ofyhyfo..", ".ofyyyfo..", ".offfffo..", "..oooooo..", ".........."], { o: '#6b5a3f', f: '#c9a35a', y: '#ffd25a', h: '#fff4c2' })
   };
   // 재미 보고서 도구 셋(늙은 광부 모자, 곽 씨 부적, 청진 망치)
-  SPR.icons.crown = mkSprite(["..........", "...yyyy...", "..yhhhhy..", ".yhhyhhhy.", ".yhhhhhhy.", "oooooooooo", ".o......o.", "..........", "..........", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a' });
+  SPR.icons.crown = mkSprite(["..........", "...yyyy...", "..yhhhhy..", ".yhkllkhy.", ".yhkllkhy.", "oooooooooo", ".o......o.", "..........", "..........", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', k: '#3a3542', l: '#fff4c2' });
   SPR.icons.amulet = mkSprite(["....oo....", "...o..o...", "..o....o..", ".wwwwwwww.", ".wrrrrrrw.", ".wwwrrwww.", ".wwrwwrww.", ".wwwrrwww.", ".wwwwwwww.", ".........."], { o: '#9a6532', w: '#efe7d6', r: '#c4432b' });
   SPR.icons.tapper = mkSprite(["..gggggg..", "..gGGGGg..", "..gggggg..", "....ww....", "....ww....", "....ww....", "....ww....", "....ww....", "...wwww...", ".........."], { g: '#7c8292', G: '#b8c1d6', w: '#9a6532' });
   SPR.icons.nugget = SPR.nugget; SPR.icons.gem = SPR.gem;
   // 도구 경험 정리: 옛 연장함, 넓은 연장 띠, 심 씨 단골 장부, 합친 도구 셋
   SPR.icons.box = mkSprite(["..........", "...oooo...", "..o....o..", "oooooooooo", "obbbbbbbbo", "obBBByBBbo", "obbbyybbbo", "obbbbbbbbo", "oooooooooo", ".........."], { o: '#3d2a1c', b: '#80583a', B: '#9a6532', y: '#ffd25a' });
   SPR.icons.belt = mkSprite(["..........", "..........", "kkkkkkkkkk", "bbbobbobbb", "bbobyobbbb", "bbbobbobbb", "kkkkkkkkkk", "..o..o..o.", "..o..o..o.", ".........."], { k: '#3d2a1c', b: '#9a6532', o: '#454956', y: '#f2c14e' });
-  SPR.icons.regular = mkSprite([".oooooooo.", ".ojjjjjjo.", ".ojyyjjjo.", ".ojjjjjjo.", ".ojyyyjjo.", ".ojjjjjjo.", ".ojjjjrro.", ".ojjjjrro.", ".oooooooo.", ".........."], { o: '#6b5a3f', j: '#efe7d6', y: '#c9a35a', r: '#c4432b' });
+  SPR.icons.regular = mkSprite([".ooooooo..", ".oBbbbbo..", ".oBwwwbo..", ".oBbbbbo..", ".oBbbbbo..", ".oBbbbbcc.", ".oBbbbcyhc", ".oBbbbcyyc", ".oooooocc.", ".........."], { o: '#2a1c12', B: '#2f5a36', b: '#4f8a4a', w: '#efe7d6', c: '#7a5212', y: '#f2c14e', h: '#fff1b8' });
   SPR.icons.bigblast = mkSprite(["y...y...y.", ".k..k..k..", "..k.k.k...", "...kkk....", "rrrrrrrrr.", "rRRRRRRRr.", "rRyyRRRRr.", "rRRRRyyRr.", "rrrrrrrrr.", ".........."], { r: '#7a2f28', R: '#c4432b', k: '#3a3542', y: '#ffd25a' });
-  SPR.icons.moontongs = mkSprite(["ww......ww", ".ww....ww.", "..ww..ww..", "...wwww...", "....ww....", "...w..w...", "..w.yy.w..", ".w.yhhy.w.", "w...yy...w", ".........."], { w: '#c9c3d6', y: '#5fe0e8', h: '#e8f4ff' });
+  SPR.icons.moontongs = mkSprite(["....yy....", "..wyhhyw..", "..wwyyww..", "...wwww...", "....kk....", "...wkkw...", "..ww..ww..", "..mm..mm..", ".mm....mm.", "mm......mm"], { w: '#c9c3d6', k: '#6f6880', y: '#5fe0e8', h: '#e8f4ff', m: '#8e7fb0' });
   SPR.icons.deadcrown = mkSprite(["y..y..y...", "yy.yy.yy..", "yhyyhyyhy.", "yyyyyyyyy.", "oooooooooo", ".orrrrrro.", ".orwrrwro.", ".orrrrrro.", "..oooooo..", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', r: '#c4432b', w: '#efe7d6' });
 })();
 
-// 오른쪽 패널 단추 그림(12×12): 달력, 설정
+// 오른쪽 패널 단추 그림(12×12): 달력, 설정. 화면 위 표시(10×10): 남은 보물, 콤보
 SPR.ui = {
   cal: mkSprite(["..k.....k...", ".rkrrrrrkrr.", ".rrrrrrrrrr.", ".wwwwwwwwww.", ".wdwwdwwdww.", ".wwwwwwwwww.", ".wdwwdwwyyw.", ".wwwwwwwyyw.", ".wdwwdwwwww.", ".wwwwwwwwww.", ".ssssssssss.", "............"],
     { k: '#c9c3d6', r: '#c4432b', w: '#e9dfc8', d: '#8a8496', y: '#e0a526', s: '#8a8496' }),
   gear: mkSprite([".....gg.....", "..g.gggg.g..", ".gggggggggg.", "..gggddggg..", ".gggd..dggg.", "gggd....dggg", "gggd....dggg", ".gggd..dggg.", "..gggddggg..", ".gggggggggg.", "..g.gggg.g..", ".....gg....."],
-    { g: '#c9c3d6', d: '#6f6880' })
+    { g: '#c9c3d6', d: '#6f6880' }),
+  // 남은 보물(등급 없이): 흙 더미 위 반짝임. 금 알갱이·보석·금잔 어느 하나로 보이지 않게(10×10)
+  treasure: mkSprite(["...w......", "...w....w.", "..wyw..www", "wwyhyww.w.", "..wyw.....", "...w......", "...w......", "..dddddd..", ".ddgdddcd.", "dddddgdddd"],
+    { w: '#fff4c2', y: '#ffd25a', h: '#ffffff', d: '#80583a', g: '#f2c14e', c: '#5fe0e8' }),
+  // 콤보: 맞물린 사슬 고리 둘(보물을 잇달아 캔다는 뜻). 불꽃·초와 헷갈리지 않게(10×10)
+  combo: mkSprite(["..........", "......YY..", ".....Y..Y.", "....Y...Y.", "...Yyy.Y..", "...Y..y...", "..y.YYy...", ".y...y....", ".y..y.....", "..yy......"],
+    { y: '#f2c14e', Y: '#b8862a' })
 };
 
 export { SPR, mkSprite, sprUrl, iconHtml };
