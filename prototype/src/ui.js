@@ -113,8 +113,9 @@ function startNewRun(tutorial, o) {
   var seed = tutorial ? TUTORIAL.seed : daily ? Core.dailySeed(daily) : seedSet ? o.seed : Core.randomSeed();
   run = Core.newRun(seed, { tutorial: tutorial, record: true, grade: daily ? 1 : grade, daily: daily, char: charOpen(settings.char || 'miner') ? settings.char : 'miner' });   // 기록 장치: 하루마다 플레이 기록을 남겨요. 오늘의 광산은 모두 같은 씨앗, 등급 1
   run.seedSet = seedSet;
-  resetView();
+  resetView(); ui.peekChar = null; ui.peekGrade = null;
   ui.opening = tutorial && !settings.openingSeen ? 0 : null;   // R52: 첫 판만 자동
+  if (tutorial && ui.opening == null) { run.deedLater = true; beginDay(); return; }   // 첫 판 안내는 판 준비 없이 곧장 지하 1층(권리증은 첫 밤에)
   renderOverlay(); ui.hudDirty = true;
 }
 function resetView() {
@@ -1020,17 +1021,49 @@ function copySeed(btn) {   // 클립보드가 막혀 있으면 글자를 골라 
 function bestKey() { return run.daily ? 'daily:' + run.daily : 'grade:' + (run.grade || 1); }
 // 캐릭터 고르기(권리증 화면 오른쪽). 첫 판은 광부로만 해요
 function skillRow(k, sk, extra) { return '<div class="skRow"><span class="mk ' + k + '">' + (k === 'x' ? 'X' : 'O') + '</span><b>' + esc(sk.name) + '</b>' + (extra ? ' <span class="muted">' + extra + '</span>' : '') + '</div>'; }
-function charPickHtml() {
-  var cur = Core.charOf(run), list = run.tutorial ? CHARACTERS.slice(0, 1) : CHARACTERS;
-  var h = '<div style="flex:1;min-width:0"><div class="lbl big" style="margin-bottom:8px">누구로 캘까요?</div><div class="charList">';
-  list.forEach(function (c) {
-    if (!charOpen(c.id)) { h += '<div class="charPick locked" title="' + esc(TEXT.charLock[c.id] || '') + '"><span class="sil">' + iconHtml('minerBy.' + c.id, 40) + '</span><div style="min-width:0"><div class="nm">???</div><div class="note">' + esc(TEXT.charLock[c.id] || '') + '</div></div></div>'; return; }
-    h += '<div class="charPick' + (c.id === cur.id ? ' sel' : '') + '" data-char="' + c.id + '">' + iconHtml('minerBy.' + c.id, 40) + '<div style="min-width:0"><div class="nm">' + esc(c.name) + '</div><div class="note">X ' + esc(c.x.name) + ' · O ' + esc(c.o.name) + '</div></div></div>';
-  });
-  h += '</div><div class="panel charInfo"><div style="color:#c9c3d6;margin-bottom:6px">' + esc(cur.line) + '</div>' +
+// ---------- 판 준비(reviews/18): 누구로(가장 크게) → 어느 광산(권리증) → 시드(접어 둠). 도감은 타이틀, 첫 판 안내는 설정에 ----------
+function gradeMulOf(g) { return CONFIG.gradeMul[g - 1] || 1; }
+function gradePays(g) { var gm = gradeMulOf(g); return CONFIG.payments.map(function (p) { return { day: p.day, amount: gm === 1 ? p.amount : Math.round(p.amount * gm / 10) * 10 }; }); }   // 규칙 모듈의 등급 납부액과 같은 셈
+function gradeRulesLine(g) {
+  var base = (CONFIG.rulePool || []).filter(function (r) { return r !== 'plain'; }), extra = (CONFIG.preset === 'v22' && CONFIG.gradeRules[g]) || [];
+  return base.concat(extra).map(function (r) { return RULES[r].name.replace(' 광맥', ''); }).join(' · ');
+}
+function setupGradeShown() { return run.daily ? 1 : ui.peekGrade || run.grade || 1; }
+function setupCan() { return !ui.peekChar && setupGradeShown() <= (settings.gradeOpen || 1); }
+function setupGrade(dir) {
+  var g = setupGradeShown() + dir; if (g < 1 || g > CONFIG.gradeNames.length) return;
+  if (g > (settings.gradeOpen || 1)) { ui.peekGrade = g; renderOverlay(); return; }   // 잠긴 광산은 보기만
+  settings.grade = g; saveSettings(); startNewRun(false, { grade: g, seed: run.seedSet ? run.seed : undefined });
+}
+function setupHtml() {
+  var daily = !!run.daily, cur = Core.charOf(run), peek = ui.peekChar, g = setupGradeShown(), gLock = g > (settings.gradeOpen || 1);
+  var names = Core.stampNames(run), best = (settings.bestBy || {})[daily ? bestKey() : 'grade:' + g] || 0, nOpen = openChars().length;
+  var h = '<div class="dim" style="background:#14121a"></div><div class="setup"><div class="suTop"><button id="suBack">타이틀로</button>' +
+    '<div class="suTabs"><button id="suNormal"' + (daily ? '' : ' class="on"') + '>보통 광산</button><button id="suDaily"' + (daily ? ' class="on"' : '') + '>' + esc(TEXT.daily) + '</button></div></div>';
+  // 왼쪽: 사람
+  h += '<div class="suLeft"><div class="suH">누구로 캘까요? <span class="note">열린 사람 ' + nOpen + ' / ' + CHARACTERS.length + '</span></div><div class="suHero">';
+  if (peek) h += '<div class="suPort locked">' + iconHtml('minerBy.' + peek, 128) + '</div><div class="suInfo"><div class="suName">???</div><div class="suLine">' + esc(TEXT.charLock[peek] || '') + '</div></div>';
+  else h += '<div class="suPort">' + iconHtml('minerBy.' + cur.id, 128) + '</div><div class="suInfo"><div class="suName">' + esc(cur.name) + '</div><div class="suLine">' + esc(cur.line) + '</div>' +
     skillRow('x', cur.x) + '<div class="note skDesc">' + esc(cur.x.desc) + '</div>' + skillRow('o', cur.o) + '<div class="note skDesc">' + esc(cur.o.desc) + '</div>' +
-    (cur.perk ? '<div class="acc" style="margin-top:6px">' + esc(cur.perk) + '</div>' : '') + (cur.weak ? '<div class="warnTxt" style="margin-top:4px">약점: ' + esc(cur.weak) + '</div>' : '') + '</div>' +
-    (run.tutorial ? '<div class="note" style="margin-top:8px">첫 판은 광부로 해요. 다른 사람은 판을 하며 하나씩 열려요.</div>' : '') + '</div>';
+    (cur.perk ? '<div class="acc" style="margin-top:8px">' + esc(cur.perk) + '</div>' : '') + (cur.weak ? '<div class="warnTxt" style="margin-top:4px">약점: ' + esc(cur.weak) + '</div>' : '') + '</div>';
+  h += '</div><div class="suStrip">';
+  CHARACTERS.forEach(function (c) { var lk = !charOpen(c.id), sel = peek ? c.id === peek : c.id === cur.id; h += '<div class="suChip' + (lk ? ' locked' : '') + (sel ? ' sel' : '') + '" data-char="' + c.id + '">' + iconHtml('minerBy.' + c.id, 48) + '<div class="nm">' + (lk ? '???' : esc(c.name)) + '</div></div>'; });
+  h += '</div></div>';
+  // 오른쪽: 광산(권리증)
+  h += '<div class="suRight"><div class="suH">어느 광산을 살까요?</div><div class="deedCard suDeed' + (gLock ? ' locked' : '') + '"><div class="suGrade">' +
+    (daily ? '' : '<button class="suArrow" id="suPrev"' + (g <= 1 ? ' disabled' : '') + '>◀</button>') + '<div class="ttl">' + (daily ? esc(TEXT.daily) + ' · ' + run.daily : gradeName(g) + ' 권리증') + '</div>' +
+    (daily ? '' : '<button class="suArrow" id="suNext"' + (g >= CONFIG.gradeNames.length ? ' disabled' : '') + '>▶</button>') + '</div>';
+  h += gLock ? '<div class="suLock">' + gradeName(g - 1) + '을 완납하면 열려요</div>' : '<div class="suMeta">광맥 ' + esc(gradeRulesLine(g)) + (gradeMulOf(g) !== 1 ? ' · 도장 값 ×' + gradeMulOf(g) : '') + '</div>';
+  gradePays(g).forEach(function (p, i) { h += '<div class="suPay"><span>' + names[i] + '</span><span class="px">' + fmt(p.amount) + '</span><span class="d">' + p.day + '일째</span></div>'; });
+  h += '<div class="suFoot">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요. 마지막 도장을 찍고 금고에 남은 돈이 점수예요.</div></div>';
+  if (daily) h += '<div class="note" style="margin-top:10px">모두 같은 판을 받아요 · 이 브라우저 최고 점수 ' + fmt(best) + '</div>';
+  else {
+    if (best && !gLock) h += '<div class="note" style="margin-top:10px">이 광산 최고 점수 ' + fmt(best) + '</div>';
+    h += ui.seedOpen || run.seedSet
+      ? '<div class="suSeed"><span class="note">' + esc(TEXT.seed.label) + '</span><input id="seedIn" spellcheck="false" autocomplete="off" placeholder="' + esc(TEXT.seed.hint) + '" style="width:130px" value="' + (run.seedSet ? Core.seedCode(run.seed) : '') + '"><button id="oSeed">' + esc(TEXT.seed.apply) + '</button><span class="note">지금 ' + Core.seedCode(run.seed) + '</span></div>'
+      : '<div class="suSeed"><button class="link" id="suSeedOpen">시드 넣기</button><span class="note">지금 ' + Core.seedCode(run.seed) + ' · ' + CONFIG.genVersion + '</span></div>';
+  }
+  h += '</div><div class="suGo"><button class="primary" id="oGoDeed"' + (setupCan() ? '' : ' disabled') + '>' + (setupCan() ? '계약하기' : '아직 잠겨 있어요') + '</button></div></div>';
   return h;
 }
 function deedHtml(stampsShown, anim, focusFirst) {   // focusFirst: 첫 판은 첫 도장만 또렷하게
@@ -1078,18 +1111,8 @@ function renderOverlay() {
   var p = run.phase, h = '';
   if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
   else if (ui.sub === 'codex') h = codexHtml();
-  else if (p === 'deed') {
-    h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:1060px;border:none;background:transparent;text-align:left;display:flex;gap:28px;align-items:flex-start"><div style="width:620px;flex:none">' +
-      '<div class="muted" style="font-size:13px;margin-bottom:10px">원 캔들 딥 · 2차 프로토타입</div>' + deedHtml(0, false, run.tutorial) +
-      '<div style="font-size:15px;margin-top:12px;line-height:24px">도장 찍는 날 밤에 금고가 모자라면 계약이 끝나요.<br>' + (CONFIG.preset === 'v22' ? '도장이 찍히면 다음 날부터 캔 값이 오르거나 갱이 깊어져요. 도장마다 선물도 하나 골라요.' : '도장이 찍히면 다음 날부터 캔 값이 올라요.') + '<br>마지막 도장을 찍고 금고에 남은 돈이 이번 판 점수예요.</div>' +
-      '<div style="text-align:right;color:#c9c3d6;margin-top:6px">중개인 구 실장</div>' +
-      '<div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:14px">' +
-      (run.tutorial ? '<button id="oSkipTut">첫 판 안내 건너뛰기</button>' : '<span style="display:flex;gap:8px"><button id="oTut">첫 판 안내로 시작</button>' + (run.daily ? '<button id="oNormal">보통 광산으로</button>' : '<button id="oDaily">' + TEXT.daily + '</button>') + '<button id="oCodex">도감</button></span>') +
-      '<button class="primary" id="oGoDeed">' + '다음' + '</button></div>' +
-      (!run.tutorial && !run.daily && (settings.gradeOpen || 1) > 1 ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">광산 고르기</span>' + [1, 2, 3].filter(function (g) { return g <= settings.gradeOpen; }).map(function (g) { return '<button data-grade="' + g + '"' + (g === run.grade ? ' class="primary"' : '') + '>' + gradeName(g) + '</button>'; }).join('') + '</div>' : '') +
-      (!run.tutorial && !run.daily ? '<div style="display:flex;gap:8px;margin-top:10px;align-items:center"><span class="note">' + esc(TEXT.seed.label) + '</span><input id="seedIn" spellcheck="false" autocomplete="off" placeholder="' + esc(TEXT.seed.hint) + '" style="width:150px" value="' + (run.seedSet ? Core.seedCode(run.seed) : '') + '"><button id="oSeed">' + esc(TEXT.seed.apply) + '</button><span class="note">지금 ' + Core.seedCode(run.seed) + ' · ' + CONFIG.genVersion + '</span></div>' : '') +
-      (run.daily ? '<div class="note" style="margin-top:8px">모두 같은 판을 받아요. 이 브라우저 최고 점수 ' + fmt((settings.bestBy || {})[bestKey()] || 0) + '</div>' : '') + '</div>' + (run.tutorial ? '' : charPickHtml()) + '</div>';   // 첫 판은 캐릭터 칸 없이
-  } else if (p === 'gift') h = giftHtml();
+  else if (p === 'deed') h = setupHtml();
+  else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
   else if (p === 'mine' && ui.sub === 'fork') h = forkHtml();
   else if (p === 'room') h = run.room.kind === 'spring' ? springHtml() : shopHtml(true);
@@ -1543,8 +1566,7 @@ function bagHtml() {
 }
 function bindOverlay() {
   function on(id, fn) { var e = document.getElementById(id); if (e) e.onclick = function (ev) { ev.stopPropagation(); fn(); }; }
-  on('oGoDeed', deedGo); on('oSkipTut', function () { settings.tutorialDone = true; saveSettings(); startNewRun(false); });
-  on('oTut', function () { startNewRun(true); });
+  on('oGoDeed', function () { if (setupCan()) deedGo(); }); on('oSkipTut', function () { settings.tutorialDone = true; saveSettings(); startNewRun(false); });
   on('oGoBoard', boardGo);
   on('oGo', function () { forkGo(ui.sel); }); on('oStay', function () { ui.sub = null; renderOverlay(); });
   on('oHp', function () { Core.springChoose(run, 'hp'); afterAction(); }); on('oCd', function () { Core.springChoose(run, 'candle'); afterAction(); });
@@ -1556,11 +1578,15 @@ function bindOverlay() {
   on('oEndless', function () { if (Core.continueEndless(run).ok) { ui.shownAt = performance.now(); renderOverlay(); ui.hudDirty = true; } });
   on('oSeedCopy', function () { copySeed(this); });
   on('oSeed', function () { var sv = Core.parseSeed(($('seedIn') || {}).value); startNewRun(false, { seed: sv, grade: run.grade }); });
-  on('oDaily', function () { startNewRun(false, { daily: true }); });
-  on('oNormal', function () { startNewRun(false); });
   on('oGiftCash', function () { giftGo(-1); });
-  OV.querySelectorAll('[data-char]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (run.phase !== 'deed' || run.d) return; run.char = b.getAttribute('data-char'); settings.char = run.char; saveSettings(); renderOverlay(); ui.hudDirty = true; }; });
-  OV.querySelectorAll('[data-grade]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); settings.grade = +b.getAttribute('data-grade'); saveSettings(); startNewRun(false, { grade: settings.grade }); }; });
+  OV.querySelectorAll('[data-char]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (!run || run.phase !== 'deed' || run.d) return; var id = b.getAttribute('data-char');
+    if (!charOpen(id)) { ui.peekChar = id; renderOverlay(); return; }   // 잠긴 사람은 여는 조건만 보여 줘요
+    ui.peekChar = null; run.char = id; settings.char = id; saveSettings(); renderOverlay(); ui.hudDirty = true; }; });
+  on('suPrev', function () { setupGrade(-1); }); on('suNext', function () { setupGrade(1); });
+  on('suBack', showTitle);
+  on('suNormal', function () { if (run.daily) startNewRun(false); });
+  on('suDaily', function () { if (!run.daily) startNewRun(false, { daily: true }); });
+  on('suSeedOpen', function () { ui.seedOpen = true; renderOverlay(); var si = $('seedIn'); if (si) si.focus(); });
   on('oAim', function () { settings.aim = !settings.aim; ui.aim = null; saveSettings(); renderOverlay(); });
   on('oOpening', function () { ui.sub = null; ui.opening = 0; renderOverlay(); });
   on('oLogGet', playlogDownload);
@@ -1902,10 +1928,11 @@ document.addEventListener('keydown', function (e) {
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
     if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag' || ui.sub === 'cal') { ui.sub = null; renderOverlay(); return; }
     if (p === 'mine') { ui.sub = 'pause'; renderOverlay(); }
+    else if (p === 'deed' && !run.d) showTitle();   // 판 준비에서 Esc는 타이틀로
     return;
   }
   if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); return; }
-  if (p === 'deed') { if (code === 'Enter' || code === 'Space') deedGo(); return; }
+  if (p === 'deed') { if ((code === 'Enter' || code === 'Space') && setupCan()) deedGo(); return; }
   if (p === 'gift') {
     var gm = /^Digit([1-3])$/.exec(code);
     if (gm) { ui.sel = +gm[1] - 1; renderOverlay(); }

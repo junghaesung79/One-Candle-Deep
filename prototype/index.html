@@ -144,6 +144,7 @@
   button:hover { border-color: #ffd25a; }
   button:disabled { color: #5d5868; border-color: #2a2633; cursor: default; }
   button.primary { background: #3a3220; border-color: #a8781c; color: #ffd25a; }
+  button.primary:disabled { background: #2a2633; border-color: #34303f; color: #5d5868; }
   #fxLayer { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
   .pop .tname { font-size: 0.8em; }
   .pop .tname.t2 { color: #7fe9ef; }
@@ -180,6 +181,48 @@
   .tBtns .tBig { font-size: 20px; padding: 12px 16px; }
   .tSub { display: block; font-size: 13px; font-weight: 400; color: #c9c3d6; margin-top: 4px; }
   .tVer { position: absolute; right: 20px; bottom: 14px; }
+  .setup { position: absolute; inset: 0; }
+  .suTop { position: absolute; left: 64px; right: 64px; top: 28px; display: flex; justify-content: space-between; align-items: center; }
+  .suTabs { display: flex; }
+  .suTabs button + button { border-left: none; }
+  .suTabs button.on { border-color: #ffd25a; color: #ffd25a; background: #2a2418; }
+  .suLeft { position: absolute; left: 64px; top: 96px; width: 680px; }
+  .suRight { position: absolute; left: 800px; top: 96px; width: 416px; }
+  .suH { font-size: 15px; font-weight: 700; color: #c9c3d6; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; }
+  .suHero { display: flex; gap: 24px; background: #1d1a24; border: 2px solid #34303f; padding: 20px; height: 312px; box-sizing: border-box; }
+  .suPort { width: 176px; height: 176px; flex: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; box-sizing: border-box;
+            background: radial-gradient(circle at 50% 72%, rgba(255,190,110,0.12) 0 34%, rgba(255,190,110,0.06) 34% 52%, rgba(255,190,110,0.025) 52% 70%, transparent 70%), #14121a; border-bottom: 4px solid #2a2633; }
+  .suPort.locked img { filter: brightness(0) opacity(0.6); }
+  .suInfo { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; }
+  .suName { font-size: 24px; font-weight: 700; line-height: 30px; margin-bottom: 4px; }
+  .suLine { color: #c9c3d6; margin-bottom: 14px; }
+  .suInfo .skDesc { margin: 2px 0 8px 23px; }
+  .suStrip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .suChip { width: 80px; padding: 8px 0 6px; background: #1d1a24; border: 2px solid #34303f; text-align: center; cursor: pointer; box-sizing: border-box; }
+  .suChip:hover { border-color: #6f6880; }
+  .suChip.sel { border-color: #ffd25a; background: #2a2418; }
+  .suChip .nm { font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .suChip.locked img { filter: brightness(0) opacity(0.55); }
+  .suChip.locked .nm { color: #5d5868; }
+  .suDeed { padding: 14px 18px 12px; }
+  .suGrade { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+  .suGrade .ttl { flex: 1; text-align: center; margin: 0; }
+  .suArrow { background: transparent; border: 2px solid #8f8576; color: #3a3542; padding: 2px 9px; font-size: 12px; }
+  .suArrow:hover { border-color: #3a3542; }
+  .suArrow:disabled { opacity: 0.25; border-color: #8f8576; }
+  .suMeta { font-size: 13px; text-align: center; color: #6f6880; margin-bottom: 10px; }
+  .suLock { font-size: 14px; text-align: center; font-weight: 700; color: #c4432b; margin-bottom: 10px; }
+  .suDeed.locked .suPay, .suDeed.locked .suFoot { opacity: 0.35; }
+  .suPay { display: flex; align-items: baseline; padding: 6px 2px; border-top: 1px dashed #c4b89f; font-size: 14px; }
+  .suPay span:first-child { flex: 1; font-weight: 700; }
+  .suPay .px { font-size: 13px; width: 90px; text-align: right; }
+  .suPay .d { width: 64px; text-align: right; color: #6f6880; }
+  .suFoot { font-size: 12.5px; line-height: 18px; margin-top: 8px; color: #5a5263; }
+  .suSeed { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+  button.link { background: none; border: none; color: #a59fb3; text-decoration: underline; padding: 0; font-weight: 400; font-size: 13px; }
+  button.link:hover { color: #f1ece2; }
+  .suGo { position: absolute; right: 64px; bottom: 44px; }
+  .suGo button { font-size: 20px; padding: 12px 44px; }
   .quote { font-size: 15px; color: #c9c3d6; margin: 8px 0; }
   .card { padding: 8px 10px; display: flex; gap: 10px; align-items: center; cursor: pointer; }
   .card .ic { width: 40px; height: 40px; background: #2a2633; display: flex; align-items: center; justify-content: center; flex: none; }
