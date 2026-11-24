@@ -1392,19 +1392,19 @@ function saveLine(sv) {
 }
 function titleHtml() {
   var sv = ui.save, st = settings.stats || {}, fresh = !settings.tutorialDone && !sv;
-  var h = '<div class="title"><canvas id="titleCv" width="320" height="180"></canvas><div class="tMenu"><div class="tName px">ONE CANDLE<br>DEEP</div><div class="tBtns">';
+  var h = '<div class="title"><canvas id="titleCv" width="320" height="180"></canvas><div class="tMenu"><div class="tName px">ONE CANDLE DEEP</div><div class="tBtns">';
   if (sv) h += '<button class="primary tBig" id="tCont">이어하기<span class="tSub">' + esc(saveLine(sv)) + '</span></button>';
-  h += '<button id="tNew"' + (sv ? '' : ' class="primary tBig"') + '>' + (fresh ? '시작하기' : '새 판') + '</button>';
+  h += '<button id="tNew"' + (sv ? '' : ' class="primary tBig"') + '>' + (fresh ? '시작하기' : '새로 하기') + '</button>';
   if (st.plays || Object.keys(codex.seen).length) h += '<button id="tCodex">도감</button>';
   if (settings.openingSeen) h += '<button id="tOpening">오프닝 다시 보기</button>';
-  h += '</div>' + (st.plays ? '<div class="note tStat">' + esc(statsLine()) + (bestLine() ? '<br>' + esc(bestLine()) : '') + '</div>' : '') + '</div>' +
+  h += '</div></div>' +
     '<div class="note tVer">2차 프로토타입 · 규칙 ' + (CONFIG.preset === 'v21' ? 'v2.1' : 'v2.2 시험') + '</div></div>';
   return h;
 }
 function titleNew() {
   var sv = ui.save;
   function go() { if (sv) run = sv.run; startNewRun(!settings.tutorialDone); }
-  if (sv) askConfirm('이어하던 판(' + sv.run.day + '일째)을 버리고 새 판을 시작할까요? 버린 판은 진 판으로 세요.', go, { yes: '새 판 시작', no: '그만두기' });
+  if (sv) askConfirm('이어하던 판(' + sv.run.day + '일째)을 버리고 새로 할까요? 버린 판은 진 판으로 세요.', go, { yes: '새로 하기', no: '그만두기' });
   else go();
 }
 // 그림: 밤의 갱구와 촛불 하나. 판을 하며 열린 사람들이 갱구 앞에 하나씩 늘어요
