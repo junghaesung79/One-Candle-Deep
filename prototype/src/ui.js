@@ -1392,7 +1392,7 @@ function saveLine(sv) {
 }
 function titleHtml() {
   var sv = ui.save, st = settings.stats || {}, fresh = !settings.tutorialDone && !sv;
-  var h = '<div class="title"><canvas id="titleCv" width="320" height="180"></canvas><div class="tMenu"><div class="tName">원 캔들 딥</div><div class="tEn px">ONE CANDLE DEEP</div><div class="tBtns">';
+  var h = '<div class="title"><canvas id="titleCv" width="320" height="180"></canvas><div class="tMenu"><div class="tName px">ONE CANDLE<br>DEEP</div><div class="tBtns">';
   if (sv) h += '<button class="primary tBig" id="tCont">이어하기<span class="tSub">' + esc(saveLine(sv)) + '</span></button>';
   h += '<button id="tNew"' + (sv ? '' : ' class="primary tBig"') + '>' + (fresh ? '시작하기' : '새 판') + '</button>';
   if (st.plays || Object.keys(codex.seen).length) h += '<button id="tCodex">도감</button>';
