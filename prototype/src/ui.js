@@ -12,13 +12,22 @@ function saveSettings() { try { localStorage.setItem('ocd2_settings', JSON.strin
 var CODEX_KEY = 'ocd2_codex';
 var codex = (function () { try { return JSON.parse(localStorage.getItem(CODEX_KEY) || '{}') || {}; } catch (e) { return {}; } })();
 if (!codex.seen) codex.seen = {};
-function codexMark(ids) { var ch = false; ids.forEach(function (id) { if (id && !codex.seen[id]) { codex.seen[id] = 1; ch = true; } }); if (ch) { try { localStorage.setItem(CODEX_KEY, JSON.stringify(codex)); } catch (e) {} } }
-function firstTag(id) { return codex.seen[id] ? '' : '<span class="firstStamp">처음</span>'; }
+function codexMark(ids) { var nw = []; ids.forEach(function (id) { if (id && !codex.seen[id]) { codex.seen[id] = 1; nw.push(id); } }); if (nw.length) { try { localStorage.setItem(CODEX_KEY, JSON.stringify(codex)); } catch (e) {} } return nw; }
+// 처음 가진 도구는 이름이 열려요: 칸이 금빛으로 번지고 설명 칸에 이름을 띄워요
+function reveal(ids) {
+  var nw = codexMark(ids); if (!nw.length || typeof ui === 'undefined') return;
+  var now = performance.now();
+  nw.forEach(function (id) { ui.revealAt[id] = now; });
+  var t = Core.TOOL_BY_ID[nw[nw.length - 1]];
+  ui.desc = '<span class="acc">' + TEXT.revealed + '</span> <b>' + esc(t.name) + '</b><br>' + esc(t.desc); ui.hudDirty = true;
+}
+// 안 가져 본 도구는 이름을 가려요(효과는 보여요). 도감과 같은 규칙
+function tName(id) { return codex.seen[id] ? Core.TOOL_BY_ID[id].name : TEXT.unknownTool; }
 
 var T = 48, BW = CONFIG.W, BH = CONFIG.H, BOX = 44, BOY = 64;   // 판 왼쪽 위(무대 좌표)
 var ui = { sub: null, sel: 0, debugReveal: false, hover: null, shownAt: 0, rHold: null, hudDirty: true, desc: null,
            bubbleQ: [], bubble: null, bubblesSeen: {}, pairHints: 0, flys: [], pocketPending: 0, logFrom: 0, seenMine: false,
-           rulesSeen: {}, settleT0: 0, payT0: 0, lastCandle: null, shopSel: -1, slotPop: {}, streakFx: null, pendingBreak: null };
+           rulesSeen: {}, settleT0: 0, payT0: 0, lastCandle: null, shopSel: -1, slotPop: {}, revealAt: {}, streakFx: null, pendingBreak: null };
 var anim = { pend: {}, shake: [], flashUntil: 0, pops: [], stopUntil: 0, numBlink: {}, blame: null, pairHint: null, emberT: 0, floorT: 0 };
 var sched = [];
 var stage = document.getElementById('stage'), board = document.getElementById('board'), bctx = board.getContext('2d');
@@ -831,13 +840,13 @@ function updateHUD() {
     });
   }
   // 도구 칸
-  codexMark(run.owned.concat(Core.innate(run)));
+  reveal(run.owned.concat(Core.innate(run)));
   var nSl = Core.slotsOf(run), slW = Math.min(48, Math.floor((408 - 4 * (nSl - 1)) / nSl)), slSt = ' style="width:' + slW + 'px;height:' + slW + 'px"';   // 칸이 늘면 작아져요(한 줄)
   $('ownLbl').textContent = '가진 도구 ' + run.owned.length + '/' + nSl;
   var os = '';
   for (var s = 0; s < nSl; s++) {
     var id = run.owned[s];
-    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150; os += '<div class="slot' + (popd ? ' pop' : '') + '" data-tool="' + id + '"' + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
+    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
     else os += '<div class="slot empty"' + slSt + '></div>';
   }
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; $('ownSlots').style.gap = '4px'; bindSlotEvents(); }
@@ -1225,11 +1234,11 @@ function shopHtml(merchant) {
   S.stock.forEach(function (id, i) {
     if (!id) { h += '<div class="card panel sold"><div class="t muted">빈 자리</div></div>'; return; }
     var t = Core.TOOL_BY_ID[id];
-    if (S.sold[i]) { h += '<div class="card panel sold"><div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + t.name + '</div><div class="d">팔렸어요</div></div></div>'; return; }
+    if (S.sold[i]) { h += '<div class="card panel sold"><div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + esc(tName(id)) + '</div><div class="d">팔렸어요</div></div></div>'; return; }
     var pr = Core.priceOf(run, id, merchant), can = run.cash >= pr, left = run.cash - pr;
     var short = np ? Math.max(0, np.amount - left) : 0;
     var warn = np && np.day === run.day + (merchant ? 0 : 1) && left < np.amount;
-    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '" style="position:relative">' + (t.kind === 'passive' ? firstTag(id) : '') + '<div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n">' + t.name +
+    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '" style="position:relative">' + '<div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n' + (t.kind === 'passive' && !codex.seen[id] ? ' unknown' : '') + '">' + (t.kind === 'passive' ? tName(id) : t.name) +
       ' <span class="muted" style="font-size:12px;font-weight:400">' + axisName(t) + '</span></div><div class="d">' + esc(t.desc) + '</div>' +
       (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자라요</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
@@ -1241,7 +1250,7 @@ function shopHtml(merchant) {
   if (!merchant && S.fuse && S.fuse.length) S.fuse.forEach(function (fid) {   // 합치기: 재료 둘을 가진 밤
     var ft = Core.TOOL_BY_ID[fid], a = Core.TOOL_BY_ID[ft.fusion[0]], b = Core.TOOL_BY_ID[ft.fusion[1]];
     h += '<div class="panel" style="padding:8px 10px;border-color:#a8781c"><div class="sub" style="font-size:13px">구조꾼 곽 씨: "' + esc(TEXT.fuse.talk) + '"</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px">' + iconHtml('icons.' + a.icon, 22) + '+' + iconHtml('icons.' + b.icon, 22) + '→' + iconHtml('icons.' + ft.icon, 26) +
-      '<b style="flex:1">' + esc(ft.name) + '</b><button class="primary" data-fuse="' + fid + '" data-tool="' + fid + '">' + TEXT.fuse.button + '</button></div><div class="d" style="font-size:12px;margin-top:2px">' + esc(ft.desc) + '</div></div>';
+      '<b style="flex:1"' + (codex.seen[fid] ? '' : ' class="unknown"') + '>' + esc(tName(fid)) + '</b><button class="primary" data-fuse="' + fid + '" data-tool="' + fid + '">' + TEXT.fuse.button + '</button></div><div class="d" style="font-size:12px;margin-top:2px">' + esc(ft.desc) + '</div></div>';
   });
   run.owned.forEach(function (id) {
     var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false);
@@ -1408,7 +1417,7 @@ function bindOverlay() {
   q = OV.querySelectorAll('[data-sell]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.sell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 팔까요? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
   q = OV.querySelectorAll('[data-fuse]');
-  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var fid = this.dataset.fuse; if (Core.fuse(run, fid).ok) { codexMark([fid]); ui.slotPop[fid] = performance.now(); } ui.hudDirty = true; renderOverlay(); };
+  for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var fid = this.dataset.fuse; if (Core.fuse(run, fid).ok) { reveal([fid]); ui.slotPop[fid] = performance.now(); } ui.hudDirty = true; renderOverlay(); };
   q = OV.querySelectorAll('[data-boxpick]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxSel = +this.dataset.boxpick; renderOverlay(); };
   q = OV.querySelectorAll('[data-boxdrop]');
@@ -1420,7 +1429,7 @@ function bindOverlay() {
   on('oLoan', function () { if (Core.takeLoan(run).ok) { ui.payT0 = performance.now(); renderOverlay(); ui.hudDirty = true; } });
   on('oPayNow', function () { if (Core.payNow(run).ok) { renderOverlay(); ui.hudDirty = true; } });
   q = OV.querySelectorAll('[data-tool]');
-  for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
+  for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
@@ -1444,8 +1453,8 @@ function boxHtml() {
     h += '<div style="display:flex;gap:14px;margin-top:10px">';
     B.opts.forEach(function (id, i) {
       var t = Core.TOOL_BY_ID[id];
-      h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + firstTag(id) + iconHtml('icons.' + t.icon, 40) +
-        '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
+      h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
+        '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
     });
     h += '</div>';
   } else h += '<div class="note" style="margin-top:10px">쓸 만한 도구는 이미 다 가졌어요</div>';
@@ -1469,7 +1478,7 @@ function boxGo(i) {
   var r = Core.chooseBox(run, i, ui.boxDrop);
   if (!r.ok) { blinkEl('ov', 'x', 1); return; }
   ui.boxSel = 0; ui.boxDrop = null;
-  if (id) { ui.slotPop[id] = performance.now(); codexMark([id]); }
+  if (id) { ui.slotPop[id] = performance.now(); reveal([id]); }
   ui.shownAt = performance.now();
   afterAction(); renderOverlay(); ui.hudDirty = true;
 }
@@ -1481,7 +1490,7 @@ function codexHtml() {
   h += '<div class="note" style="margin-bottom:10px">한 번 얻은 도구는 이름과 효과가 열려요. 이 브라우저에 남아요</div><div class="codexGrid">';
   all.forEach(function (t) {
     var seen = !!codex.seen[t.id];
-    h += '<div class="panel codexCell' + (seen ? '' : ' unseen') + '">' + iconHtml('icons.' + t.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(t.name) : '???') + '</div>' +
+    h += '<div class="panel codexCell' + (seen ? '' : ' unseen') + '">' + iconHtml('icons.' + t.icon, 30) + '<div style="min-width:0"><div class="n">' + esc(tName(t.id)) + '</div>' +
       '<div class="note">' + (t.fusion ? '합친 도구' : axisName(t) + ' · ' + t.rarity) + '</div>' + (seen ? '<div class="d">' + esc(t.desc) + '</div>' : '<div class="d muted">' + (t.fusion ? '두 도구를 합치면 나와요. 하나는 연장함에서 나온 것이어야 해요' : '아직 못 얻었어요') + '</div>') + '</div></div>';
   });
   h += '</div><div style="text-align:right;margin-top:12px"><button class="primary" id="oCodexClose">닫기</button></div></div>';
@@ -1494,8 +1503,8 @@ function giftHtml() {
   h += '<div class="quote">중개인 구 실장: "' + esc(q) + '"</div>' + (stampR && full ? '<div class="note" style="margin-top:6px">' + esc(TEXT.reward.full) + '</div>' : '') + '<div style="display:flex;gap:14px;margin-top:10px;' + (stampR && full ? 'opacity:0.45' : '') + '">';
   run.giftOpts.forEach(function (id, i) {
     var t = Core.TOOL_BY_ID[id];
-    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px;position:relative">' + firstTag(id) + iconHtml('icons.' + t.icon, 40) +
-      '<div class="nm">' + esc(t.name) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' +
+    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
+      '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' +
       '</div>';
   });
   h += '</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="note">카드를 클릭해서 골라요</span><span style="display:flex;gap:10px">' +
@@ -1507,6 +1516,7 @@ function giftGo(i) {
   if (performance.now() - ui.shownAt < 500) return;
   var r = Core.chooseGift(run, i == null ? ui.sel : i);
   if (!r.ok) return;
+  if (r.id) reveal([r.id]);
   ui.sel = 0; ui.shownAt = performance.now();
   if (run.phase === 'shop') { renderOverlay(); ui.hudDirty = true; return; }   // 도장 선물 → 상점
   ui.giftLine = '중개인 구 실장: "' + TEXT.gift.after + '" · 받은 도구: ' + Core.TOOL_BY_ID[r.id].name;
@@ -1535,7 +1545,7 @@ function forkGo(i) {
   if (f.chunk && !f.chunk.done && f.chunk.dug > 0) askConfirm(TEXT.chunk.leave.replace('{n}', f.chunk.total - f.chunk.dug), leave);
   else leave();
 }
-function buyTool(i) { var r = Core.buy(run, i); if (r.ok) { ui.hudDirty = true; } else if (r.poor) blinkEl('ov', 'x', 1); renderOverlay(); }
+function buyTool(i) { var bid = run.shop && run.shop.stock[i]; var r = Core.buy(run, i); if (r.ok) { ui.hudDirty = true; if (bid && Core.TOOL_BY_ID[bid].kind === 'passive') reveal([bid]); } else if (r.poor) blinkEl('ov', 'x', 1); renderOverlay(); }
 function settleNext() {
   var dlg = $('settleDlg');
   if (performance.now() - ui.settleT0 < ui.settleDur && dlg && !dlg.classList.contains('instant')) { dlg.classList.add('instant'); ui.settleT0 = -1e9; return; }
