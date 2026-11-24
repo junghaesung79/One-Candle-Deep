@@ -330,6 +330,16 @@ describe('규칙 단위 검사', () => {
       check(Core.takeLoan(rl).ok && rl.payment.ok && rl.stamps === 1 && Core.payments(rl)[1].amount === next0 + 150 && rl.loanUsed, 'loan stamps now and adds 1.5x to the next stamp');
       const rn = Core.newRun(6205); Core.debugSkipDay(rn); Core.debugSkipDay(rn); Core.startDay(rn); rn.d.pocket = 100; Core.returnUp(rn); Core.afterSettle(rn); Core.afterPayment(rn);
       check(rn.phase === 'final' && !rn.final.success, 'refusing the loan ends the contract'); }
+    // 유품: 하나뿐이라 챙기거나 두고 가요. 도구 칸을 쓰지 않고 판 끝까지 남아요
+    { const rk = Core.newRun(7401); Core.startDay(rk); const hp0 = rk.d.hpMax, tc0 = Core.travelCost(rk, 3), cap0 = Core.streakCapIdx(rk), own0 = rk.owned.length;
+      rk.boxOffer = { keep: 'ironhelm', opts: [], scorch: false, quote: '' };
+      check(Core.chooseBox(rk, 0).ok && rk.keeps.includes('ironhelm') && rk.d.hpMax === hp0 + 1 && rk.owned.length === own0 && !rk.boxOffer, 'keepsake taken: hp +1 now, no tool slot used');
+      rk.boxOffer = { keep: 'boots', opts: [], scorch: false, quote: '' };
+      check(Core.chooseBox(rk, -1).ok && !rk.keeps.includes('boots'), 'keepsake can be left behind');
+      ['boots', 'crackedhelm', 'thickcandle', 'prayer'].forEach(id => { rk.boxOffer = { keep: id, opts: [], scorch: false, quote: '' }; Core.chooseBox(rk, 0); });
+      check(Core.travelCost(rk, 3) === tc0 - 1 && Core.streakCapIdx(rk) === cap0 + 1 && rk.d.hpMax === hp0, 'boots and cracked helm apply');
+      const rk2 = Core.newRun(7402); rk2.keeps = ['thickcandle', 'prayer', 'ironhelm']; Core.startDay(rk2);
+      check(rk2.d.candleMax === env.CONFIG.candleMax + 10 && rk2.d.streak === 1 && rk2.d.hpMax === env.CONFIG.hpMax + 1, 'next day: candle +10, combo starts at x1.5, hp +1'); }
     // 바랜 분필 자국: 층마다 O 0~1개, X 0~2개. 늘 맞고, 오른쪽 클릭으로 안 바뀌어요
     { const cntO = [0, 0], cntX = [0, 0, 0]; let wrong = 0, extra = 0, locked = true;
       for (let s = 7000; s < 7300; s++) {

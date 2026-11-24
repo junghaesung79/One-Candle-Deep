@@ -106,6 +106,19 @@ function iconHtml(name, size, cls) {
   };
   // 도구 아이콘(10×10)
   SPR.icons = {
+    // 유품 아이콘
+    kCandle: mkSprite(["....y.....", "...yhy....", "....y.....", "..wwwwww..", "..wllllw..", "..wllllw..", "..wllllw..", "..wllllw..", "..wllllw..", ".oooooooo."], { y: '#ffd25a', h: '#fff4c2', w: '#c9b49c', l: '#efe7d6', o: '#3d2a1c' }),
+    kHelm: mkSprite(["..........", "...oooo...", "..oggggo..", ".oggyyggo.", ".oggggggo.", ".oggggggo.", "oooooooooo", "o........o", "..........", ".........."], { o: '#3a3542', g: '#8a8fa0', y: '#ffd25a' }),
+    kCrack: mkSprite(["..........", "...oooo...", "..ogrggo..", ".oggrgggo.", ".ogrggggo.", ".oggrgggo.", "oooooooooo", "o........o", "..........", ".........."], { o: '#3a3542', g: '#8a8fa0', r: '#c4432b' }),
+    kWick: mkSprite(["....y.....", "...yhy....", "...yhy....", "....y.....", "....k.....", "..wwwwww..", "..wllllw..", ".oooooooo.", "..........", ".........."], { y: '#ffd25a', h: '#fff4c2', k: '#3d2a1c', w: '#c9b49c', l: '#efe7d6', o: '#3d2a1c' }),
+    kBoots: mkSprite(["..........", "..oo......", "..ob......", "..ob......", "..ob......", "..obbo....", "..obbbboo.", "..obbbbbbo", "..oooooooo", ".........."], { o: '#3d2a1c', b: '#8a5a3a' }),
+    kBook: mkSprite(["..........", ".oooooooo.", ".obbbbbbo.", ".obwwwwbo.", ".obbbbbbo.", ".obwwwbbo.", ".obbbbbbo.", ".oooooooo.", "..........", ".........."], { o: '#3d2a1c', b: '#6a4a2a', w: '#c9b49c' }),
+    kLamp: mkSprite(["....y.....", "...yhy....", "....y.....", "...oko....", "..oggggo..", ".oggggggo.", ".oggggggo.", "..oggggo..", "...oooo...", ".........."], { y: '#ffd25a', h: '#fff4c2', o: '#3d2a1c', k: '#3d2a1c', g: '#a8781c' }),
+    kNet: mkSprite(["..........", ".oooooooo.", ".o.w.w.wo.", ".ow.w.w.o.", ".o.w.w.wo.", ".ow.w.w.o.", "..oooooo..", "....oo....", "....oo....", ".........."], { o: '#5a4a3a', w: '#c9b49c' }),
+    kPurse: mkSprite(["....rr....", "...r..r...", "..oooooo..", ".obbbbbbo.", "obbbbbbbbo", "obbbybbbbo", "obbbbbbbbo", ".obbbbbbo.", "..oooooo..", ".........."], { r: '#c4432b', o: '#3d2a1c', b: '#8a5a3a', y: '#ffd25a' }),
+    kCard: mkSprite(["..........", "oooooooooo", "owwwwwwwwo", "owkkkwwwwo", "owwwwwwwwo", "owkkkkkkwo", "owkkkkwwwo", "oooooooooo", "..........", ".........."], { o: '#3a3542', w: '#efe7d6', k: '#5d6270' }),
+    kKey: mkSprite(["..........", ".ooo......", "o...o.....", "o...ooooo.", "o...o.o.o.", ".ooo..o...", "..........", "..........", "..........", ".........."], { o: '#b0703a' }),
+    kPrayer: mkSprite(["..oooooo..", ".owwwwwwo.", ".owkkkkwo.", ".owwwwwwo.", ".owkkkwwo.", ".owwwwwwo.", ".owkkkkwo.", ".owwwwwwo.", "..oooooo..", ".........."], { o: '#a8781c', w: '#efe7d6', k: '#8a7a6a' }),
     ledger: mkSprite([".oooooooo.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".ojllllro.", ".ojjjjjjo.", ".oooooooo.", ".........."], { o: '#3d2a1c', j: '#efe7d6', l: '#a59fb3', r: '#c4432b' }),
     sheet: mkSprite(["..oooooo..", ".ojjjjjjo.", ".ojxjjjjo.", ".ojjxjjjo.", ".ojxjxjjo.", ".ojjjjjjo.", ".ojllljjo.", ".ojjjjjjo.", ".oooooooo.", ".........."], { o: '#3a3542', j: '#efe7d6', x: '#c4432b', l: '#a59fb3' }),
     powder: mkSprite(["....y.....", "...k......", "...k......", "..oooo....", ".obbbbo...", "obbbbbbo..", "obbbbbbo..", "obbbbbbo..", ".obbbbo...", "..oooo...."], { o: '#1a1420', b: '#5d6270', k: '#9a6532', y: '#ffd25a' }),

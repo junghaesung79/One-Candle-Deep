@@ -456,6 +456,7 @@ class Bot {
   // 옛 연장함: 가장 앞 순위를 고르고, 칸이 가득이면 가진 것 가운데 가장 뒤 순위와 바꿔요(새 것이 더 앞일 때만). 아니면 곽 씨에게 넘겨요
   takeBox(run) {
     const Core = this.Core, B = run.boxOffer;
+    if (B.keep) { Core.chooseBox(run, this.o.noKeep ? -1 : 0); this.m.keeps = (this.m.keeps || 0) + (this.o.noKeep ? 0 : 1); return; }   // 유품은 늘 챙겨요
     let bi = -1, br = 1e9; B.opts.forEach((id, i) => { const r = this.rank(id); if (r < br) { br = r; bi = i; } });
     if (bi < 0) { Core.chooseBox(run, -1); return; }
     if (run.owned.length < Core.slotsOf(run)) { Core.chooseBox(run, bi); this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); return; }
