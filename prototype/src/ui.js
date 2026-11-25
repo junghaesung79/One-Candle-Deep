@@ -118,6 +118,7 @@ function startNewRun(tutorial, o) {
   if (tutorial && ui.opening == null) { run.deedLater = true; beginDay(); return; }   // 첫 판 안내는 판 준비 없이 곧장 지하 1층(권리증은 첫 밤에)
   renderOverlay(); ui.hudDirty = true;
 }
+function ruleSeen(r) { ui.rulesSeen[r] = true; if (!settings.rulesSeen) settings.rulesSeen = {}; if (!settings.rulesSeen[r]) { settings.rulesSeen[r] = 1; saveSettings(); } }
 function resetView() {
   sched = []; ui.flys.forEach(function (f) { if (f.el.parentNode) f.el.remove(); }); ui.flys = []; ui.pocketPending = 0;
   ui.sub = null; ui.sel = 0; ui.bubblesSeen = {}; ui.pairHints = 0; ui.seenMine = false; ui.firstBreakDone = false; ui.rulesSeen = {}; ui.bubbleQ = []; hideBubble();
@@ -226,7 +227,7 @@ function drainFx() {
       case 'break': ui.firstBreakDone = true; addShake(2, 120); anim.stopUntil = Math.max(anim.stopUntil, now + 70); break;
       case 'open': {
         var start, total = CONFIG.fx.chainMaxMs;
-        if (e.floorStart) { start = now + 350; anim.floorT = now; ui.rulesSeen[run.d.floor.rule] = true; }
+        if (e.floorStart) { start = now + 350; anim.floorT = now; ruleSeen(run.d.floor.rule); }
         else start = now + (e.stop || 0);
         var maxRing = 0; e.cells.forEach(function (c) { if (c.ring > maxRing) maxRing = c.ring; });
         var gap = maxRing ? Math.max(CONFIG.fx.ringMinMs, Math.min(CONFIG.fx.ringMs, total / maxRing)) : 0;
@@ -1161,8 +1162,7 @@ function forkHtml() {   // 고를 때 다른 것만 보여요. 지금 콤보·�
   opts.forEach(function (o, i) {
     h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-fork="' + i + '">';
     if (o.kind === 'floor') {
-      var R = RULES[o.rule], fresh = !ui.rulesSeen[o.rule];
-      if (fresh) h += '<span class="badge gold first">처음</span>';
+      var R = RULES[o.rule], fresh = !(settings.rulesSeen || {})[o.rule];   // 이 브라우저에서 처음 보는 광맥에만 풀이 한 줄(표시는 따로 달지 않아요)
       h += iconHtml('rules.' + o.rule, 48) + '<div class="nm">' + R.name + '</div><div class="tx">' + esc(R.sign) + '</div>' + veinDiagram(o.rule) + '<div class="hp2">' + (fresh ? esc(R.help) : '') + '</div>';   // 처음 보는 광맥만 풀이를 붙여요(자리는 늘 같아요)
       if (o.est) h += '<div class="tx forkNum">' + (CONFIG.countsShown ? '보물 ' + o.est.t + ' · 지뢰 ' + o.est.m : '보물 ' + o.est.t + '쯤 · 지뢰 ' + o.est.m + '쯤') + (o.est.tierUp ? ' · 보물 한 등급 위' : '') + '</div>';
       h += '<div class="forkExtra">' + (o.bonus ? '<div class="acc" style="font-weight:700">' + esc(bonusText(o.bonus)) + '</div>' : '') + (o.chunk ? '<span class="badge gold">큰 덩이 ' + d.chunkSpec.w + '×' + d.chunkSpec.h + '</span>' : '') + '</div>';
@@ -1757,7 +1757,7 @@ function forkGo(i) {
   ui.sel = i;
   var go = function () {
     var r = Core.descend(run, i);
-    if (r.ok) { ui.sub = null; anim.pend = {}; if (o.kind === 'floor') ui.rulesSeen[o.rule] = true; }
+    if (r.ok) { ui.sub = null; anim.pend = {}; if (o.kind === 'floor') ruleSeen(o.rule); }
     afterAction(); renderOverlay();
   };
   var leave = function () {   // 촛불이 모자라면 공개 없이 안내만
