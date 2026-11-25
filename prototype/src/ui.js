@@ -1384,8 +1384,11 @@ function settingsHtml() {
     b += setRow('화면 흔들림', '', setTg('oShake', settings.shake)) + setRow('지뢰 플래시', '지뢰가 터질 때 화면이 번쩍입니다', setTg('oFlash', settings.flash)) +
       setRow('전체 화면', '', setTg('oFull', !!document.fullscreenElement));
   } else if (tab === 'sound') {
-    b += setRow('전체 음량', '', setVol('all')) + setRow('음악', '', setVol('music')) + setRow('효과음', '', setVol('sfx')) +
-      setRow('창이 뒤에 있으면 소리 끄기', '', setTg('oBgMute', settings.bgMute !== false));
+    // 소리는 아직 없어서 자리만 보여 주고 막아 둬요(누르면 오해하니까)
+    b += '<div class="soon"><div class="soonBody" inert aria-hidden="true">' +
+      setRow('전체 음량', '', setVol('all')) + setRow('음악', '', setVol('music')) + setRow('효과음', '', setVol('sfx')) +
+      setRow('창이 뒤에 있으면 소리 끄기', '', setTg('oBgMute', settings.bgMute !== false)) +
+      '</div><div class="soonVeil"><div>소리는 아직 없습니다</div><div class="note">음악과 효과음은 나중에 들어갑니다</div></div></div>';
   } else if (tab === 'ctrl') {
     b += setRow('조준', '켜면 한 번 눌러 고르고, 한 번 더 눌러 캐거나 터뜨립니다. 끄면 한 번에 걸어가서 합니다', setTg('oAim', settings.aim)) +
       '<h3>키보드</h3><div class="keyGrid"><span>Esc</span><span>일시 정지, 창 닫기</span>' + (CONFIG.preset === 'v21' ? '<span>Tab</span><span>가방</span>' : '') + '<span>R</span><span>올라가기</span><span>Enter · Space</span><span>다음 화면</span><span>숫자</span><span>카드 고르기</span></div>';
