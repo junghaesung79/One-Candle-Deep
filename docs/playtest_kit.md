@@ -6,7 +6,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 빌드 | `cd prototype && npm run build` 뒤 `dist/index.html`을 테스터에게 보내거나 정적 호스팅에 올려요. 개발 서버(`npm run dev`)여도 돼요 |
+| 빌드 | 테스터에게 https://junghaesung79.github.io/One-Candle-Deep/ 주소를 보내요. main에 푸시하면 CI가 검사를 통과한 빌드를 올려요. 디버그 키는 꺼져 있어요. 파일로 보내려면 `cd prototype && npm run build` 뒤 `dist/index.html` |
 | 규칙 | 기본은 v2.2 시험 규칙이에요. 비교가 필요하면 주소 뒤에 `?preset=v21`을 붙여 2차 기획 v2.1 규칙으로 해 볼 수 있어요. 설정 창 맨 아래에 지금 규칙이 적혀 있어요 |
 | 기록 | 따로 켤 것이 없어요. 하루가 끝날 때마다 브라우저에 한 줄씩 쌓여요(09 C.3.1) |
 | 사람 | 5명. 지뢰찾기를 해 본 사람 3명, 거의 안 해 본 사람 2명이 좋아요 |

@@ -1907,6 +1907,7 @@ function clickCell(p) {
 
 // ---------- 입력 ----------
 // 키보드(R93): 판 위 조작(이동·캐기·분필·발파)은 마우스로만. 키는 창 넘기기·고르기와 Esc·Tab·R만 남긴다
+var DEBUG_KEYS = !!(import.meta.env && import.meta.env.DEV) || /[?&]debug\b/.test(location.search);
 document.addEventListener('keydown', function (e) {
   var tg = e.target && e.target.tagName; if ((tg === 'INPUT' && e.target.type !== 'range') || tg === 'TEXTAREA') { if (e.key === 'Enter' && e.target.id === 'seedIn') { e.preventDefault(); var sb = $('oSeed'); if (sb) sb.click(); } return; }   // 시드 칸에 글을 쓰는 동안은 단축키를 쓰지 않아요
   if (ui.sweep) { e.preventDefault(); if (!e.repeat) endSweep(); return; }
@@ -1921,12 +1922,12 @@ document.addEventListener('keydown', function (e) {
   }
   if (!run) return;
   if (['ShiftLeft', 'ShiftRight', 'ControlLeft', 'AltLeft', 'MetaLeft'].indexOf(code) < 0 && !e.repeat) flushAll();   // 연출 건너뛰기
-  // 디버그(개발용)
-  if (code === 'F2') { ui.debugReveal = !ui.debugReveal; return; }
-  if (code === 'F3') { Core.debugFillCandle(run); ui.hudDirty = true; return; }
-  if (code === 'F4') { run.cash += 500; ui.hudDirty = true; if (run.phase === 'shop' || run.phase === 'room' || run.phase === 'board') renderOverlay(); return; }
-  if (code === 'F8') { Core.debugEndDay(run); afterAction(); return; }
-  if (code === 'F9') { Core.debugSkipDay(run); ui.sub = null; ui.opening = null; ui.shownAt = 0; run.fx = []; hideBubble(); renderOverlay(); ui.hudDirty = true; return; }
+  // 디버그(개발 서버, 또는 주소 뒤 ?debug). 배포한 판에서는 꺼져 있어요
+  if (DEBUG_KEYS && code === 'F2') { ui.debugReveal = !ui.debugReveal; return; }
+  if (DEBUG_KEYS && code === 'F3') { Core.debugFillCandle(run); ui.hudDirty = true; return; }
+  if (DEBUG_KEYS && code === 'F4') { run.cash += 500; ui.hudDirty = true; if (run.phase === 'shop' || run.phase === 'room' || run.phase === 'board') renderOverlay(); return; }
+  if (DEBUG_KEYS && code === 'F8') { Core.debugEndDay(run); afterAction(); return; }
+  if (DEBUG_KEYS && code === 'F9') { Core.debugSkipDay(run); ui.sub = null; ui.opening = null; ui.shownAt = 0; run.fx = []; hideBubble(); renderOverlay(); ui.hudDirty = true; return; }
   var p = run.phase;
   if (code === 'Escape') {   // 설정은 Esc로 연다
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }

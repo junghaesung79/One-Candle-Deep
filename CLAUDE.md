@@ -24,7 +24,7 @@
 | prototype/bot/ | bot.js 봇 정책과 한 판 진행, cli.ts 경제 측정 보고서 |
 | prototype/tests/ | Vitest 테스트: 광맥 생성기, 규칙 단위 검사, 봇 연기 검사 |
 | docs/export/기획서_2차_v2.1.docx | Word로 묶은 기획서(docs/ 의 마크다운을 합친 것). 원본은 마크다운이에요 |
-| .github/workflows/ci.yml | 푸시마다 타입 검사, 테스트, 빌드 |
+| .github/workflows/ci.yml | 푸시마다 타입 검사, 테스트, 빌드. main이면 GitHub Pages에 배포 |
 
 ## 문서 읽는 순서
 
@@ -88,7 +88,8 @@ npm run bot          # 경제 측정 보고서(보통 100판 + 신중·욕심 �
 npm run build        # dist/index.html 파일 하나로 빌드. 더블클릭으로 열거나 정적 호스팅에 올려요
 ```
 
-- 디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김
+- 디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김. 개발 서버에서만 켜지고, 배포한 판에서는 주소 뒤 `?debug`를 붙여야 켜져요
+- 플레이테스트 주소: https://junghaesung79.github.io/One-Candle-Deep/ main에 푸시하면 CI가 검사를 통과한 빌드를 GitHub Pages에 올려요
 - 켜면 타이틀부터예요. 진행 중인 판은 브라우저 저장소(ocd2_run)에 통째로 저장돼 '이어하기'로 돌아가요. 처음 켠 상태로 보려면 ocd2_run, ocd2_settings, ocd2_codex 를 지워요
 - 개발 서버에서만 `window.__ocd`(run, Core, afterAction)로 상태를 읽을 수 있어요. 화면 점검 스크립트용이고 빌드에는 빠져요
 - 봇 재사용: `import { load, playRun, POLICY } from './bot/bot.js'` (정책: cautious 신중, normal 보통, greedy 욕심). `load()` 는 규칙 모듈 하나를 같이 써서, CONFIG를 고치면 같은 프로세스의 다음 판에도 남아요

@@ -127,7 +127,7 @@ Node.js 20 이상이 필요해요.
 | `npm run bot` | 경제 측정 보고서(1~2분). `npm run bot -- 300`처럼 판 수를 줄 수 있어요 |
 | `npm run build` | `dist/index.html` 파일 하나로 빌드 |
 
-디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김.
+디버그 키: F2 판 공개, F3 촛불 가득, F4 금고 +500, F8 오늘 끝, F9 하루 넘김. 개발 서버에서만 켜지고, 배포한 판은 주소 뒤에 `?debug`를 붙여야 켜져요. 플레이테스트 주소는 https://junghaesung79.github.io/One-Candle-Deep/ 이고 main에 푸시하면 CI가 올려요.
 
 GitHub에 올리면 `.github/workflows/ci.yml`이 푸시마다 타입 검사, 테스트, 빌드를 돌려요.
 
