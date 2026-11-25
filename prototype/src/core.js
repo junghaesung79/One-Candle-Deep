@@ -268,7 +268,7 @@ var TOOLS = [
       }
     } },
   // 소모품
-  { id: 'powder', rarity: '소모품', name: '화약', short: '화약', price: 40, kind: 'consumable', icon: 'powder', sets: ['21', '22'],
+  { id: 'powder', rarity: '소모품', name: '화약', short: '화약', price: 40, kind: 'consumable', icon: 'powder', sets: ['21'],   // v2.2에는 소모품이 없어요(촛불 4를 사는 것과 같아 유물만 촛불을 바꾼다는 규칙과 어긋남)
     desc: '고른 X 칸에 촛불 없이 불을 붙입니다' },
   { id: 'match', rarity: '소모품', name: '성냥 묶음', short: '성냥', price: 50, kind: 'consumable', icon: 'match', sets: ['21'],
     desc: '촛불이 꺼진 뒤에만 켤 수 있습니다. 촛불 +10으로 다시 불이 붙습니다' }
@@ -503,12 +503,12 @@ PRESETS.v22 = {
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
                 sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true, perfect: true,
                 relicBox: true, toolSell: true, fusion: true, loan: true, fadedChalk: true, keepsake: true },
-    shop: { tools: 3, cons: 2, reroll: 20, sellBack: 0.5, passiveSlots: 8, consSlots: 3, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
+    shop: { tools: 3, cons: 0, reroll: 20, sellBack: 0.5, passiveSlots: 8, consSlots: 0, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
             rarityWeight: { '일반': 50, '고급': 35, '희귀': 15 } },   // 도구 칸 8(도구 경험 정리)
     toolSet: '22',
     voidCompare: { 1: 1110, 2: 2420, 3: 3130, 4: 4350, 5: 5250 },   // 그 도장을 찍은 판의 그 구간 수입 평균(세 정책 400판, 05 8.12)
     gift: { n: 3, rarity: '일반', tutorial: ['betchalk', 'gloves', 'fuse'] },
-    tutorialShopDay1: ['tapper', 'lens', 'amulet', 'powder'],
+    tutorialShopDay1: ['tapper', 'lens', 'amulet'],
     gradeMul: [1, 1.3, 1.8, 2, 2.2, 2.4, 2.6]   // 등급 2·3 배수(v22 봇 측정, 05 8.12)
   },
   text: { opening1: '15일 안에 다섯 번 나눠 내세요. 사흘마다 도장을 찍어 드려요. 도장 다섯 개면 광산은 당신 거예요.',

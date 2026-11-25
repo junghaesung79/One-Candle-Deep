@@ -887,7 +887,7 @@ function updateHUD() {
   var kr = $('keepRow');
   if (kr._h !== ks) { kr._h = ks; kr.innerHTML = ks ? '<span class="lbl" style="margin:0 4px 0 0">' + esc(TEXT.keep.row) + '</span>' + ks : '';
     var ke = kr.querySelectorAll('[data-keep]'); for (var ki = 0; ki < ke.length; ki++) ke[ki].onmouseenter = function () { var k = Core.KEEP_BY_ID[this.dataset.keep]; ui.desc = '<b>' + esc(k.name) + '</b> <span class="muted">유물</span><br>' + esc(k.desc); ui.hudDirty = true; }; }
-  // R53 버튼: 두드려 보기·소모품 → 고르기 상태. 발파는 X 칸을 누르면 돼서 버튼이 없어요(R94)
+  // 버튼: 두드려 보기·소모품(v2.1만) → 고르기 상태. 발파는 X 칸을 누르면 돼서 버튼이 없어요(R94)
   var md = ui.mode || {};
   var us = d && !d.probesMax && !CONFIG.features.probeBase ? '' :   // v22: 두드려 보기는 청진 망치가 있을 때만
     '<div class="uslot' + (modeOk('probe') ? '' : ' off') + (md.kind === 'probe' ? ' on' : '') + '" data-use="probe" data-tip="probe"><span>두드려 보기<br>' + (d ? d.probes + '/' + d.probesMax : '') + ' · −2</span></div>';
@@ -1332,7 +1332,7 @@ function shopHtml(merchant) {
       (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자랍니다</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
   });
-  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button><span class="note">도구 세 자리만 바뀝니다</span></div>';
+  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button>' + (CONFIG.shop.cons ? '<span class="note">도구 세 자리만 바뀝니다</span>' : '') + '</div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했습니다)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
   var canSell = !merchant && (CONFIG.features.sellBack || CONFIG.features.toolSell) && (!run.tutorial || run.owned.length >= Core.slotsOf(run));   // 첫 판은 칸이 찼을 때만 팔기(reviews/16)
   h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:5px;min-height:0"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + Core.slotsOf(run) + (!canSell ? '' : CONFIG.features.toolSell ? ' · 심 씨는 상점 값의 ' + (Core.owns(run, 'regular') ? '75%' : '절반') + '에 삽니다' : ' · 되팔면 산 값의 절반입니다') + '</div>';
