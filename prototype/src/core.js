@@ -526,7 +526,7 @@ PRESETS.v22 = {
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
                 sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true, perfect: true,
                 relicBox: true, toolSell: true, fusion: true, loan: true, fadedChalk: true, keepsake: true },
-    shop: { tools: 3, cons: 0, reroll: 20, sellBack: 0.5, passiveSlots: 8, consSlots: 0, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
+    shop: { tools: 3, cons: 0, reroll: 20, rerollStamp: 20, rerollStep: 0.5, sellBack: 0.5, passiveSlots: 8, consSlots: 0, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
             rarityWeight: { '일반': 50, '고급': 35, '희귀': 15 } },   // 도구 칸 8(도구 경험 정리)
     toolSet: '22',
     voidCompare: { 1: 1110, 2: 2420, 3: 3130, 4: 4350, 5: 5250 },   // 그 도장을 찍은 판의 그 구간 수입 평균(세 정책 400판, 05 8.12)
@@ -2275,7 +2275,12 @@ var Core = (function () {
     var t = TOOL_BY_ID[id];
     return Math.round(t.price * (merchant ? 1 - CONFIG.shop.merchantDiscount : 1) / 10) * 10;
   }
-  function rerollPrice(run) { return CONFIG.shop.reroll; }
+  // 다시 보기: 밤마다 '처음 값 + 도장 수 × rerollStamp'에서 시작해 할 때마다 처음 값의 rerollStep만큼 올라요(reviews/22 4장, R123). 첫 판은 그대로
+  function rerollPrice(run) {
+    var S = CONFIG.shop, base = S.reroll + (run.tutorial ? 0 : (S.rerollStamp || 0) * (run.stamps || 0));
+    var n = run.tutorial || !run.shop ? 0 : run.shop.rerolls || 0;
+    return base + Math.round(base * (S.rerollStep || 0)) * n;
+  }
   function servicePrice(run) { return CONFIG.shop.merchantService.price; }
   function buy(run, slot) {
     var merchant = run.phase === 'room' && run.room && run.room.kind === 'merchant';

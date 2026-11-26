@@ -393,6 +393,12 @@ describe('규칙 단위 검사', () => {
       const hp0 = r.d.hp; Core.hit(r, m.x, m.y);
       check(r.d.hp === hp0 && r.d.streak === 0, 'amulet keeps hp, streak breaks'); }
     { const r = Core.newRun(6109); r.owned.push('tapper'); Core.startDay(r); check(r.d.probes === 2, 'tapper gives two probes'); }
+    // 다시 보기 값: 밤마다 20 + 도장 수 × 20에서 시작해 할 때마다 처음 값의 절반씩 오른다(R123)
+    { const r = Core.newRun(6114); r.stamps = 2; r.cash = 10000; r.phase = 'shop'; r.shop = { stock: [], sold: {}, rerolls: 0, fuse: [] };
+      const p0 = Core.rerollPrice(r); Core.reroll(r); const p1 = Core.rerollPrice(r); Core.reroll(r);
+      check(p0 === 60 && p1 === 90 && Core.rerollPrice(r) === 120 && r.cash === 10000 - 60 - 90, 'reroll price climbs within a night');
+      const t = Core.newRun(6115, { tutorial: true }); t.phase = 'shop'; t.shop = { stock: [], sold: {}, rerolls: 3, fuse: [] };
+      check(Core.rerollPrice(t) === CONFIG.shop.reroll, 'first run: reroll price stays'); }
     // 처음 풀 새 도구 넷(reviews/23): 첫 삽, 외톨이 등, 금 알갱이 주머니, 촛농 받이
     { const digT = (r: any) => { const f = r.d.floor, t = f.cells.find((c: any) => c.haz === 'treasure' && c.cover !== 'open' && !c.chunk); const nb = Core.neighbors(f, t.x, t.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y; const p0 = r.d.pocket; Core.hit(r, t.x, t.y); return { t, got: r.d.pocket - p0 }; };
       const r = Core.newRun(6110); r.owned.push('firstdig', 'nuggetbag'); Core.startDay(r); r.d.floor.rule = 'pair'; r.d.streak = 0;
