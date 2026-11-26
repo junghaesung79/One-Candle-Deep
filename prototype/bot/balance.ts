@@ -39,6 +39,7 @@ const VARIANTS: Record<string, () => void> = {
 };
 function setPays(a: number[]) { CONFIG.payments = CONFIG.payments.map((p: any, i: number) => Object.assign({}, p, { amount: a[i] })); }
 
+if (process.env.PAYS) VARIANTS[name] = () => setPays(process.env.PAYS!.split(',').map(Number));   // PAYS=300,1000,2400,4800,8000 처럼 곡선을 바로 줄 수 있어요
 if (!VARIANTS[name]) throw new Error('모르는 변형 ' + name);
 VARIANTS[name]();
 // 청진 망치 횟수는 하루 시작에서 정해요. 변형에서 바꿨으면 하루를 열 때 고쳐 넣어요

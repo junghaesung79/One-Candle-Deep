@@ -165,6 +165,11 @@ function iconHtml(name, size, cls) {
   SPR.icons.regular = mkSprite([".ooooooo..", ".oBbbbbo..", ".oBwwwbo..", ".oBbbbbo..", ".oBbbbbo..", ".oBbbbbcc.", ".oBbbbcyhc", ".oBbbbcyyc", ".oooooocc.", ".........."], { o: '#2a1c12', B: '#2f5a36', b: '#4f8a4a', w: '#efe7d6', c: '#7a5212', y: '#f2c14e', h: '#fff1b8' });
   SPR.icons.bigblast = mkSprite(["y...y...y.", ".k..k..k..", "..k.k.k...", "...kkk....", "rrrrrrrrr.", "rRRRRRRRr.", "rRyyRRRRr.", "rRRRRyyRr.", "rrrrrrrrr.", ".........."], { r: '#7a2f28', R: '#c4432b', k: '#3a3542', y: '#ffd25a' });
   SPR.icons.moontongs = mkSprite(["....yy....", "..wyhhyw..", "..wwyyww..", "...wwww...", "....kk....", "...wkkw...", "..ww..ww..", "..mm..mm..", ".mm....mm.", "mm......mm"], { w: '#c9c3d6', k: '#6f6880', y: '#5fe0e8', h: '#e8f4ff', m: '#8e7fb0' });
+  // 처음 풀에 새로 넣은 넷(reviews/23)
+  SPR.icons.firstdig = mkSprite(["........bb", ".......bb.", "......bb..", ".....bb...", "....bb....", "..gGg.....", ".gGGGg....", ".gGGGg....", "..ggg.....", "...g......"], { b: '#9a6532', g: '#7c8292', G: '#c3c7d2' });
+  SPR.icons.lonelamp = mkSprite(["....k.....", "....k.....", "...kkk....", "..kyyyk...", "..kyhyk...", "..kyyyk...", "...kkk....", "....y.....", "...y.y....", ".........."], { k: '#454956', y: '#ffd25a', h: '#fff4c2' });
+  SPR.icons.nuggetbag = mkSprite(["...o..o...", "....oo....", "...bbbb...", "..bbbbbb..", ".bbbyybbb.", ".bbyhyybb.", ".bbbyybbb.", "..bbbbbb..", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#f2c14e', h: '#fff1b8' });
+  SPR.icons.dripdish = mkSprite(["....y.....", "...yhy....", "....k.....", "...www....", "...www....", "..wwwww...", "bbwbbbwbbb", ".bbbbbbbb.", "..........", ".........."], { y: '#ffd25a', h: '#fff4c2', k: '#3a3542', w: '#efe7d6', b: '#b8862e' });
   SPR.icons.deadcrown = mkSprite(["y..y..y...", "yy.yy.yy..", "yhyyhyyhy.", "yyyyyyyyy.", "oooooooooo", ".orrrrrro.", ".orwrrwro.", ".orrrrrro.", "..oooooo..", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', r: '#c4432b', w: '#efe7d6' });
 })();
 

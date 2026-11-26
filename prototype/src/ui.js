@@ -878,7 +878,7 @@ function updateHUD() {
   var os = '';
   for (var s = 0; s < nSl; s++) {
     var id = run.owned[s];
-    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
+    if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + rarAttr(id) + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
     else os += '<div class="slot empty"' + slSt + '></div>';
   }
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; $('ownSlots').style.gap = '4px'; bindSlotEvents(); }
@@ -1220,6 +1220,7 @@ function settleHtml() {
   });
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
+  if (S.lines.drip) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>촛농 받이(남은 촛불)</span><span>' + fmt(S.lines.drip) + '</span></div>'; delay += 120; }
   if (S.lines.order) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>주문 보수</span><span>' + fmt(S.lines.order) + '</span></div>'; delay += 120; }
   ui.settleT0 = performance.now(); ui.settleDur = delay + 1100;
   h += '<div style="display:flex;align-items:center;gap:14px;margin:14px 0;font-size:17px">' + iconHtml('pouch', 32) + '<span>오늘 주머니 <b class="px" id="sPocket">' + fmt(S.gross) + '</b></span>' +
@@ -1347,7 +1348,7 @@ function shopHtml(merchant) {
     var pr = Core.priceOf(run, id, merchant), can = run.cash >= pr, left = run.cash - pr;
     var short = np ? Math.max(0, np.amount - left) : 0;
     var warn = np && np.day === run.day + (merchant ? 0 : 1) && left < np.amount;
-    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '" style="position:relative">' + '<div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n' + (t.kind === 'passive' && !codex.seen[id] ? ' unknown' : '') + '">' + (t.kind === 'passive' ? tName(id) : t.name) +
+    h += '<div class="card panel' + (ui.shopSel === i ? ' sel' : '') + '" data-buy="' + i + '" data-tool="' + id + '"' + rarAttr(id) + ' style="position:relative">' + '<div class="ic">' + iconHtml('icons.' + t.icon, 30) + '</div><div class="t"><div class="n' + (t.kind === 'passive' && !codex.seen[id] ? ' unknown' : '') + '">' + (t.kind === 'passive' ? tName(id) : t.name) +
       ' <span class="muted" style="font-size:12px;font-weight:400">' + axisName(t) + '</span></div><div class="d">' + esc(t.desc) + '</div>' +
       (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자랍니다</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
@@ -1363,7 +1364,7 @@ function shopHtml(merchant) {
   });
   run.owned.forEach(function (id) {
     var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false);
-    h += '<div class="card panel" style="padding:2px 8px;cursor:default;min-height:0;align-items:center" data-tool="' + id + '"><div class="ic" style="width:24px;height:24px">' + iconHtml('icons.' + t.icon, 20) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div></div>' +   // 효과는 마우스를 올리면 아래 설명 칸에
+    h += '<div class="card panel" style="padding:2px 8px;cursor:default;min-height:0;align-items:center" data-tool="' + id + '"' + rarAttr(id) + '><div class="ic" style="width:24px;height:24px">' + iconHtml('icons.' + t.icon, 20) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div></div>' +   // 효과는 마우스를 올리면 아래 설명 칸에
       (!canSell ? '' : '<button data-sell="' + id + '"' + (rm ? '' : ' disabled title="이걸 빼면 칸이 모자랍니다"') + '>' + (CONFIG.features.toolSell ? '팔기' : '되팔기') + ' +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없습니다</div>';
@@ -1671,6 +1672,7 @@ function bindOverlay() {
   for (i = 0; i < kq.length; i++) if (kq[i].dataset.keep) kq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var k = Core.KEEP_BY_ID[this.dataset.keep]; sd.innerHTML = '<b class="acc">' + esc(k.name) + '</b> <span class="muted">' + esc(TEXT.keep.row) + '</span><br>' + esc(k.desc); };
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
+function rarAttr(id) { var t = Core.TOOL_BY_ID[id]; var n = t && { '일반': 1, '고급': 2, '희귀': 3, '합침': 4 }[t.rarity]; return n ? ' data-rar="' + n + '"' : ''; }   // 테두리 색: 보물 등급과 같은 색(일반 금 알갱이, 고급 청록 보석, 희귀 금잔, 합침 보라)
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
@@ -1694,7 +1696,7 @@ function boxHtml() {
     h += '<div style="display:flex;gap:14px;margin-top:10px">';
     B.opts.forEach(function (id, i) {
       var t = Core.TOOL_BY_ID[id];
-      h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '" style="min-height:170px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
+      h += '<div class="fork panel' + (ui.boxSel === i ? ' sel' : '') + '" data-boxpick="' + i + '" data-tool="' + id + '"' + rarAttr(id) + ' style="min-height:170px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
         '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · ' + t.rarity + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' + (CONFIG.features.fusion && !run.tutorial && isPart(id) ? '<div class="acc" style="font-size:12px;margin-top:6px">' + esc(TEXT.fuse.boxHint) + '</div>' : '') + '</div>';
     });
     h += '</div>';
@@ -1739,7 +1741,7 @@ function codexHtml() {   // 못 얻은 칸은 실루엣과 ???만. 얻는 법은
   function cnt(list) { return list.filter(function (x) { return codex.seen[x.id]; }).length; }
   function cell(x, sub, desc, hint) {
     var seen = !!codex.seen[x.id];
-    return '<div class="panel codexCell' + (seen ? '' : ' unseen') + '"' + (seen ? '' : ' title="' + esc(hint) + '"') + '>' + iconHtml('icons.' + x.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(x.name) : '???') + '</div><div class="note">' + sub + '</div>' + (seen ? '<div class="d">' + esc(desc) + '</div>' : '') + '</div></div>';
+    return '<div class="panel codexCell' + (seen ? '' : ' unseen') + '"' + (seen && x.rarity ? rarAttr(x.id) : '') + (seen ? '' : ' title="' + esc(hint) + '"') + '>' + iconHtml('icons.' + x.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(x.name) : '???') + '</div><div class="note">' + sub + '</div>' + (seen ? '<div class="d">' + esc(desc) + '</div>' : '') + '</div></div>';
   }
   var h = '<div class="dim" style="background:rgba(11,10,16,0.85)"></div><div class="dlg" style="width:1000px;height:640px;display:flex;flex-direction:column"><h2>도감</h2>' +
     '<div class="note" style="margin-bottom:12px">한 번 얻으면 이름과 효과가 열립니다. 상점, 옛 연장함, 도장 선물에서 얻습니다. 이 브라우저에 남습니다</div><div style="flex:1;overflow:auto">';
@@ -1757,7 +1759,7 @@ function giftHtml() {
   h += '<div class="quote">중개인 구 실장: "' + esc(q) + '"</div>' + (stampR && full ? '<div class="note" style="margin-top:6px">' + esc(TEXT.reward.full) + '</div>' : '') + '<div style="display:flex;gap:14px;margin-top:10px;' + (stampR && full ? 'opacity:0.45' : '') + '">';
   run.giftOpts.forEach(function (id, i) {
     var t = Core.TOOL_BY_ID[id];
-    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '" style="min-height:210px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
+    h += '<div class="fork panel' + (ui.sel === i ? ' sel' : '') + '" data-gift="' + i + '"' + rarAttr(id) + ' style="min-height:210px;position:relative">' + iconHtml('icons.' + t.icon, 40) +
       '<div class="nm' + (codex.seen[id] ? '' : ' unknown') + '">' + esc(tName(id)) + '</div><div class="note" style="margin-bottom:6px">' + axisName(t) + ' · 상점 값 ' + fmt(t.price) + '</div><div class="tx">' + esc(t.desc) + '</div>' +
       '</div>';
   });

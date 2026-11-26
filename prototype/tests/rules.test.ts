@@ -266,7 +266,7 @@ describe('규칙 단위 검사', () => {
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
       check(CONFIG.rulePool.join() === 'pair,border,lonely' && r.plan.firstRule.slice(1).every((x: string) => ['pair', 'border', 'lonely'].includes(x)), 'three veins (plain only day 1)');
-      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 14 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown'].includes(t.id)), '14 tools in v22 set, no fused tools in the pool'); }
+      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 18 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown'].includes(t.id)), '18 tools in v22 set, no fused tools in the pool'); }
     // 촛불이 다 타면 그 자리에서 하루 끝(불씨 없음)
     { const r = Core.newRun(6102); Core.startDay(r); const f = r.d.floor;
       const c = f.cells.find(q => q.cover !== 'open' && !q.haz && !q.stair && Core.neighbors(f, q.x, q.y).some(n => n.cover === 'open'));
@@ -393,6 +393,18 @@ describe('규칙 단위 검사', () => {
       const hp0 = r.d.hp; Core.hit(r, m.x, m.y);
       check(r.d.hp === hp0 && r.d.streak === 0, 'amulet keeps hp, streak breaks'); }
     { const r = Core.newRun(6109); r.owned.push('tapper'); Core.startDay(r); check(r.d.probes === 2, 'tapper gives two probes'); }
+    // 처음 풀 새 도구 넷(reviews/23): 첫 삽, 외톨이 등, 금 알갱이 주머니, 촛농 받이
+    { const digT = (r: any) => { const f = r.d.floor, t = f.cells.find((c: any) => c.haz === 'treasure' && c.cover !== 'open' && !c.chunk); const nb = Core.neighbors(f, t.x, t.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y; const p0 = r.d.pocket; Core.hit(r, t.x, t.y); return { t, got: r.d.pocket - p0 }; };
+      const r = Core.newRun(6110); r.owned.push('firstdig', 'nuggetbag'); Core.startDay(r); r.d.floor.rule = 'pair'; r.d.streak = 0;
+      const a1 = digT(r); check(r.d.streak === 2, 'first dig: first treasure of the floor +2 steps');
+      check(a1.got === CONFIG.treasureValue[a1.t.tier] + (a1.t.tier === 1 ? CONFIG.nuggetBag : 0), 'nugget bag: gold nugget +5');
+      digT(r); check(r.d.streak === 3, 'first dig: only the first one');
+      const r2 = Core.newRun(6111); r2.owned.push('lonelamp'); Core.startDay(r2); r2.d.streak = 0; r2.d.floor.rule = 'lonely';
+      digT(r2); check(r2.d.streak === 2, 'lone lamp: +1 step on lonely floors');
+      const r3 = Core.newRun(6112); r3.owned.push('dripdish'); Core.startDay(r3); r3.d.candle = 10; Core.returnUp(r3);
+      check(r3.settle.lines.drip === 10 * CONFIG.dripPer, 'drip dish: 4 per candle left');
+      const r4 = Core.newRun(6113); r4.owned.push('dripdish'); Core.startDay(r4); r4.d.candle = 70; Core.returnUp(r4);
+      check(r4.settle.lines.drip === CONFIG.dripMax, 'drip dish: capped'); }
     // 완벽한 층
     { const r = Core.newRun(6110); Core.startDay(r); const f = r.d.floor;
       const T = f.cells.filter(c => c.haz === 'treasure'); T.slice(1).forEach(c => { c.cover = 'open'; c.removed = true; });

@@ -73,13 +73,14 @@ var CONFIG = {
   fadedChalk: { o: [0, 0, 1], x: [0, 1, 2] },
   keepsake: { share: 0.25 },
   endless: { every: 3, mul: 1.5, round: 100, minesPerStamp: 1, minesMax: 8 },   // 끝없는 갱: 마지막 도장 뒤 3일마다, 직전 도장의 1.5배. 끝없는 도장마다 층 지뢰 +1(최대 8)
-  genVersion: '2.2',                           // 시드 판본: 같은 시드라도 판본이 다르면 광산이 다를 수 있어요                  // 옛 연장함 가운데 이만큼은 도구 둘 대신 유물 하나   // 바랜 분필 자국: 층마다 제비에서 하나씩 뽑아요(O는 0·0·1, X는 0·1·2). 늘 맞아요
+  genVersion: '2.2.1',                           // 시드 판본: 같은 시드라도 판본이 다르면 광산이 다를 수 있어요                  // 옛 연장함 가운데 이만큼은 도구 둘 대신 유물 하나   // 바랜 분필 자국: 층마다 제비에서 하나씩 뽑아요(O는 0·0·1, X는 0·1·2). 늘 맞아요
   ruleTune: {},
   firstRunDiscount: 1,                       // 첫 판(안내 판) 납부액 배수. 1이면 할인 없음. 의뢰인 결정 대기(처음 하는 사람 보정)                              // 광맥별 보물·지뢰 수 더하기 { pair: { t: -2, m: 0 } }. 광맥끼리 수입을 맞추는 손잡이(v22)           // gravel 'chain': 층 도착 때가 아닌 와르르로 min칸 이상 열리면 칸마다 per(시세 붙음)
   stampReward: { n: 3, cash: [60, 150, 300, 500], rarity: [[60, 35, 5], [45, 40, 15], [30, 45, 25], [20, 45, 35]] },   // 도장 선물: 도장 k개째 [일반, 고급, 희귀] 가중치, 대신 받는 금고 돈
   toolSet: '21',                             // 상점·선물에 나오는 도구 묶음('21' 12종 / '22' 12종)
   gradeRules: { 2: ['tally'], 3: ['tally', 'minepair'] },   // 등급별로 더 나오는 광맥(v22)
   gradeNames: ['달못 1호 갱', '달못 4호 갱', '달못 9호 갱'],
+  nuggetBag: 3, dripPer: 4, dripMax: 120,     // 금 알갱이 주머니, 촛농 받이(reviews/23)
   lensMinMult: 1.5,                          // 감정 렌즈가 켜지는 콤보 배율                           // 성냥 묶음: 불씨일 때 켜면 촛불 +10
   fx: { breakStop: 60, treasureStop: 110, boxStop: 120, mineStop: 140, ringMs: 35, ringMinMs: 12, chainMaxMs: 600, openAnimMs: 120, startChainMs: 600 }
 };
@@ -231,6 +232,28 @@ var TOOLS = [
     desc: '도구 칸이 두 칸 늘어납니다' },
   { id: 'regular', axis: '', rarity: '일반', name: '심 씨 단골 장부', short: '단골 장부', price: 110, kind: 'passive', icon: 'regular', sets: ['22'],
     desc: '도구를 팔 때 값의 25%를 더 받습니다' },
+  // 도구 80종의 처음 풀에서 새로 넣은 넷(reviews/23, R121)
+  { id: 'firstdig', axis: '콤보', rarity: '고급', name: '첫 삽', short: '첫 삽', price: 180, kind: 'passive', icon: 'firstdig', sets: ['22'],
+    desc: '층마다 처음 캔 보물은 콤보가 두 단계 오릅니다',
+    hooks: {
+      on_floor_enter: function (ctx) { ctx.state.ready = true; },
+      on_treasure: function (ctx, ev) { if (ev.chunk || ev.tool || ev.scorch || ctx.state.ready === false) return; ctx.state.ready = false; ev.streakStep += 1; ctx.proc('첫 보물 콤보 +2'); }
+    } },
+  { id: 'lonelamp', axis: '보물', rarity: '일반', name: '외톨이 등', short: '외톨이 등', price: 120, kind: 'passive', icon: 'lonelamp', sets: ['22'],
+    desc: '외톨이 광맥 층에서 보물을 캐면 콤보가 한 단계 더 오릅니다',
+    hooks: {
+      on_treasure: function (ctx, ev) { var f = ctx.floor(); if (ev.chunk || ev.tool || ev.scorch || !f || f.rule !== 'lonely') return; ev.streakStep += 1; ctx.proc('외톨이 콤보 +1'); }
+    } },
+  { id: 'nuggetbag', axis: '보물', rarity: '일반', name: '금 알갱이 주머니', short: '알갱이 주머니', price: 110, kind: 'passive', icon: 'nuggetbag', sets: ['22'],
+    desc: '금 알갱이 값이 3 오릅니다',
+    hooks: {
+      on_treasure: function (ctx, ev) { if (ev.chunk || ev.tier !== 1) return; ev.base += CONFIG.nuggetBag; }
+    } },
+  { id: 'dripdish', axis: '', rarity: '일반', name: '촛농 받이', short: '촛농 받이', price: 110, kind: 'passive', icon: 'dripdish', sets: ['22'],
+    desc: '올라가기로 하루를 끝내면 남은 촛불 1마다 금고에 4가 들어옵니다(최대 120). 쓰러진 날은 없습니다',
+    hooks: {
+      on_day_end: function (ctx, ev) { var d = ctx.run.d; if (ev.reason !== 'return' || !d || d.candle <= 0) return; var n = Math.min(CONFIG.dripMax, d.candle * CONFIG.dripPer); d.pocket += n; d.pocketLines.drip = (d.pocketLines.drip || 0) + n; }
+    } },
   // 합친 도구: 재료 둘을 가진 밤에 곽 씨가 합쳐 줘요. 상점·선물·연장함에는 나오지 않아요. 재료의 효과를 다 가지고 하나가 더 세져요
   { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['fuse', 'refiner'],
     desc: 'X 칸에 불을 붙이면 두 걸음 안의 X 칸이 모두 함께 터지고, 터진 지뢰 자리마다 금 알갱이가 남습니다. 이 금 알갱이는 콤보도 올립니다' },
@@ -426,7 +449,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
     { cap: '마법 광산을 판답니다. 값은 헐값이고, 보름달에만 열린답니다.' },
     { who: '구 실장', cap: '15일 안에 세 번 나눠 내십시오. 낼 때마다 도장을 찍어 드립니다. 도장 세 개면 광산은 손님 것입니다.' },
     { cap: '가진 건 촛불 하나와 곡괭이 한 자루입니다.' }],
-  axisName: { '콤보': '콤보 도구', '발파': '발파 도구', '와르르': '와르르 도구', '분필': '분필 도구', '': '두루 쓰는 도구' }
+  axisName: { '콤보': '콤보 도구', '발파': '발파 도구', '와르르': '와르르 도구', '분필': '분필 도구', '보물': '보물 도구', '': '두루 쓰는 도구' }
 };
 
 
@@ -1232,7 +1255,7 @@ var Core = (function () {
       candle: cm, candleMax: cm, hp: hm, hpMax: hm,
       probes: gang(run, 'thin') ? 4 : CONFIG.probesPerDay, probesMax: 0,
       floor: null, floorIdx: 0, px: CONFIG.START.x, py: CONFIG.START.y, face: { dx: 0, dy: 1 },
-      pocket: 0, pocketLines: { treasure: 0, treasureN: 0, gravel: 0, chunk: 0, order: 0, refine: 0, sold: 0 },
+      pocket: 0, pocketLines: { treasure: 0, treasureN: 0, gravel: 0, chunk: 0, order: 0, refine: 0, sold: 0, drip: 0 },
       streak: (gang(run, 'moon') ? 1 : 0) + keepSum(run, 'streakStart'), embersOn: false, embers: 0, endReason: null, lowWarned: false,
       forkCount: 0, roomForks: {}, mutations: (run.mutationPlan[run.day] || []).slice(),
       chunkSpec: chunkSpec, chunkDone: false, chunkSeen: false,
@@ -1533,7 +1556,7 @@ var Core = (function () {
   function gainTreasure(run, x, y, base, o) {
     o = o || {};
     var d = run.d;
-    var ev = emit(run, 'on_treasure', { x: x, y: y, base: base, bonus: (gang(run, 'rough') && !o.chunk ? 0.2 : 0) + (!o.chunk && !o.tool ? keepSum(run, 'treasureBonus') : 0), scorch: !!o.scorch, tier: o.tier || 1 });   // 숨이 거침: 큰 덩이는 빼고
+    var ev = emit(run, 'on_treasure', { x: x, y: y, chunk: !!o.chunk, tool: !!o.tool, streakStep: 0, base: base, bonus: (gang(run, 'rough') && !o.chunk ? 0.2 : 0) + (!o.chunk && !o.tool ? keepSum(run, 'treasureBonus') : 0), scorch: !!o.scorch, tier: o.tier || 1 });   // 숨이 거침: 큰 덩이는 빼고
     var mult = streakMult(run);
     var fv = (!o.chunk && run.d.floor && run.d.floor.valueMul) || 1;   // 갈림길 덤 '이 층 보물 값 ×1.3'(큰 덩이는 빼고)
     var full = ev.base * stage(run).valueMul * fv * (o.chunk ? 1 : (charOf(run).valueMul || 1));   // 측량사는 보물 값 ×0.9(큰 덩이는 빼고)                       // 시세(도장 수)는 주머니에 들어가는 값 전부에 붙는다
@@ -1545,7 +1568,7 @@ var Core = (function () {
     fx(run, { t: 'gain', x: x, y: y, base: Math.round(b), full: Math.round(full), mult: mult, bonus: ev.bonus, total: total, tier: o.tier || 1, scorch: !!o.scorch, chunk: !!o.chunk, w: o.w, h: o.h, label: o.label || '' });
     d.stats.treasures++; run.stats.treasures++;
     if (!d.stats.firstTreasureHit) d.stats.firstTreasureHit = d.stats.hits || 1;
-    if (!o.scorch && !o.noStreak) streakUp(run, 1 + (o.extraStep || 0));   // 그을린 보물은 콤보를 올리지 않는다(01 6장)
+    if (!o.scorch && !o.noStreak) streakUp(run, 1 + (o.extraStep || 0) + ev.streakStep);   // 그을린 보물은 콤보를 올리지 않는다(01 6장)
     return total;
   }
   function curFloorRec(run) { return run.d.floorsVisited[run.d.floorsVisited.length - 1]; }

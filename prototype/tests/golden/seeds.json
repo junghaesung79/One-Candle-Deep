@@ -1,5 +1,5 @@
 {
- "version": "2.2",
+ "version": "2.2.1",
  "seeds": {
   "1": [
    {
@@ -11,7 +11,7 @@
      "f4b70b01",
      "adfd823d"
     ],
-    "shop": "fuse,crown,sieve"
+    "shop": "wedge,betchalk,belt"
    },
    {
     "day": 2,
@@ -22,7 +22,7 @@
      "f0dc38bf",
      "3ef1ecf9"
     ],
-    "shop": "regular,lens,betchalk"
+    "shop": "dripdish,crown,sieve"
    },
    {
     "day": 3,
@@ -33,7 +33,7 @@
      "56ae4f4d",
      "954688b0"
     ],
-    "shop": "sieve,belt,regular"
+    "shop": "tapper,nuggetbag,dripdish"
    },
    {
     "day": 4,
@@ -44,7 +44,7 @@
      "1dba8e63",
      "9601b366"
     ],
-    "shop": "crown,lastcard,fuse"
+    "shop": "betchalk,amulet,wedge"
    },
    {
     "day": 5,
@@ -55,7 +55,7 @@
      "96b736c7",
      "c76b07e4"
     ],
-    "shop": "sieve,gloves,crown"
+    "shop": "tapper,gloves,amulet"
    },
    {
     "day": 6,
@@ -66,7 +66,7 @@
      "93aec9b9",
      "4aeeba2e"
     ],
-    "shop": "refiner,amulet,regular"
+    "shop": "tapper,refiner,nuggetbag"
    },
    {
     "day": 7,
@@ -77,7 +77,7 @@
      "d5aaaa75",
      "acbf579e"
     ],
-    "shop": "gloves,amulet,lens"
+    "shop": "gloves,betchalk,crown"
    },
    {
     "day": 8,
@@ -88,7 +88,7 @@
      "7902971f",
      "2b3d1aa4"
     ],
-    "shop": "tongs,gloves,sieve"
+    "shop": "regular,gloves,tapper"
    },
    {
     "day": 9,
@@ -99,7 +99,7 @@
      "974c7945",
      "c8b37d1b"
     ],
-    "shop": "lens,crown,sieve"
+    "shop": "lastcard,crown,belt"
    },
    {
     "day": 10,
@@ -110,7 +110,7 @@
      "d8ef9c7f",
      "9eeb13c9"
     ],
-    "shop": "gloves,amulet,lastcard"
+    "shop": "lens,refiner,crown"
    },
    {
     "day": 11,
@@ -121,7 +121,7 @@
      "cfbac6a8",
      "260c4952"
     ],
-    "shop": "lastcard,wedge,lens"
+    "shop": "amulet,firstdig,crown"
    },
    {
     "day": 12,
@@ -132,7 +132,7 @@
      "0dccc4c9",
      "ca584509"
     ],
-    "shop": "gloves,regular,amulet"
+    "shop": "gloves,dripdish,sieve"
    },
    {
     "day": 13,
@@ -143,7 +143,7 @@
      "d7cf7ad6",
      "985f8063"
     ],
-    "shop": "amulet,gloves,lens"
+    "shop": "betchalk,gloves,lens"
    },
    {
     "day": 14,
@@ -154,7 +154,7 @@
      "98df574d",
      "fc022aa6"
     ],
-    "shop": "regular,fuse,lastcard"
+    "shop": "nuggetbag,wedge,amulet"
    },
    {
     "day": 15,
@@ -178,7 +178,7 @@
      "957caa39",
      "00b93d6e"
     ],
-    "shop": "crown,tapper,regular"
+    "shop": "betchalk,lonelamp,dripdish"
    },
    {
     "day": 2,
@@ -189,7 +189,7 @@
      "87c45b95",
      "d3e7010d"
     ],
-    "shop": "sieve,betchalk,regular"
+    "shop": "tapper,fuse,dripdish"
    },
    {
     "day": 3,
@@ -200,7 +200,7 @@
      "f90a45ac",
      "67ee9f4c"
     ],
-    "shop": "betchalk,wedge,lastcard"
+    "shop": "fuse,firstdig,amulet"
    },
    {
     "day": 4,
@@ -211,7 +211,7 @@
      "88690ac6",
      "fe90739a"
     ],
-    "shop": "gloves,fuse,amulet"
+    "shop": "gloves,sieve,betchalk"
    },
    {
     "day": 5,
@@ -222,7 +222,7 @@
      "4d37749d",
      "5ef7a16d"
     ],
-    "shop": "wedge,sieve,amulet"
+    "shop": "firstdig,belt,fuse"
    },
    {
     "day": 6,
@@ -233,7 +233,7 @@
      "4b979995",
      "1129668f"
     ],
-    "shop": "fuse,belt,crown"
+    "shop": "wedge,nuggetbag,amulet"
    },
    {
     "day": 7,
@@ -244,7 +244,7 @@
      "30743fa5",
      "32621229"
     ],
-    "shop": "gloves,fuse,sieve"
+    "shop": "gloves,wedge,belt"
    },
    {
     "day": 8,
@@ -255,7 +255,7 @@
      "5c705f25",
      "c937c229"
     ],
-    "shop": "sieve,betchalk,amulet"
+    "shop": "belt,sieve,fuse"
    },
    {
     "day": 9,
@@ -266,7 +266,7 @@
      "8fb30062",
      "21149da9"
     ],
-    "shop": "fuse,gloves,lens"
+    "shop": "wedge,lens,gloves"
    },
    {
     "day": 10,
@@ -277,7 +277,7 @@
      "ec5b7aa8",
      "f21749f6"
     ],
-    "shop": "betchalk,tapper,lens"
+    "shop": "refiner,lonelamp,lens"
    },
    {
     "day": 11,
@@ -288,7 +288,7 @@
      "303388a2",
      "62c3572a"
     ],
-    "shop": "lastcard,tapper,fuse"
+    "shop": "crown,lonelamp,sieve"
    },
    {
     "day": 12,
@@ -299,7 +299,7 @@
      "e54d604f",
      "f69f38a0"
     ],
-    "shop": "fuse,crown,tongs"
+    "shop": "sieve,amulet,belt"
    },
    {
     "day": 13,
@@ -310,7 +310,7 @@
      "8ff853f3",
      "b0d968cd"
     ],
-    "shop": "fuse,amulet,sieve"
+    "shop": "tongs,betchalk,tapper"
    },
    {
     "day": 14,
@@ -321,7 +321,7 @@
      "2a36e914",
      "78e31a76"
     ],
-    "shop": "crown,fuse,betchalk"
+    "shop": "amulet,sieve,tongs"
    },
    {
     "day": 15,
@@ -345,7 +345,7 @@
      "592ee4f9",
      "7e614aef"
     ],
-    "shop": "crown,betchalk,fuse"
+    "shop": "betchalk,sieve,refiner"
    },
    {
     "day": 2,
@@ -356,7 +356,7 @@
      "982cf372",
      "d3e88eb6"
     ],
-    "shop": "crown,tapper,wedge"
+    "shop": "amulet,lonelamp,firstdig"
    },
    {
     "day": 3,
@@ -367,7 +367,7 @@
      "0843ceed",
      "be3154c2"
     ],
-    "shop": "amulet,crown,gloves"
+    "shop": "betchalk,amulet,gloves"
    },
    {
     "day": 4,
@@ -378,7 +378,7 @@
      "6fa1f3b6",
      "977071e3"
     ],
-    "shop": "tongs,betchalk,lastcard"
+    "shop": "regular,refiner,amulet"
    },
    {
     "day": 5,
@@ -389,7 +389,7 @@
      "259974e2",
      "587df4a2"
     ],
-    "shop": "belt,wedge,sieve"
+    "shop": "nuggetbag,regular,wedge"
    },
    {
     "day": 6,
@@ -400,7 +400,7 @@
      "d6f55b53",
      "3f5fcfe5"
     ],
-    "shop": "amulet,crown,tapper"
+    "shop": "fuse,amulet,lonelamp"
    },
    {
     "day": 7,
@@ -411,7 +411,7 @@
      "471cbcef",
      "39a42bad"
     ],
-    "shop": "lens,sieve,amulet"
+    "shop": "crown,wedge,betchalk"
    },
    {
     "day": 8,
@@ -422,7 +422,7 @@
      "b563e2e7",
      "65b3983d"
     ],
-    "shop": "tapper,tongs,amulet"
+    "shop": "lonelamp,regular,betchalk"
    },
    {
     "day": 9,
@@ -433,7 +433,7 @@
      "bb5dbbf6",
      "c675f092"
     ],
-    "shop": "sieve,tapper,amulet"
+    "shop": "wedge,lonelamp,betchalk"
    },
    {
     "day": 10,
@@ -444,7 +444,7 @@
      "ffed750c",
      "a29aff7e"
     ],
-    "shop": "refiner,amulet,betchalk"
+    "shop": "sieve,betchalk,fuse"
    },
    {
     "day": 11,
@@ -455,7 +455,7 @@
      "099a811c",
      "f0deb637"
     ],
-    "shop": "gloves,amulet,tapper"
+    "shop": "gloves,betchalk,lonelamp"
    },
    {
     "day": 12,
@@ -466,7 +466,7 @@
      "aa261b74",
      "7dd63027"
     ],
-    "shop": "crown,gloves,refiner"
+    "shop": "betchalk,gloves,wedge"
    },
    {
     "day": 13,
@@ -477,7 +477,7 @@
      "5dcb682a",
      "9e18a19c"
     ],
-    "shop": "sieve,crown,belt"
+    "shop": "regular,betchalk,lonelamp"
    },
    {
     "day": 14,
@@ -488,7 +488,7 @@
      "f3e97488",
      "0d62b9be"
     ],
-    "shop": "belt,amulet,refiner"
+    "shop": "nuggetbag,betchalk,wedge"
    },
    {
     "day": 15,
@@ -512,7 +512,7 @@
      "0268713f",
      "8322238e"
     ],
-    "shop": "tapper,gloves,sieve"
+    "shop": "lonelamp,lens,tapper"
    },
    {
     "day": 2,
@@ -523,7 +523,7 @@
      "32cc409a",
      "cae81c38"
     ],
-    "shop": "fuse,regular,wedge"
+    "shop": "sieve,dripdish,firstdig"
    },
    {
     "day": 3,
@@ -534,7 +534,7 @@
      "541d8d5b",
      "76805f6d"
     ],
-    "shop": "regular,crown,lastcard"
+    "shop": "dripdish,betchalk,amulet"
    },
    {
     "day": 4,
@@ -545,7 +545,7 @@
      "e2994b17",
      "433660f5"
     ],
-    "shop": "betchalk,regular,fuse"
+    "shop": "fuse,dripdish,tapper"
    },
    {
     "day": 5,
@@ -556,7 +556,7 @@
      "81832cf9",
      "aa35c942"
     ],
-    "shop": "amulet,tapper,betchalk"
+    "shop": "fuse,lonelamp,betchalk"
    },
    {
     "day": 6,
@@ -567,7 +567,7 @@
      "8d2e0750",
      "94144b05"
     ],
-    "shop": "lens,wedge,gloves"
+    "shop": "lastcard,regular,gloves"
    },
    {
     "day": 7,
@@ -578,7 +578,7 @@
      "b9c87ff8",
      "c6e136b8"
     ],
-    "shop": "belt,gloves,tongs"
+    "shop": "nuggetbag,gloves,tapper"
    },
    {
     "day": 8,
@@ -589,7 +589,7 @@
      "972843ff",
      "2b32f9e0"
     ],
-    "shop": "tapper,wedge,gloves"
+    "shop": "lonelamp,firstdig,gloves"
    },
    {
     "day": 9,
@@ -600,7 +600,7 @@
      "2163e645",
      "89bac259"
     ],
-    "shop": "regular,tongs,gloves"
+    "shop": "dripdish,regular,gloves"
    },
    {
     "day": 10,
@@ -611,7 +611,7 @@
      "3deb7a57",
      "14078ed9"
     ],
-    "shop": "crown,gloves,regular"
+    "shop": "amulet,gloves,dripdish"
    },
    {
     "day": 11,
@@ -622,7 +622,7 @@
      "baa51b94",
      "46d0fdd6"
     ],
-    "shop": "gloves,crown,fuse"
+    "shop": "lens,amulet,sieve"
    },
    {
     "day": 12,
@@ -633,7 +633,7 @@
      "5d05978f",
      "8e35517d"
     ],
-    "shop": "wedge,crown,fuse"
+    "shop": "regular,amulet,wedge"
    },
    {
     "day": 13,
@@ -644,7 +644,7 @@
      "17ea587d",
      "0cc2669c"
     ],
-    "shop": "fuse,wedge,regular"
+    "shop": "tapper,regular,dripdish"
    },
    {
     "day": 14,
@@ -655,7 +655,7 @@
      "d4865b2f",
      "b783449e"
     ],
-    "shop": "tapper,lens,fuse"
+    "shop": "lonelamp,lastcard,wedge"
    },
    {
     "day": 15,
@@ -679,7 +679,7 @@
      "53e4164d",
      "df17b9cc"
     ],
-    "shop": "wedge,amulet,fuse"
+    "shop": "regular,betchalk,wedge"
    },
    {
     "day": 2,
@@ -690,7 +690,7 @@
      "cd761bc7",
      "d1771fdf"
     ],
-    "shop": "wedge,lens,fuse"
+    "shop": "regular,crown,wedge"
    },
    {
     "day": 3,
@@ -701,7 +701,7 @@
      "c0c5e412",
      "0de4aa24"
     ],
-    "shop": "fuse,gloves,sieve"
+    "shop": "tapper,gloves,belt"
    },
    {
     "day": 4,
@@ -712,7 +712,7 @@
      "1fe41aaf",
      "8c3d734b"
     ],
-    "shop": "lens,fuse,gloves"
+    "shop": "lens,tapper,gloves"
    },
    {
     "day": 5,
@@ -723,7 +723,7 @@
      "38f8496e",
      "3ddb1b93"
     ],
-    "shop": "sieve,fuse,betchalk"
+    "shop": "regular,tapper,sieve"
    },
    {
     "day": 6,
@@ -734,7 +734,7 @@
      "e63b07d0",
      "384a3d75"
     ],
-    "shop": "amulet,gloves,wedge"
+    "shop": "fuse,gloves,firstdig"
    },
    {
     "day": 7,
@@ -745,7 +745,7 @@
      "5b1b7eb7",
      "c8978d7b"
     ],
-    "shop": "crown,sieve,gloves"
+    "shop": "amulet,tapper,gloves"
    },
    {
     "day": 8,
@@ -756,7 +756,7 @@
      "52f7c7f6",
      "194ffdb2"
     ],
-    "shop": "belt,gloves,amulet"
+    "shop": "nuggetbag,gloves,betchalk"
    },
    {
     "day": 9,
@@ -767,7 +767,7 @@
      "d26db4fd",
      "85e92db4"
     ],
-    "shop": "crown,sieve,wedge"
+    "shop": "amulet,tapper,regular"
    },
    {
     "day": 10,
@@ -778,7 +778,7 @@
      "bffa227f",
      "86ab08af"
     ],
-    "shop": "amulet,wedge,fuse"
+    "shop": "fuse,firstdig,wedge"
    },
    {
     "day": 11,
@@ -789,7 +789,7 @@
      "47747863",
      "22cf179b"
     ],
-    "shop": "regular,amulet,fuse"
+    "shop": "nuggetbag,betchalk,fuse"
    },
    {
     "day": 12,
@@ -800,7 +800,7 @@
      "6b7b02db",
      "c768812e"
     ],
-    "shop": "sieve,wedge,amulet"
+    "shop": "tapper,regular,betchalk"
    },
    {
     "day": 13,
@@ -811,7 +811,7 @@
      "c2286fb2",
      "00e25f56"
     ],
-    "shop": "wedge,gloves,crown"
+    "shop": "regular,crown,gloves"
    },
    {
     "day": 14,
@@ -822,7 +822,7 @@
      "3efabe7e",
      "bb430b3b"
     ],
-    "shop": "regular,fuse,refiner"
+    "shop": "nuggetbag,sieve,wedge"
    },
    {
     "day": 15,

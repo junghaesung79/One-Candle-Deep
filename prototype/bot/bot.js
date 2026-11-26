@@ -29,7 +29,7 @@ const POLICY = {
 
 const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, plain: 1 };
 // 구매 선호(보통·욕심). 측정으로 정한 순서(05 문서 8.3)
-const TOOL_PREF = ['bigblast', 'moontongs', 'deadcrown', 'refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'belt', 'gloves', 'tapper', 'lastcard', 'betchalk', 'regular'];   // 합친 도구는 내려놓지 않아요
+const TOOL_PREF = ['bigblast', 'moontongs', 'deadcrown', 'refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'firstdig', 'belt', 'gloves', 'lonelamp', 'tapper', 'nuggetbag', 'lastcard', 'betchalk', 'dripdish', 'regular'];   // 합친 도구는 내려놓지 않아요
 const ORDER_PREF = ['reach5', 'deepStreak', 'gems2', 'bigNum', 'chain20', 'streak3', 'floor5', 'noProbe', 'blast4', 'chalkO', 'chain3', 'clean3', 'emberT', 'keep20', 'noMine', 'xRight'];
 
 class Bot {
