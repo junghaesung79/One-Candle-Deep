@@ -974,7 +974,7 @@ function renderLog() {
 }
 
 // ---------- 오버레이 화면 ----------
-var OV = $('ov');
+var OV = $('ov'), LOOK = $('look');   // LOOK: 장면 위에 얹는 보기 창(달력·일시 정지·설정·도감) 층(reviews/21)
 function stampIdx(day) { var P = Core.payments(run); for (var i = 0; i < P.length; i++) if (P[i].day === day) return i; return -1; }
 function stampNm(day) { var i = stampIdx(day); return i >= 0 ? Core.stampNames(run)[i] : ''; }
 var NUM_KO = ['', '한', '두', '세', '네', '다섯', '여섯'];
@@ -1074,21 +1074,34 @@ function playlogDownload() {
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   } catch (e) {}
 }
-// 달력·일시 정지(설정·도감)를 열 수 있는 화면: 판, 상점, 도장 선물. 정산·도장 찍는 날은 연출이 다시 돌아서 아직 빼요(reviews/21)
+// 달력·일시 정지(설정·도감)를 열 수 있는 화면: 판과, 판 안의 장면(정산, 도장 찍는 날, 도장 선물, 상점)(reviews/21)
 function lookable() {
   if (!run || ui.title || ui.opening != null || run.boxOffer) return false;
   var p = run.phase;
-  return p === 'mine' ? (!ui.sub || ui.sub === 'cal' || ui.sub === 'pause') : p === 'shop' || p === 'gift' || (p === 'room' && run.room && run.room.kind === 'merchant');
+  return p === 'mine' ? (!ui.sub || ui.sub === 'cal' || ui.sub === 'pause') : p === 'shop' || p === 'gift' || p === 'settle' || p === 'payment' || (p === 'room' && run.room && run.room.kind === 'merchant');
 }
+function lookHtml() { return ui.sub === 'cal' ? calHtml() : ui.sub === 'pause' ? pauseHtml() : ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ''; }
+function pageHtml(p) { return p === 'gift' ? giftHtml() : p === 'room' ? shopHtml(true) : p === 'settle' ? settleHtml() : p === 'payment' ? paymentHtml() : run.deedLater && !run.deedHanded ? deedLateHtml() : shopHtml(false); }
 function renderOverlay() {
-  $('stage').classList.remove('barUp');
+  var wasLook = LOOK.className === 'show';
+  LOOK.innerHTML = ''; LOOK.className = '';
+  $('stage').classList.remove('barUp', 'page');
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
   if (ui.title) { OV.innerHTML = titleHtml() + (ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ''); OV.className = 'show'; bindOverlay(); return; }
   if (run.phase === 'settle') recordDay();
-  var p = run.phase, h = '', onPage = p !== 'mine' && lookable();   // 상점·선물 위에 창을 얹을 때는 아래 화면을 그대로 그려요
+  var p = run.phase, h = '';
+  if (p !== 'mine' && lookable()) {   // 판 안의 장면: 날짜 줄은 같은 자리, 보기 창은 따로 얹어요
+    var lk = lookHtml(), key = p + ':' + run.day + ':' + run.stamps;
+    // 창만 열고 닫을 때는 아래 장면을 다시 그리지 않아요(정산 숫자 세기, 도장 연출이 처음부터 다시 돌지 않게)
+    if (!((lk || wasLook) && OV._key === key && OV.className === 'show')) { OV.innerHTML = pageHtml(p); OV.className = 'show'; OV._key = key; clearBubbles(); }
+    $('stage').classList.add('page');
+    if (lk) { LOOK.innerHTML = lk; LOOK.className = 'show'; } else $('stage').classList.add('barUp');
+    bindOverlay(); saveRun(); return;
+  }
+  OV._key = '';
   if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
-  else if (ui.sub === 'codex' && !onPage) h = codexHtml();
-  else if (ui.sub === 'settings' && !onPage) h = settingsHtml();
+  else if (ui.sub === 'codex') h = codexHtml();
+  else if (ui.sub === 'settings') h = settingsHtml();
   else if (p === 'deed') h = setupHtml();
   else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
@@ -1101,8 +1114,6 @@ function renderOverlay() {
   else if (ui.sub === 'pause') h = pauseHtml();
   else if (ui.sub === 'bag') h = bagHtml();
   else if (ui.sub === 'cal') h = calHtml();
-  if (onPage) h += ui.sub === 'cal' ? calHtml() : ui.sub === 'pause' ? pauseHtml() : ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : '';   // 상점·선물 위에도 달력·일시 정지·설정·도감(닫으면 그 화면 그대로)
-  if (onPage && !ui.sub) $('stage').classList.add('barUp');   // 판이 아닌 화면에서도 날짜·달력·톱니 줄은 같은 자리에
   OV.innerHTML = h;
   OV.className = h ? 'show' : '';
   if (h && p !== 'mine') clearBubbles();
@@ -1324,7 +1335,7 @@ function finalHtml() {
 function shopHtml(merchant) {
   var S = merchant ? run.room : run.shop, np = Core.nextPayment(run), G = Core.goalInfo(run);
   var eve = !merchant && np && np.day === run.day + 1;
-  var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:636px;top:72px;transform:translate(-50%,0);display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
+  var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:636px;display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
   h += '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin-bottom:4px">' + (merchant ? '상인 방 · 광산 안 (산 도구는 바로 효과)' : '지상 · ' + run.day + '일째 밤 · 상인 심 씨') + (eve ? ' <span class="badge">내일 도장 찍는 날</span>' : '') + '</h2><div style="font-size:16px">' + iconHtml('coins', 20) + ' 금고 <b class="px acc">' + fmt(run.cash) + '</b></div></div>';
   h += '<div style="font-size:15px;margin-bottom:4px">' + goalLine(run) + '</div>';
   h += '<div class="sub" style="font-size:14px;margin-bottom:8px">상인 심 씨: "' + esc(merchant ? '금고 돈으로만 받아. 산 도구는 지금부터 효과가 나.' : TEXT.shopTalk[run.day % TEXT.shopTalk.length]) + '"</div>';
@@ -1580,6 +1591,7 @@ function bagHtml() {
   h += '<h3>가진 도구</h3>' + (run.owned.length ? run.owned.map(function (id) { var t = Core.TOOL_BY_ID[id]; return '<div style="font-size:14px;margin:3px 0"><b>' + t.name + '</b> <span class="note">' + esc(t.desc) + '</span></div>'; }).join('') : '<div class="note">없음</div>');
   return h + '<div style="text-align:right;margin-top:12px"><button class="primary" id="oClose">닫기</button></div></div>';
 }
+function ovAll(sel) { return document.querySelectorAll('#ov ' + sel + ', #look ' + sel); }   // 장면 층과 보기 창 층을 함께
 function bindOverlay() {
   function on(id, fn) { var e = document.getElementById(id); if (e) e.onclick = function (ev) { ev.stopPropagation(); fn(); }; }
   on('oGoDeed', function () { if (setupCan()) deedGo(); }); on('oSkipTut', function () { settings.tutorialDone = true; saveSettings(); startNewRun(false); });
@@ -1595,7 +1607,7 @@ function bindOverlay() {
   on('oSeedCopy', function () { copySeed(this); });
   on('oSeed', function () { var sv = Core.parseSeed(($('seedIn') || {}).value); startNewRun(false, { seed: sv, grade: run.grade }); });
   on('oGiftCash', function () { giftGo(-1); });
-  OV.querySelectorAll('[data-char]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (!run || run.phase !== 'deed' || run.d) return; var id = b.getAttribute('data-char');
+  ovAll('[data-char]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); if (!run || run.phase !== 'deed' || run.d) return; var id = b.getAttribute('data-char');
     if (!charOpen(id)) { ui.peekChar = id; renderOverlay(); return; }   // 잠긴 사람은 여는 조건만 보여 줘요
     ui.peekChar = null; run.char = id; settings.char = id; saveSettings(); renderOverlay(); ui.hudDirty = true; }; });
   on('suPrev', function () { setupGrade(-1); }); on('suNext', function () { setupGrade(1); });
@@ -1623,39 +1635,39 @@ function bindOverlay() {
   on('oSetClose', closeSettings);
   on('oFull', function () { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (e) {} setTimeout(renderOverlay, 200); });
   on('oBgMute', function () { settings.bgMute = settings.bgMute === false; saveSettings(); renderOverlay(); });
-  OV.querySelectorAll('[data-settab]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); ui.setTab = b.getAttribute('data-settab'); renderOverlay(); }; });
-  OV.querySelectorAll('[data-vol]').forEach(function (r) {
+  ovAll('[data-settab]').forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); ui.setTab = b.getAttribute('data-settab'); renderOverlay(); }; });
+  ovAll('[data-vol]').forEach(function (r) {
     r.oninput = function () { var k = r.getAttribute('data-vol'); settings.vol = settings.vol || {}; settings.vol[k] = +r.value; r.nextSibling.textContent = r.value; };
     r.onchange = function () { saveSettings(); blip(r.getAttribute('data-vol')); };
   });
   on('oCalDim', function () { ui.sub = null; renderOverlay(); });
-  var q = OV.querySelectorAll('[data-order]');
+  var q = ovAll('[data-order]');
   for (var i = 0; i < q.length; i++) q[i].onclick = function () { ui.sel = +this.dataset.order; renderOverlay(); };
   on('oGift', function () { giftGo(); });
-  q = OV.querySelectorAll('[data-gift]');
+  q = ovAll('[data-gift]');
   for (i = 0; i < q.length; i++) q[i].onclick = function () { ui.sel = +this.dataset.gift; renderOverlay(); };
-  q = OV.querySelectorAll('[data-fork]');
+  q = ovAll('[data-fork]');
   for (i = 0; i < q.length; i++) q[i].onclick = function () { ui.sel = +this.dataset.fork; renderOverlay(); };   // 카드는 고르기만, 내려가기 단추로 정해요(선물·연장함과 같게)
-  q = OV.querySelectorAll('[data-buyb]');
+  q = ovAll('[data-buyb]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); buyTool(+this.dataset.buyb); };
-  q = OV.querySelectorAll('[data-buy]');
+  q = ovAll('[data-buy]');
   for (i = 0; i < q.length; i++) q[i].onclick = function () { buyTool(+this.dataset.buy); };
-  q = OV.querySelectorAll('[data-sell]');
+  q = ovAll('[data-sell]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.sell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 파시겠습니까? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
-  q = OV.querySelectorAll('[data-fuse]');
+  q = ovAll('[data-fuse]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var fid = this.dataset.fuse; if (Core.fuse(run, fid).ok) { reveal([fid]); ui.slotPop[fid] = performance.now(); } ui.hudDirty = true; renderOverlay(); };
-  q = OV.querySelectorAll('[data-boxpick]');
+  q = ovAll('[data-boxpick]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxSel = +this.dataset.boxpick; renderOverlay(); };
-  q = OV.querySelectorAll('[data-boxdrop]');
+  q = ovAll('[data-boxdrop]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxDrop = this.dataset.boxdrop; renderOverlay(); };
   on('oBoxTake', function () { boxGo(ui.boxSel || 0); }); on('oBoxPass', function () { boxGo(-1); });
   on('oCodex', function () { ui.sub = 'codex'; renderOverlay(); }); on('oCodexClose', function () { ui.sub = null; renderOverlay(); });
-  q = OV.querySelectorAll('[data-psell]');   // 도장 날 모자랄 때 도구를 팔아 채우기
+  q = ovAll('[data-psell]');   // 도장 날 모자랄 때 도구를 팔아 채우기
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.psell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 파시겠습니까? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
   on('oLoan', function () { if (Core.takeLoan(run).ok) { ui.payT0 = performance.now(); renderOverlay(); ui.hudDirty = true; } });
   on('oPayNow', function () { if (Core.payNow(run).ok) { renderOverlay(); ui.hudDirty = true; } });
-  q = OV.querySelectorAll('[data-tool]');
-  var kq = OV.querySelectorAll('[data-keep]');
+  q = ovAll('[data-tool]');
+  var kq = ovAll('[data-keep]');
   for (i = 0; i < kq.length; i++) if (kq[i].dataset.keep) kq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var k = Core.KEEP_BY_ID[this.dataset.keep]; sd.innerHTML = '<b class="acc">' + esc(k.name) + '</b> <span class="muted">' + esc(TEXT.keep.row) + '</span><br>' + esc(k.desc); };
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }

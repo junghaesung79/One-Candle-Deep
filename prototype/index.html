@@ -44,7 +44,10 @@
   .lbl { font-size: 12.5px; font-weight: 700; color: #a59fb3; }
   .lbl.big { font-size: 14px; color: #f1ece2; }
   #runBar { height: 48px; padding: 0 6px 0 12px; display: flex; align-items: center; gap: 8px; }
-  #stage.barUp #runBar { position: relative; z-index: 9; }   /* 상점·선물에서도 날짜·달력·톱니 줄이 같은 자리에 떠 있어요 */
+  #stage.barUp #runBar { position: relative; z-index: 9; }   /* 판 안의 장면에서도 날짜·달력·톱니 줄이 같은 자리에 떠 있어요 */
+  #stage.page #ov > .dlg { top: 390px; max-height: 636px; overflow-y: auto; }   /* 장면은 위 72 px를 날짜 줄에 비워요(보기 창을 열어도 자리가 그대로) */
+  #look { position: absolute; inset: 0; display: none; z-index: 10; }
+  #look.show { display: block; }
   #runDay { font-size: 15px; font-weight: 700; white-space: nowrap; }
   #runDay .px { font-size: 15px; color: #ffd25a; }
   #runLeft { font-size: 13px; color: #a59fb3; white-space: nowrap; }
@@ -334,6 +337,7 @@
   <div id="fxLayer"></div>
   <div id="termTip"></div>
   <div id="ov"></div>
+  <div id="look"></div>
   <div id="cmodal" role="dialog" aria-modal="true"><div class="box"><div id="cmodalMsg" style="margin-bottom:16px"></div><div style="display:flex;gap:10px;justify-content:flex-end"><button id="cmodalNo">아니요</button><button id="cmodalOk" class="primary">네</button></div></div></div>
 </div>
 <script type="module" src="/src/main.js"></script>
