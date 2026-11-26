@@ -28,7 +28,7 @@ function kName(id) { return codex.seen[id] ? Core.KEEP_BY_ID[id].name : TEXT.unk
 
 var T = 48, BW = CONFIG.W, BH = CONFIG.H, BOX = 44, BOY = 64;   // 판 왼쪽 위(무대 좌표)
 var ui = { sub: null, sel: 0, debugReveal: false, hover: null, shownAt: 0, rHold: null, hudDirty: true, desc: null,
-           bubbleQ: [], bubble: null, bubblesSeen: {}, pairHints: 0, flys: [], pocketPending: 0, logFrom: 0, seenMine: false,
+           bubbleQ: [], bubble: null, bubblesSeen: {}, tipAt: {}, pairHints: 0, flys: [], pocketPending: 0, logFrom: 0, seenMine: false,
            rulesSeen: {}, settleT0: 0, payT0: 0, lastCandle: null, shopSel: -1, slotPop: {}, keepPop: {}, revealAt: {}, streakFx: null, pendingBreak: null };
 var anim = { pend: {}, shake: [], flashUntil: 0, pops: [], stopUntil: 0, numBlink: {}, blame: null, pairHint: null, emberT: 0, floorT: 0 };
 var sched = [];
@@ -327,7 +327,7 @@ function drainFx() {
         break;
       case 'proc': procs.push(e); break;
       case 'order': blinkEl('orderLine', 'acc', 1200); break;
-      case 'perfect': addFly({ x: 380, y: 250, showAt: 500, flyAt: null, fadeAt: 2200, size: 26, rise: 16, color: '#ffd25a', steps: [{ t: 500, h: '완벽한 층' }] }); break;
+      case 'perfect': after(2400, function () { bubble('perfect', TEXT.guide.meet.perfect[1], { el: 'hdr', below: true }); }); addFly({ x: 380, y: 250, showAt: 500, flyAt: null, fadeAt: 2200, size: 26, rise: 16, color: '#ffd25a', steps: [{ t: 500, h: '완벽한 층' }] }); break;
     }
   });
   // 계산 연출: 도구 아이콘이 순서대로 튄다(6.7). 원인 연출 포함 1.2초 안
@@ -358,9 +358,22 @@ function candleFloat(delta) {
 }
 
 // ---------- 강조 말풍선(6개, 첫 판) ----------
+// 처음 만남 풀이(R124): 한 번 만난 것은 안내서에 남고 다시 띄우지 않아요(19 기준 3)
+var TIP_OF_BUBBLE = { gold: 'chunk', faded: 'faded', boxHere: 'box', perfect: 'perfect', probe: 'probe' };
+function tipSeen(k) { return !!((settings.tips || {})[k] || (settings.bubblesOnce || {})[k] || (k === 'chunk' && (settings.bubblesOnce || {}).gold) || (k === 'box' && (settings.bubblesOnce || {}).boxHere)); }
+function markTip(k) { if (!settings.tips) settings.tips = {}; if (settings.tips[k]) return; settings.tips[k] = true; saveSettings(); }
+// 장면 안 '처음' 한 줄: 처음 만난 장면에서만 보이고, 그 장면에 머무는 동안은 그대로 남아요
+function tipNote(k) {
+  var at = run.phase + ':' + run.day + ':' + run.stamps;
+  if (tipSeen(k) && ui.tipAt[k] !== at) return '';
+  markTip(k); ui.tipAt[k] = at;
+  var M = TEXT.guide.meet[k];
+  return '<div class="tipNote"><b>' + esc(TEXT.guide.note) + ' · ' + esc(M[0]) + '</b>' + esc(M[1]) + '</div>';
+}
 function bubble(key, text, anchor) {
   if (ui.bubblesSeen[key]) return;
-  var anyRun = ['ember', 'gold', 'faded', 'boxHere'].indexOf(key) >= 0;   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
+  var anyRun = ['ember', 'gold', 'faded', 'boxHere', 'perfect', 'probe'].indexOf(key) >= 0;
+  if (TIP_OF_BUBBLE[key]) markTip(TIP_OF_BUBBLE[key]);   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
   if (!anyRun && !(run && run.tutorial)) return;
   if (anyRun && !run.tutorial) { if (!settings.bubblesOnce) settings.bubblesOnce = {}; if (settings.bubblesOnce[key]) return; settings.bubblesOnce[key] = true; saveSettings(); }
   ui.bubblesSeen[key] = true;
@@ -897,6 +910,7 @@ function updateHUD() {
   }
   if ($('useSlots')._h !== us) { $('useSlots').innerHTML = us; $('useSlots')._h = us; bindSlotEvents(); }
   // 버튼으로 쓸 것이 하나도 없으면 줄째 숨겨요(빈 칸만 늘어놓지 않아요)
+  if (d && d.probesMax && !CONFIG.features.probeBase && run.phase === 'mine' && !ui.sub) bubble('probe', TEXT.guide.meet.probe[1], { el: 'useWrap', below: true });   // 청진 망치를 처음 가진 날
   var anyUse = (d && (d.probesMax || CONFIG.features.probeBase)) || run.cons.some(function (a) { return a; });
   $('useWrap').style.visibility = anyUse ? 'visible' : 'hidden';   // 줄 자리는 늘 남겨 둬서 아래 칸이 움직이지 않아요
 
@@ -1080,14 +1094,14 @@ function lookable() {
   var p = run.phase;
   return p === 'mine' ? (!ui.sub || ui.sub === 'cal' || ui.sub === 'pause') : p === 'shop' || p === 'gift' || p === 'settle' || p === 'payment' || (p === 'room' && run.room && run.room.kind === 'merchant');
 }
-function lookHtml() { return ui.sub === 'cal' ? calHtml() : ui.sub === 'pause' ? pauseHtml() : ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ''; }
+function lookHtml() { return ui.sub === 'cal' ? calHtml() : ui.sub === 'pause' ? pauseHtml() : ui.sub === 'codex' ? codexHtml() : ui.sub === 'guide' ? guideHtml() : ui.sub === 'settings' ? settingsHtml() : ''; }
 function pageHtml(p) { return p === 'gift' ? giftHtml() : p === 'room' ? shopHtml(true) : p === 'settle' ? settleHtml() : p === 'payment' ? paymentHtml() : run.deedLater && !run.deedHanded ? deedLateHtml() : shopHtml(false); }
 function renderOverlay() {
   var wasLook = LOOK.className === 'show';
   LOOK.innerHTML = ''; LOOK.className = '';
   $('stage').classList.remove('barUp', 'page');
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
-  if (ui.title) { OV.innerHTML = titleHtml() + (ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ''); OV.className = 'show'; bindOverlay(); return; }
+  if (ui.title) { OV.innerHTML = titleHtml() + (ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ui.sub === 'guide' ? guideHtml() : ''); OV.className = 'show'; bindOverlay(); return; }
   if (run.phase === 'settle') recordDay();
   var p = run.phase, h = '';
   if (p !== 'mine' && lookable()) {   // 판 안의 장면: 날짜 줄은 같은 자리, 보기 창은 따로 얹어요
@@ -1101,6 +1115,7 @@ function renderOverlay() {
   OV._key = '';
   if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
   else if (ui.sub === 'codex') h = codexHtml();
+  else if (ui.sub === 'guide') h = guideHtml();
   else if (ui.sub === 'settings') h = settingsHtml();
   else if (p === 'deed') h = setupHtml();
   else if (p === 'gift') h = giftHtml();
@@ -1274,6 +1289,7 @@ function paymentHtml() {
       run.owned.forEach(function (id) { var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false); h += '<button data-psell="' + id + '"' + (rm ? '' : ' disabled') + ' style="display:flex;align-items:center;gap:4px;padding:4px 8px">' + iconHtml('icons.' + t.icon, 18) + esc(t.short) + ' <span class="note">+' + fmt(Core.sellPrice(run, id)) + '</span></button>'; });
       h += '</div>';
     }
+    if (L && L.ok) h += tipNote('loan');
     if (L && (L.ok || L.last || L.used)) h += '<div class="panel" style="padding:8px 12px;margin-top:12px">' + (L.ok ? '<div class="sub">상인 심 씨: "' + esc(TEXT.short.loanAsk.replace('{short}', fmt(L.short)).replace('{repay}', fmt(L.repay))) + '"</div><div style="text-align:right;margin-top:6px"><button id="oLoan">' + esc(TEXT.short.loan.replace('{short}', fmt(L.short)).replace('{repay}', fmt(L.repay))) + '</button></div>' : '<span class="note">' + esc(L.last ? TEXT.short.lastNo : L.used ? TEXT.short.loanUsed : '') + '</span>') + '</div>';
     h += '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px"><button id="oPay">' + TEXT.short.giveUp + '</button><button class="primary" id="oPayNow"' + (shortNow > 0 ? ' disabled' : '') + '>' + TEXT.short.payNow + '</button></div></div>';
     return h;
@@ -1320,7 +1336,7 @@ function finalHtml() {
       (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸습니다. 새 광맥 하나가 더 나오고 값이 오릅니다. 판 준비에서 고릅니다</div>' : '') +
       unlockBlock() + recordFold(chart, st, '<div class="note" style="margin-top:8px">권리증 뒷면, 작은 글씨</div><div>' + esc(TEXT.deedBack) + '</div><div class="sub" style="margin-top:4px">중개인 구 실장: "' + esc(TEXT.deedNext) + '"</div>') +
       (!EN && !run.tutorial ? '<div class="quote" style="margin-top:10px">중개인 구 실장: "' + esc(TEXT.endless.ask) + '"</div>' : '') +
-      '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">' + (!EN && !run.tutorial ? '<button id="oEndless">' + esc(TEXT.endless.button) + '</button>' : '') + '<button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
+      (!EN && !run.tutorial ? tipNote('endless') : '') + '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">' + (!EN && !run.tutorial ? '<button id="oEndless">' + esc(TEXT.endless.button) + '</button>' : '') + '<button class="primary" id="oAgain">같은 광산 다시</button></div></div>';
   } else {
     var paid = Core.payments(run).slice(0, run.stamps).map(function (p, i) { return Core.stampNames(run)[i] + ' ' + fmt(p.amount); }).join(', ') || '없습니다';
     h = '<div class="dim" style="background:#0b0a10"></div><div class="dlg" style="width:720px"><h2 style="color:#e5484d">계약 해지</h2>' +
@@ -1339,6 +1355,7 @@ function shopHtml(merchant) {
   var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:636px;display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
   h += '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin-bottom:4px">' + (merchant ? '상인 방 · 광산 안 (산 도구는 바로 효과)' : '지상 · ' + run.day + '일째 밤 · 상인 심 씨') + (eve ? ' <span class="badge">내일 도장 찍는 날</span>' : '') + '</h2><div style="font-size:16px">' + iconHtml('coins', 20) + ' 금고 <b class="px acc">' + fmt(run.cash) + '</b></div></div>';
   h += '<div style="font-size:15px;margin-bottom:4px">' + goalLine(run) + '</div>';
+  if (!merchant) h += tipNote('flow') || (S.fuse && S.fuse.length ? tipNote('fuse') : '') || (S.rerolls ? tipNote('reroll') : '');
   h += '<div class="sub" style="font-size:14px;margin-bottom:8px">상인 심 씨: "' + esc(merchant ? '금고 돈으로만 받아. 산 도구는 지금부터 효과가 나.' : TEXT.shopTalk[run.day % TEXT.shopTalk.length]) + '"</div>';
   h += '<div style="display:flex;gap:16px;flex:1;min-height:0"><div style="flex:1.6;display:flex;flex-direction:column;gap:6px">';
   S.stock.forEach(function (id, i) {
@@ -1380,9 +1397,22 @@ function shopHtml(merchant) {
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
   return h;
 }
+// 안내서(R124): 목적과 흐름, 기본, 만난 것. 만나지 않은 것은 ???로
+function guideHtml() {
+  var G = TEXT.guide, seen = 0, keys = Object.keys(G.meet);
+  var row = function (a, b) { return '<div class="gRow"><b>' + esc(a) + '</b><span>' + esc(b) + '</span></div>'; };
+  var h = '<div class="dim" style="background:rgba(11,10,16,0.85)"></div><div class="dlg" style="width:820px;height:620px;display:flex;flex-direction:column"><h2>' + esc(G.title) + '</h2><div style="flex:1;overflow:auto;padding-right:6px">';
+  h += '<h3>' + esc(G.goalH) + '</h3><div style="font-size:15px;line-height:22px;margin-bottom:10px">' + esc(G.goal) + '</div>';
+  h += '<h3>' + esc(G.flowH) + '</h3>' + G.flow.map(function (f) { return row(f[0], f[1]); }).join('');
+  h += '<h3 style="margin-top:12px">' + esc(G.basicH) + '</h3>' + G.basic.map(function (f) { return row(f[0], f[1]); }).join('');
+  var meet = keys.map(function (k) { var M = G.meet[k], ok = tipSeen(k); if (ok) seen++; return ok ? row(M[0], M[1]) : '<div class="gRow unseen"><b>???</b><span>' + esc(G.unmet) + '</span></div>'; }).join('');
+  h += '<h3 style="margin-top:12px">' + esc(G.meetH) + ' <span class="muted">' + seen + ' / ' + keys.length + '</span></h3>' + meet;
+  h += '</div><div style="text-align:right;margin-top:12px"><button class="primary" id="oGuideClose">닫기</button></div></div>';
+  return h;
+}
 function pauseHtml() {   // 일시 정지: 할 일만. 고르는 값은 모두 설정 창에
   return '<div class="dim"></div><div class="dlg pauseDlg"><h2>일시 정지</h2><div class="pauseBtns">' +
-    '<button class="primary" id="oClose">계속하기</button><button id="oSettings">설정</button><button id="oCodex">도감</button><button id="oGiveUp">판 포기</button><button id="oTitle">타이틀로</button></div></div>';
+    '<button class="primary" id="oClose">계속하기</button><button id="oSettings">설정</button><button id="oGuide">안내서</button><button id="oCodex">도감</button><button id="oGiveUp">판 포기</button><button id="oTitle">타이틀로</button></div></div>';
 }
 // ---------- 설정 창: 탭 다섯 개, 창 높이는 늘 같아요 ----------
 var SET_TABS = [['game', '게임'], ['view', '화면'], ['sound', '소리'], ['ctrl', '조작'], ['rec', '기록']];
@@ -1448,7 +1478,7 @@ function titleHtml() {
   if (sv) h += '<button class="primary tBig" id="tCont">이어하기<span class="tSub">' + esc(saveLine(sv)) + '</span></button>';
   h += '<button id="tNew"' + (sv ? '' : ' class="primary tBig"') + '>' + (fresh ? '시작하기' : '새로 하기') + '</button>';
   if (st.plays || Object.keys(codex.seen).length) h += '<button id="tCodex">도감</button>';
-  h += '<button id="tSettings">설정</button>';
+  h += '<button id="tGuide">안내서</button><button id="tSettings">설정</button>';
   h += '</div></div></div>';
   return h;
 }
@@ -1662,6 +1692,7 @@ function bindOverlay() {
   q = ovAll('[data-boxdrop]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); ui.boxDrop = this.dataset.boxdrop; renderOverlay(); };
   on('oBoxTake', function () { boxGo(ui.boxSel || 0); }); on('oBoxPass', function () { boxGo(-1); });
+  on('oGuide', function () { ui.sub = 'guide'; renderOverlay(); }); on('tGuide', function () { ui.sub = 'guide'; renderOverlay(); }); on('oGuideClose', function () { ui.sub = null; renderOverlay(); });
   on('oCodex', function () { ui.sub = 'codex'; renderOverlay(); }); on('oCodexClose', function () { ui.sub = null; renderOverlay(); });
   q = ovAll('[data-psell]');   // 도장 날 모자랄 때 도구를 팔아 채우기
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.psell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 파시겠습니까? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
@@ -1691,7 +1722,7 @@ function boxHtml() {
   if (ui.boxSel == null || ui.boxSel >= B.opts.length) ui.boxSel = 0;
   if (ui.boxDrop && run.owned.indexOf(ui.boxDrop) < 0) ui.boxDrop = null;
   var h = '<div class="dim" style="background:rgba(11,10,16,0.78)"></div><div class="dlg" style="width:860px"><h2 style="display:flex;align-items:center;gap:8px">' + iconHtml('icons.box', 30) + esc(TEXT.box.title) + (B.scorch ? ' <span class="badge">그을림</span>' : '') + '</h2>';
-  h += '<div class="quote">구조꾼 곽 씨: "' + esc(B.quote) + '"</div>';
+  h += tipNote('box') + '<div class="quote">구조꾼 곽 씨: "' + esc(B.quote) + '"</div>';
   if (B.opts.length) {
     h += '<div style="display:flex;gap:14px;margin-top:10px">';
     B.opts.forEach(function (id, i) {
@@ -1718,6 +1749,7 @@ function isPart(id) { return TOOLS.some(function (q) { return q.fusion && q.fusi
 // 유물: 하나뿐이라 챙기거나 두고 가요
 function keepHtml() {
   var B = run.boxOffer, k = Core.KEEP_BY_ID[B.keep];
+  markTip('relic');   // 풀이는 아래 줄(유물 설명)이 늘 하고 있어서 안내서에만 남겨요
   var h = '<div class="dim" style="background:rgba(11,10,16,0.78)"></div><div class="dlg" style="width:560px"><h2 style="display:flex;align-items:center;gap:8px">' + iconHtml('icons.box', 30) + esc(TEXT.keep.title) + '</h2>';
   h += '<div class="quote">구조꾼 곽 씨: "' + esc(B.quote) + '"</div>';
   h += '<div class="fork panel sel" style="min-height:150px;margin-top:10px;cursor:default">' + iconHtml('icons.' + k.icon, 44) + '<div class="nm' + (codex.seen[k.id] ? '' : ' unknown') + '">' + esc(kName(k.id)) + '</div><div class="tx">' + esc(k.desc) + '</div></div>';
@@ -1756,6 +1788,7 @@ function giftHtml() {
   var stampR = run.giftKind === 'stamp', full = run.owned.length >= Core.slotsOf(run);
   var h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:900px"><h2>' + (stampR ? TEXT.reward.title + ' (' + run.stamps + '개째)' : TEXT.gift.title) + '</h2>';
   var q = stampR ? TEXT.reward.enter + ' ' + TEXT.reward.cashEnter.replace('{cash}', fmt(run.giftCash)) : run.tutorial ? TEXT.gift.enter : TEXT.gift.enter + ' ' + TEXT.gift.enter2;
+  if (stampR) h += tipNote('gift');
   h += '<div class="quote">중개인 구 실장: "' + esc(q) + '"</div>' + (stampR && full ? '<div class="note" style="margin-top:6px">' + esc(TEXT.reward.full) + '</div>' : '') + '<div style="display:flex;gap:14px;margin-top:10px;' + (stampR && full ? 'opacity:0.45' : '') + '">';
   run.giftOpts.forEach(function (id, i) {
     var t = Core.TOOL_BY_ID[id];
@@ -1950,7 +1983,7 @@ document.addEventListener('keydown', function (e) {
   if (['F2', 'F3', 'F4', 'F8', 'F9', 'Tab', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter'].indexOf(code) >= 0) e.preventDefault();
   if (ui.title && !run) {   // 타이틀: Enter·Space는 맨 위 단추, Esc는 도감·만화를 닫아요
     if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); else if (code === 'Escape') openingEnd(); return; }
-    if (ui.sub === 'codex' || ui.sub === 'settings') { if (code === 'Escape') { ui.sub = null; renderOverlay(); } return; }
+    if (ui.sub === 'codex' || ui.sub === 'settings' || ui.sub === 'guide') { if (code === 'Escape') { ui.sub = null; renderOverlay(); } return; }
     if ((code === 'Enter' || code === 'Space') && !e.repeat) { var tb = $(ui.save ? 'tCont' : 'tNew'); if (tb) tb.click(); }
     return;
   }
@@ -1966,14 +1999,14 @@ document.addEventListener('keydown', function (e) {
   if (code === 'Escape') {   // 설정은 Esc로 연다
     if (ui.mode) { ui.mode = null; ui.hudDirty = true; return; }
     if (ui.sub === 'settings') { closeSettings(); return; }
-    if (ui.sub === 'codex') { ui.sub = null; renderOverlay(); return; }
+    if (ui.sub === 'codex' || ui.sub === 'guide') { ui.sub = null; renderOverlay(); return; }
     if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag' || ui.sub === 'cal') { ui.sub = null; renderOverlay(); return; }
     if (p === 'mine' || lookable()) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); }
     else if (p === 'deed' && !run.d) showTitle();   // 판 준비에서 Esc는 타이틀로
     return;
   }
   if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); return; }
-  if (p !== 'mine' && (ui.sub === 'cal' || ui.sub === 'pause' || ui.sub === 'codex' || ui.sub === 'settings')) return;   // 상점 위에 창이 열려 있으면 아래 화면의 키는 듣지 않아요
+  if (p !== 'mine' && (ui.sub === 'cal' || ui.sub === 'pause' || ui.sub === 'codex' || ui.sub === 'settings' || ui.sub === 'guide')) return;   // 상점 위에 창이 열려 있으면 아래 화면의 키는 듣지 않아요
   if (p === 'deed') { if ((code === 'Enter' || code === 'Space') && setupCan()) deedGo(); return; }
   if (p === 'gift') {
     var gm = /^Digit([1-3])$/.exec(code);
