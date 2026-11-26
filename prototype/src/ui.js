@@ -748,8 +748,8 @@ function drawCandle(now) {
   $('coinsIc').innerHTML = iconHtml('coins', 18);
   $('bCal').innerHTML = iconHtml('ui.cal', 24); $('bCal').title = '달력';
   $('bGear').innerHTML = iconHtml('ui.gear', 24); $('bGear').title = '설정';
-  $('bCal').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'cal'; renderOverlay(); } };
-  $('bGear').onclick = function () { if (run && run.phase === 'mine' && !ui.sub) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); } };
+  $('bCal').onclick = function () { if (lookable() && !ui.sub) { ui.mode = null; ui.sub = 'cal'; renderOverlay(); } };
+  $('bGear').onclick = function () { if (lookable() && !ui.sub) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); } };
   $('bReturn').onclick = function () { askReturn(); };   // R53: 버튼 → 확인 창
   $('sign').addEventListener('click', function () { var f = run && run.d && run.d.floor; if (f) setDesc('<b>' + RULES[f.rule].name + '</b><br>' + esc(RULES[f.rule].sign) + '<br><span class="muted">' + esc(RULES[f.rule].help) + '</span><br>' + veinDiagram(f.rule)); });
 })();
@@ -1074,14 +1074,21 @@ function playlogDownload() {
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   } catch (e) {}
 }
+// 달력·일시 정지(설정·도감)를 열 수 있는 화면: 판, 상점, 도장 선물. 정산·도장 찍는 날은 연출이 다시 돌아서 아직 빼요(reviews/21)
+function lookable() {
+  if (!run || ui.title || ui.opening != null || run.boxOffer) return false;
+  var p = run.phase;
+  return p === 'mine' ? (!ui.sub || ui.sub === 'cal' || ui.sub === 'pause') : p === 'shop' || p === 'gift' || (p === 'room' && run.room && run.room.kind === 'merchant');
+}
 function renderOverlay() {
+  $('stage').classList.remove('barUp');
   if (ui.opening != null) { OV.innerHTML = openingHtml(); OV.className = 'show'; clearBubbles(); bindOverlay(); drawOpening(); return; }
   if (ui.title) { OV.innerHTML = titleHtml() + (ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : ''); OV.className = 'show'; bindOverlay(); return; }
   if (run.phase === 'settle') recordDay();
-  var p = run.phase, h = '';
+  var p = run.phase, h = '', onPage = p !== 'mine' && lookable();   // 상점·선물 위에 창을 얹을 때는 아래 화면을 그대로 그려요
   if (run.boxOffer) h = boxHtml();   // 옛 연장함 고르기가 먼저예요(하루가 같은 순간에 끝나도)
-  else if (ui.sub === 'codex') h = codexHtml();
-  else if (ui.sub === 'settings') h = settingsHtml();
+  else if (ui.sub === 'codex' && !onPage) h = codexHtml();
+  else if (ui.sub === 'settings' && !onPage) h = settingsHtml();
   else if (p === 'deed') h = setupHtml();
   else if (p === 'gift') h = giftHtml();
   else if (p === 'board') h = boardHtml();
@@ -1094,6 +1101,8 @@ function renderOverlay() {
   else if (ui.sub === 'pause') h = pauseHtml();
   else if (ui.sub === 'bag') h = bagHtml();
   else if (ui.sub === 'cal') h = calHtml();
+  if (onPage) h += ui.sub === 'cal' ? calHtml() : ui.sub === 'pause' ? pauseHtml() : ui.sub === 'codex' ? codexHtml() : ui.sub === 'settings' ? settingsHtml() : '';   // 상점·선물 위에도 달력·일시 정지·설정·도감(닫으면 그 화면 그대로)
+  if (onPage && !ui.sub) $('stage').classList.add('barUp');   // 판이 아닌 화면에서도 날짜·달력·톱니 줄은 같은 자리에
   OV.innerHTML = h;
   OV.className = h ? 'show' : '';
   if (h && p !== 'mine') clearBubbles();
@@ -1315,7 +1324,7 @@ function finalHtml() {
 function shopHtml(merchant) {
   var S = merchant ? run.room : run.shop, np = Core.nextPayment(run), G = Core.goalInfo(run);
   var eve = !merchant && np && np.day === run.day + 1;
-  var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:660px;display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
+  var h = '<div class="dim" style="' + (merchant ? '' : 'background:#14121a') + '"></div><div class="dlg" style="width:1080px;height:636px;top:72px;transform:translate(-50%,0);display:flex;flex-direction:column;padding:14px 22px;' + (eve ? 'border-color:#c4432b' : '') + '">';
   h += '<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin-bottom:4px">' + (merchant ? '상인 방 · 광산 안 (산 도구는 바로 효과)' : '지상 · ' + run.day + '일째 밤 · 상인 심 씨') + (eve ? ' <span class="badge">내일 도장 찍는 날</span>' : '') + '</h2><div style="font-size:16px">' + iconHtml('coins', 20) + ' 금고 <b class="px acc">' + fmt(run.cash) + '</b></div></div>';
   h += '<div style="font-size:15px;margin-bottom:4px">' + goalLine(run) + '</div>';
   h += '<div class="sub" style="font-size:14px;margin-bottom:8px">상인 심 씨: "' + esc(merchant ? '금고 돈으로만 받아. 산 도구는 지금부터 효과가 나.' : TEXT.shopTalk[run.day % TEXT.shopTalk.length]) + '"</div>';
@@ -1347,7 +1356,13 @@ function shopHtml(merchant) {
       (!canSell ? '' : '<button data-sell="' + id + '"' + (rm ? '' : ' disabled title="이걸 빼면 칸이 모자랍니다"') + '>' + (CONFIG.features.toolSell ? '팔기' : '되팔기') + ' +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   if (!run.owned.length) h += '<div class="note">아직 없습니다</div>';
-  h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + [(CONFIG.features.probeBase || Core.owns(run, 'tapper') ? '두드려 보기' : '')].concat(run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; })).filter(Boolean).join(' · ') + (run.cons.length ? '' : (CONFIG.features.probeBase || Core.owns(run, 'tapper') ? ' · ' : '') + '한 번 쓰는 물건은 없습니다') + '</div>';
+  if ((run.keeps || []).length) {   // 유물: 판 위 오른쪽 칸에만 있던 것을 상점에서도(도구를 고를 때 엮이는 것이 있어요)
+    h += '<div class="lbl" style="margin-top:6px">' + esc(TEXT.keep.row) + '</div><div style="display:flex;flex-wrap:wrap;gap:4px 12px">';
+    run.keeps.forEach(function (id) { var k = Core.KEEP_BY_ID[id]; h += '<span data-keep="' + id + '" style="display:inline-flex;align-items:center;gap:4px;font-size:13px">' + iconHtml('icons.' + k.icon, 20) + esc(k.name) + '</span>'; });
+    h += '</div>';
+  }
+  var probe = CONFIG.features.probeBase || Core.owns(run, 'tapper');
+  if (CONFIG.shop.cons) h += '<div class="lbl" style="margin-top:6px" data-term="버튼으로 쓰는 것">버튼으로 쓰는 것</div><div class="note">' + [(probe ? '두드려 보기' : '')].concat(run.cons.map(function (a) { return Core.TOOL_BY_ID[a.id].name + ' ×' + a.n; })).filter(Boolean).join(' · ') + (run.cons.length ? '' : (probe ? ' · ' : '') + '한 번 쓰는 물건은 없습니다') + '</div>';   // v2.2에는 한 번 쓰는 물건이 없어서 이 줄을 빼요(두드려 보기는 청진 망치가 도구 줄에 있어요)
   h += '<div class="panel" id="shopDesc" style="padding:8px 10px;margin-top:auto;min-height:80px;font-size:13px;line-height:18px"><span class="muted">물건에 마우스를 올리면 설명과 엮이는 도구가 보입니다.</span></div></div></div>';
   h += '<div style="display:flex;justify-content:flex-end;gap:10px;align-items:center;margin-top:8px">' +
     (merchant ? '<button class="primary" id="oLeave">나가기: 지하 ' + run.room.next + '층(' + RULES[run.room.rule || 'plain'].name + ')</button>' : '<button class="primary" id="oDay">다음 날로</button>') + '</div></div>';
@@ -1401,7 +1416,7 @@ function settingsHtml() {
     SET_TABS.map(function (t) { return '<button data-settab="' + t[0] + '"' + (t[0] === tab ? ' class="on"' : '') + '>' + t[1] + '</button>'; }).join('') +
     '</div><div class="setBody">' + b + '</div><div style="text-align:right;margin-top:14px"><button class="primary" id="oSetClose">닫기</button></div></div>';
 }
-function closeSettings() { ui.sub = run && !ui.title && run.phase === 'mine' ? 'pause' : null; renderOverlay(); }
+function closeSettings() { ui.sub = run && !ui.title && (run.phase === 'mine' || lookable()) ? 'pause' : null; renderOverlay(); }
 // ---------- 타이틀(reviews/17): 켤 때 한 번 지나가요. 메뉴는 쓸 일이 생기면 하나씩 늘어요 ----------
 function showTitle() {
   if (run) saveRun();
@@ -1640,6 +1655,8 @@ function bindOverlay() {
   on('oLoan', function () { if (Core.takeLoan(run).ok) { ui.payT0 = performance.now(); renderOverlay(); ui.hudDirty = true; } });
   on('oPayNow', function () { if (Core.payNow(run).ok) { renderOverlay(); ui.hudDirty = true; } });
   q = OV.querySelectorAll('[data-tool]');
+  var kq = OV.querySelectorAll('[data-keep]');
+  for (i = 0; i < kq.length; i++) if (kq[i].dataset.keep) kq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var k = Core.KEEP_BY_ID[this.dataset.keep]; sd.innerHTML = '<b class="acc">' + esc(k.name) + '</b> <span class="muted">' + esc(TEXT.keep.row) + '</span><br>' + esc(k.desc); };
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
@@ -1674,7 +1691,7 @@ function boxHtml() {
     h += '<div class="note warnTxt" style="margin-top:12px">' + esc(TEXT.box.full) + '</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">';
     run.owned.forEach(function (id) {
       var t = Core.TOOL_BY_ID[id], ok = Core.canRemove(run, id, true);
-      h += '<button data-boxdrop="' + id + '" data-tool="' + id + '"' + (ok ? '' : ' disabled title="이걸 빼면 칸이 모자라요"') + ' class="' + (ui.boxDrop === id ? 'primary' : '') + '" style="display:flex;align-items:center;gap:4px;padding:4px 8px">' + iconHtml('icons.' + t.icon, 18) + esc(t.short) + ' <span class="note">+' + fmt(Core.toolValue(run, id, 'site')) + '</span></button>';
+      h += '<button data-boxdrop="' + id + '" data-tool="' + id + '"' + (ok ? '' : ' disabled title="이걸 빼면 칸이 모자랍니다"') + ' class="' + (ui.boxDrop === id ? 'primary' : '') + '" style="display:flex;align-items:center;gap:4px;padding:4px 8px">' + iconHtml('icons.' + t.icon, 18) + esc(t.short) + ' <span class="note">+' + fmt(Core.toolValue(run, id, 'site')) + '</span></button>';
     });
     h += '</div>';
   }
@@ -1937,11 +1954,12 @@ document.addEventListener('keydown', function (e) {
     if (ui.sub === 'settings') { closeSettings(); return; }
     if (ui.sub === 'codex') { ui.sub = null; renderOverlay(); return; }
     if (ui.sub === 'fork' || ui.sub === 'pause' || ui.sub === 'bag' || ui.sub === 'cal') { ui.sub = null; renderOverlay(); return; }
-    if (p === 'mine') { ui.sub = 'pause'; renderOverlay(); }
+    if (p === 'mine' || lookable()) { ui.mode = null; ui.sub = 'pause'; renderOverlay(); }
     else if (p === 'deed' && !run.d) showTitle();   // 판 준비에서 Esc는 타이틀로
     return;
   }
   if (ui.opening != null) { if (code === 'Enter' || code === 'Space') openingNext(); return; }
+  if (p !== 'mine' && (ui.sub === 'cal' || ui.sub === 'pause' || ui.sub === 'codex' || ui.sub === 'settings')) return;   // 상점 위에 창이 열려 있으면 아래 화면의 키는 듣지 않아요
   if (p === 'deed') { if ((code === 'Enter' || code === 'Space') && setupCan()) deedGo(); return; }
   if (p === 'gift') {
     var gm = /^Digit([1-3])$/.exec(code);

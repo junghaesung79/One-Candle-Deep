@@ -16,7 +16,7 @@
 | docs/00_overview.md, 08_feedback_status.md, 09_prototype_guide.md | Word 기획서에만 있던 기획 요약, 부록 B(피드백·검수 처리), 부록 C(프로토타입 안내)를 옮긴 것 |
 | docs/history.md | 작업 기록: 대화 중 중요한 방향과 결정을 날짜별로 한 줄씩. 세세하게 쓰지 않아요 |
 | docs/decisions.md | 팀장 결정 기록(R1~R111). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
-| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md), 타이틀과 이어하기 고찰(17_title_save.md), 판 준비 화면 고찰(18_run_setup.md), 화면 전체 점검 기준(19_ui_audit.md), 처음부터 끝 너머까지의 흐름과 빈 곳(20_journey.md)(근거 자료) |
+| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md), 타이틀과 이어하기 고찰(17_title_save.md), 판 준비 화면 고찰(18_run_setup.md), 화면 전체 점검 기준(19_ui_audit.md), 처음부터 끝 너머까지의 흐름과 빈 곳(20_journey.md), 화면의 장면·띠·창 나누기(21_screen_access.md)(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
 | prototype/ | 웹 프로토타입. Vite + TypeScript 프로젝트예요(package.json) |
 | prototype/src/ | ES 모듈: core.js 규칙(DOM 없음), ui.js 화면, sprites.js 그림, main.js 진입점. core.d.ts 는 규칙 모듈의 타입 선언 |
@@ -70,7 +70,7 @@ v2.2 시험(v2.1과 다른 점):
 - 화면에서 계약금·중도금·잔금 대신 '도장'이라고 써요
 - 화면 문구와 문서에 내부 코드(R12, H01 같은 번호, 함수 이름)를 쓰지 않아요
 - 이모지를 쓰지 않아요
-- 화면을 만들거나 고칠 때 docs/reviews/19_ui_audit.md 의 점검 기준 여덟(흔들림 없음, 한 번만 말하기 등)을 따라요
+- 화면을 만들거나 고칠 때 docs/reviews/19_ui_audit.md 의 점검 기준 여덟(흔들림 없음, 한 번만 말하기 등)을 따라요. 새 화면은 장면·띠·창 가운데 무엇인지 먼저 정해요(docs/reviews/21_screen_access.md): 날짜·달력·톱니 줄은 판 안 모든 장면에서 같은 자리, 보기 창은 어느 장면 위에서도 열리고 닫으면 그 장면 그대로
 - 프로토타입은 공개 웹페이지에서도 돌아가야 해서 브라우저 기본 alert / confirm / prompt 를 쓰지 않아요. 확인 창은 화면 안에 직접 그려요. localStorage는 try/catch로 감싸요
 - 경제 수치(납부액, 보물 값, 시세, 도구 값)는 docs/05_items_economy.md 가 기준이에요. 바꾸면 봇으로 다시 재고 05를 고쳐요
 - 규칙이나 수치를 바꾸면 docs/decisions.md 에 결정 한 줄을 남기고, 관련 문서(01, 02, 03, 05, 06, 07)를 같이 맞춰요
