@@ -359,7 +359,7 @@ function candleFloat(delta) {
 
 // ---------- 강조 말풍선(6개, 첫 판) ----------
 // 처음 만남 풀이(R124): 한 번 만난 것은 안내서에 남고 다시 띄우지 않아요(19 기준 3)
-var TIP_OF_BUBBLE = { gold: 'chunk', faded: 'faded', boxHere: 'box', perfect: 'perfect', probe: 'probe' };
+var TIP_OF_BUBBLE = { gold: 'chunk', faded: 'faded', boxHere: 'box', perfect: 'perfect' };
 function tipSeen(k) { return !!((settings.tips || {})[k] || (settings.bubblesOnce || {})[k] || (k === 'chunk' && (settings.bubblesOnce || {}).gold) || (k === 'box' && (settings.bubblesOnce || {}).boxHere)); }
 function markTip(k) { if (!settings.tips) settings.tips = {}; if (settings.tips[k]) return; settings.tips[k] = true; saveSettings(); }
 // 장면 안 '처음' 한 줄: 처음 만난 장면에서만 보이고, 그 장면에 머무는 동안은 그대로 남아요
@@ -910,7 +910,6 @@ function updateHUD() {
   }
   if ($('useSlots')._h !== us) { $('useSlots').innerHTML = us; $('useSlots')._h = us; bindSlotEvents(); }
   // 버튼으로 쓸 것이 하나도 없으면 줄째 숨겨요(빈 칸만 늘어놓지 않아요)
-  if (d && d.probesMax && !CONFIG.features.probeBase && run.phase === 'mine' && !ui.sub) bubble('probe', TEXT.guide.meet.probe[1], { el: 'useWrap', below: true });   // 청진 망치를 처음 가진 날
   var anyUse = (d && (d.probesMax || CONFIG.features.probeBase)) || run.cons.some(function (a) { return a; });
   $('useWrap').style.visibility = anyUse ? 'visible' : 'hidden';   // 줄 자리는 늘 남겨 둬서 아래 칸이 움직이지 않아요
 
@@ -1370,7 +1369,7 @@ function shopHtml(merchant) {
       (can ? '<div class="note">사면 금고 ' + fmt(left) + (np ? ' · 다음 도장까지 ' + fmt(short) + (warn ? ' <span class="badge">모자랍니다</span>' : '') : '') + '</div>' : '') + '</div><div class="p"' + (can ? '' : ' style="color:#6f6880"') + '>' + fmt(pr) + '</div>' +
       '<button ' + (can ? '' : 'disabled') + ' data-buyb="' + i + '">사기</button></div>';
   });
-  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 보기 ' + Core.rerollPrice(run) + '</button>' + (CONFIG.shop.cons ? '<span class="note">도구 세 자리만 바뀝니다</span>' : '') + '</div>';
+  if (!merchant) h += '<div style="display:flex;gap:10px;align-items:center"><button id="oReroll" ' + (run.cash >= Core.rerollPrice(run) ? '' : 'disabled') + '>다른 물건 ' + Core.rerollPrice(run) + '</button>' + (CONFIG.shop.cons ? '<span class="note">도구 세 자리만 바뀝니다</span>' : '') + '</div>';
   else h += '<div style="display:flex;gap:10px;align-items:center"><button id="oService" ' + (!run.room.serviced && run.cash >= Core.servicePrice(run) ? '' : 'disabled') + '>촛불 손질 ' + Core.servicePrice(run) + ': 촛불 +' + CONFIG.shop.merchantService.candle + (run.room.serviced ? ' (했습니다)' : '') + '</button><span class="note">지금 촛불 ' + run.d.candle + '</span></div>';
   var canSell = !merchant && (CONFIG.features.sellBack || CONFIG.features.toolSell) && (!run.tutorial || run.owned.length >= Core.slotsOf(run));   // 첫 판은 칸이 찼을 때만 팔기(reviews/16)
   h += '</div><div style="flex:1;display:flex;flex-direction:column;gap:5px;min-height:0"><div class="lbl" data-term="가진 도구">가진 도구 ' + run.owned.length + '/' + Core.slotsOf(run) + (!canSell ? '' : CONFIG.features.toolSell ? ' · 심 씨는 상점 값의 ' + (Core.owns(run, 'regular') ? '75%' : '절반') + '에 삽니다' : ' · 되팔면 산 값의 절반입니다') + '</div>';

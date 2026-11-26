@@ -341,8 +341,11 @@ describe('규칙 단위 검사', () => {
       check(Core.chooseBox(rk, 0).ok && rk.keeps.includes('ironhelm') && rk.d.hpMax === hp0 + 1 && rk.owned.length === own0 && !rk.boxOffer, 'keepsake taken: hp +1 now, no tool slot used');
       rk.boxOffer = { keep: 'boots', opts: [], scorch: false, quote: '' };
       check(Core.chooseBox(rk, -1).ok && !rk.keeps.includes('boots'), 'keepsake can be left behind');
-      ['boots', 'crackedhelm', 'thickcandle', 'prayer'].forEach(id => { rk.boxOffer = { keep: id, opts: [], scorch: false, quote: '' }; Core.chooseBox(rk, 0); });
-      check(Core.travelCost(rk, 3) === tc0 - 1 && Core.streakCapIdx(rk) === cap0 + 1 && rk.d.hpMax === hp0, 'boots and cracked helm apply');
+      ['boots', 'thickcandle', 'prayer'].forEach(id => { rk.boxOffer = { keep: id, opts: [], scorch: false, quote: '' }; Core.chooseBox(rk, 0); });
+      rk.owned.push('crackedhelm');   // 맞바꿈은 도구로 옮겼어요(R129)
+      check(Core.travelCost(rk, 3) === tc0 - 1 && Core.streakCapIdx(rk) === cap0 + 1, 'boots and cracked helm apply');
+      const rk3 = Core.newRun(7403); rk3.owned = ['crackedhelm', 'shortwick']; Core.startDay(rk3);
+      check(rk3.d.hpMax === env.CONFIG.hpMax - 1 && rk3.d.candleMax === env.CONFIG.candleMax - 15, 'trade-off tools change hp and candle next day');
       const rk2 = Core.newRun(7402); rk2.keeps = ['thickcandle', 'prayer', 'ironhelm']; Core.startDay(rk2);
       check(rk2.d.candleMax === env.CONFIG.candleMax + 10 && rk2.d.streak === 1 && rk2.d.hpMax === env.CONFIG.hpMax + 1, 'next day: candle +10, combo starts at x1.5, hp +1'); }
     // 바랜 분필 자국: 층마다 O 0~1개, X 0~2개. 늘 맞고, 오른쪽 클릭으로 안 바뀌어요
@@ -392,11 +395,10 @@ describe('규칙 단위 검사', () => {
       const m = f.cells.find(c => c.haz === 'mine' && c.cover !== 'open'); const nb = Core.neighbors(f, m.x, m.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y;
       const hp0 = r.d.hp; Core.hit(r, m.x, m.y);
       check(r.d.hp === hp0 && r.d.streak === 0, 'amulet keeps hp, streak breaks'); }
-    { const r = Core.newRun(6109); r.owned.push('tapper'); Core.startDay(r); check(r.d.probes === 2, 'tapper gives two probes'); }
-    // 다시 보기 값: 밤마다 20에서 시작해 할 때마다 20씩(R123)
+    // 다른 물건(다시 보기) 값: 밤마다 40에서 시작해 할 때마다 40씩(R123, R129)
     { const r = Core.newRun(6114); r.stamps = 2; r.cash = 10000; r.phase = 'shop'; r.shop = { stock: [], sold: {}, rerolls: 0, fuse: [] };
       const p0 = Core.rerollPrice(r); Core.reroll(r); const p1 = Core.rerollPrice(r); Core.reroll(r);
-      check(p0 === 20 && p1 === 40 && Core.rerollPrice(r) === 60 && r.cash === 10000 - 20 - 40, 'reroll price 20, 40, 60 within a night'); }
+      check(p0 === 40 && p1 === 80 && Core.rerollPrice(r) === 120 && r.cash === 10000 - 40 - 80, 'reroll price 40, 80, 120 within a night'); }
     // 처음 풀 새 도구 넷(reviews/23): 첫 삽, 외톨이 등, 금 알갱이 주머니, 촛농 받이
     { const digT = (r: any) => { const f = r.d.floor, t = f.cells.find((c: any) => c.haz === 'treasure' && c.cover !== 'open' && !c.chunk); const nb = Core.neighbors(f, t.x, t.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y; const p0 = r.d.pocket; Core.hit(r, t.x, t.y); return { t, got: r.d.pocket - p0 }; };
       const r = Core.newRun(6110); r.owned.push('firstdig', 'nuggetbag'); Core.startDay(r); r.d.floor.rule = 'pair'; r.d.streak = 0;
