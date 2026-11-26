@@ -16,7 +16,7 @@
 | docs/00_overview.md, 08_feedback_status.md, 09_prototype_guide.md | Word 기획서에만 있던 기획 요약, 부록 B(피드백·검수 처리), 부록 C(프로토타입 안내)를 옮긴 것 |
 | docs/history.md | 작업 기록: 대화 중 중요한 방향과 결정을 날짜별로 한 줄씩. 세세하게 쓰지 않아요 |
 | docs/decisions.md | 팀장 결정 기록(R1~R111). 문서끼리 다르면 이 기록과 가장 최근 결정이 우선해요 |
-| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md), 타이틀과 이어하기 고찰(17_title_save.md), 판 준비 화면 고찰(18_run_setup.md), 화면 전체 점검 기준(19_ui_audit.md), 처음부터 끝 너머까지의 흐름과 빈 곳(20_journey.md), 화면의 장면·띠·창 나누기(21_screen_access.md), 도구로 곡선 따라가기: 다시 보기·칸·풀(22_tool_build.md), 도구 80종 효과 틀과 1차 목록(23_tool_80.md)(근거 자료) |
+| docs/reviews/ | 첫 플레이 혼란 감사, 재미 진단, 2차 독립 검수 보고서, 재미 증진 보고서(12_fun_report.html), 도구 아이디어 조사(13_tool_ideas.md), 도구 경험 조사(14_tool_experience.md), 시드와 끝없는 갱 설계안(15_seed_endless.md), 첫 판 경험 고찰(16_first_run.md), 타이틀과 이어하기 고찰(17_title_save.md), 판 준비 화면 고찰(18_run_setup.md), 화면 전체 점검 기준(19_ui_audit.md), 처음부터 끝 너머까지의 흐름과 빈 곳(20_journey.md), 화면의 장면·띠·창 나누기(21_screen_access.md), 도구로 곡선 따라가기: 다시 보기·칸·풀(22_tool_build.md), 도구 80종 효과 틀과 1차 목록(23_tool_80.md), 소모품 다시 넣기(24_consumables.md)(근거 자료) |
 | docs/v1/ | 1차 기획안 기록(참고용, 현재 규칙 아님) |
 | prototype/ | 웹 프로토타입. Vite + TypeScript 프로젝트예요(package.json) |
 | prototype/src/ | ES 모듈: core.js 규칙(DOM 없음), ui.js 화면, sprites.js 그림, main.js 진입점. core.d.ts 는 규칙 모듈의 타입 선언 |
