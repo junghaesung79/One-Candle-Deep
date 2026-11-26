@@ -513,8 +513,8 @@ PRESETS.v21.config.stairShown = false; PRESETS.v21.config.countsShown = false;  
 PRESETS.v22 = {
   config: {
     // 봇 측정으로 맞춘 금액. 도구 경험(칸 8, 연장함) 뒤 다시 올림: 마지막 도장 보통 76%, 신중 31%, 욕심 65%(05 8.15)
-    payments: [{ day: 3, name: '계약금', amount: 300 }, { day: 6, name: '1차 중도금', amount: 900 }, { day: 9, name: '2차 중도금', amount: 1900 },
-               { day: 12, name: '3차 중도금', amount: 3400 }, { day: 15, name: '잔금', amount: 5500 }],
+    payments: [{ day: 3, name: '계약금', amount: 300 }, { day: 6, name: '1차 중도금', amount: 1000 }, { day: 9, name: '2차 중도금', amount: 2400 },
+               { day: 12, name: '3차 중도금', amount: 4800 }, { day: 15, name: '잔금', amount: 8000 }],
     // 도장 수(0~5)에 따른 시세와 깊어짐: 값은 ×1.5에서 멈추고, 도장을 찍을수록 층 표를 한 칸씩 깊게 써요
     stages: [{ startDepth: 1, rowShift: 0, valueMul: 1 }, { startDepth: 1, rowShift: 0, valueMul: 1.5 }, { startDepth: 1, rowShift: 1, valueMul: 1.5 },
              { startDepth: 1, rowShift: 2, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }],
