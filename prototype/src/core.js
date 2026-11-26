@@ -185,7 +185,7 @@ var TOOLS = [
       on_streak_break: function (ctx, ev) { if (ctx.state.ready !== false && ev.from > 0) { ev.to = ev.from - 1; ctx.state.ready = false; ctx.proc('콤보 한 단계만'); } }
     } },
   { id: 'lens', axis: '콤보', rarity: '고급', name: '감정 렌즈', short: '렌즈', price: 180, kind: 'passive', icon: 'lens', sets: ['21', '22'],
-    desc: '콤보가 ×1.5 이상일 때 직접 깬 칸의 숫자 옆에, 주변에 보물이 섞여 있으면 보석 점이 찍힙니다',
+    desc: '콤보가 ×1.5 이상일 때 깬 칸 둘레에 보물이 있으면 숫자 옆에 보석 점이 찍힙니다',
     hooks: {
       on_break: function (ctx, ev) {
         if (!ev.direct || ctx.mult() < CONFIG.lensMinMult) return;
@@ -194,9 +194,9 @@ var TOOLS = [
       }
     } },
   { id: 'lastcard', axis: '콤보', rarity: '희귀', name: '마지막 패', short: '패', price: 250, kind: 'passive', icon: 'card', sets: ['21', '22'],
-    desc: '체력이 1이면 콤보가 ×5까지 오릅니다' },
+    desc: '체력이 1 남으면 콤보가 ×5까지 오릅니다' },
   { id: 'crown', axis: '콤보', rarity: '고급', name: '늙은 광부 모자', short: '모자', price: 240, kind: 'passive', icon: 'crown', sets: ['22'],
-    desc: '콤보 상한이 ×3에서 ×4로 오릅니다' },
+    desc: '콤보가 ×3이 아니라 ×4까지 오릅니다' },
   { id: 'amulet', axis: '콤보', rarity: '고급', name: '곽 씨 부적', short: '부적', price: 200, kind: 'passive', icon: 'amulet', sets: ['22'],
     desc: '하루 한 번, 콤보가 ×2 이상일 때 지뢰를 쳐도 체력이 줄지 않습니다. 콤보는 끊깁니다',
     hooks: {
@@ -214,24 +214,24 @@ var TOOLS = [
     } },
   // 발파 축
   { id: 'fuse', axis: '발파', rarity: '일반', name: '긴 도화선', short: '도화선', price: 130, kind: 'passive', icon: 'fuse', sets: ['21', '22'],
-    desc: 'X 칸에 불을 붙이면 두 걸음 안에 있는 다른 X 칸에도 한꺼번에 붙습니다. 촛불은 한 번만 듭니다' },
+    desc: 'X 칸을 발파하면 두 걸음 안의 다른 X 칸도 함께 터집니다. 촛불은 한 번만 듭니다' },
   { id: 'refiner', axis: '발파', rarity: '희귀', name: '설익이 정제기', short: '정제기', price: 360, kind: 'passive', icon: 'refiner', sets: ['21', '22'],
-    desc: '불 한 번에 지뢰가 3개 이상 터지면 터진 자리마다 금 알갱이가 남습니다. 콤보 배율은 받지만 콤보는 오르지 않습니다',
+    desc: '발파 한 번에 지뢰가 3개 이상 터지면 터진 자리마다 금 알갱이가 남습니다. 이 금 알갱이로는 콤보가 오르지 않습니다',
     hooks: { on_blast_mine: function (ctx, ev) { var big = ctx.owns('bigblast'); if (ev.n >= (big ? 1 : CONFIG.refinerMin)) ctx.treasure(ev.x, ev.y, CONFIG.treasureValue[1], big ? '큰 발파' : '정제기', { noStreak: !(big && CONFIG.relic.bigStreak) }); } } },   // R33. 큰 발파는 한 개부터, 콤보도 올라요
   { id: 'sieve', axis: '발파', rarity: '고급', name: '그을음 체', short: '그을음 체', price: 240, kind: 'passive', icon: 'sieve', sets: ['21', '22'],
-    desc: '불 한 번에 지뢰가 2개 이상 터지면 범위 안 보물이 그을리지 않습니다. 제값을 받고 콤보도 오릅니다',
+    desc: '발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않고 제값을 받습니다. 콤보도 오릅니다',
     hooks: { on_blast: function (ctx, ev) { if (ev.mines >= 2 && ev.scorch) { ev.scorch = false; ctx.proc('그을음 없음'); } } } },
   { id: 'tongs', axis: '발파', rarity: '희귀', name: '해체 집게', short: '집게', price: 310, kind: 'passive', icon: 'tongs', sets: ['21', '22'],
-    desc: '불을 붙인 X 칸이 지뢰가 아니면 녹이지 않고 집게로 꺼냅니다. 촛불은 1만 들고, 보물은 그을린 채(반값) 나옵니다' },
+    desc: '발파한 X 칸이 지뢰가 아니면 녹이지 않고 꺼냅니다. 촛불은 1만 들고, 보물은 그을려 반값입니다' },
   { id: 'wedge', axis: '발파', rarity: '고급', name: '울림 쐐기', short: '쐐기', price: 220, kind: 'passive', icon: 'wedge', sets: ['21', '22'],
     desc: '보물이나 지뢰를 없애 숫자가 0이 되면, 그 칸 주변 두 칸까지 안전한 칸이 열립니다' },
   { id: 'tapper', axis: '발파', rarity: '일반', name: '청진 망치', short: '망치', price: 120, kind: 'passive', icon: 'tapper', sets: ['22'],
-    desc: '하루 두 번 두드려 보기를 쓸 수 있습니다(한 번에 촛불 2). 고른 칸이 지뢰인지 아닌지 알려 줍니다' },
+    desc: '하루 두 번 칸을 두드려 지뢰인지 알아봅니다(촛불 2)' },
   // 두루 쓰는 도구(도구 경험 정리, v22)
   { id: 'belt', axis: '', rarity: '희귀', name: '넓은 연장 띠', short: '연장 띠', price: 260, kind: 'passive', icon: 'belt', sets: ['22'],
     desc: '도구 칸이 두 칸 늘어납니다' },
   { id: 'regular', axis: '', rarity: '일반', name: '심 씨 단골 장부', short: '단골 장부', price: 110, kind: 'passive', icon: 'regular', sets: ['22'],
-    desc: '도구를 팔 때 값의 25%를 더 받습니다' },
+    desc: '도구를 팔 때 25%를 더 받습니다' },
   // 도구 80종의 처음 풀에서 새로 넣은 넷(reviews/23, R121)
   { id: 'firstdig', axis: '콤보', rarity: '고급', name: '첫 삽', short: '첫 삽', price: 180, kind: 'passive', icon: 'firstdig', sets: ['22'],
     desc: '층마다 처음 캔 보물은 콤보가 두 단계 오릅니다',
@@ -245,22 +245,22 @@ var TOOLS = [
       on_treasure: function (ctx, ev) { var f = ctx.floor(); if (ev.chunk || ev.tool || ev.scorch || !f || f.rule !== 'lonely') return; ev.streakStep += 1; ctx.proc('외톨이 콤보 +1'); }
     } },
   { id: 'nuggetbag', axis: '보물', rarity: '일반', name: '금 알갱이 주머니', short: '알갱이 주머니', price: 110, kind: 'passive', icon: 'nuggetbag', sets: ['22'],
-    desc: '금 알갱이 값이 3 오릅니다',
+    desc: '금 알갱이 값이 3 높습니다',
     hooks: {
       on_treasure: function (ctx, ev) { if (ev.chunk || ev.tier !== 1) return; ev.base += CONFIG.nuggetBag; }
     } },
   { id: 'dripdish', axis: '', rarity: '일반', name: '촛농 받이', short: '촛농 받이', price: 110, kind: 'passive', icon: 'dripdish', sets: ['22'],
-    desc: '올라가기로 하루를 끝내면 남은 촛불 1마다 금고에 4가 들어옵니다(최대 120). 쓰러진 날은 없습니다',
+    desc: '올라가기로 하루를 끝내면 남은 촛불 1마다 금고에 4가 들어옵니다(최대 120)',
     hooks: {
       on_day_end: function (ctx, ev) { var d = ctx.run.d; if (ev.reason !== 'return' || !d || d.candle <= 0) return; var n = Math.min(CONFIG.dripMax, d.candle * CONFIG.dripPer); d.pocket += n; d.pocketLines.drip = (d.pocketLines.drip || 0) + n; }
     } },
   // 합친 도구: 재료 둘을 가진 밤에 곽 씨가 합쳐 줘요. 상점·선물·연장함에는 나오지 않아요. 재료의 효과를 다 가지고 하나가 더 세져요
   { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['fuse', 'refiner'],
-    desc: 'X 칸에 불을 붙이면 두 걸음 안의 X 칸이 모두 함께 터지고, 터진 지뢰 자리마다 금 알갱이가 남습니다. 이 금 알갱이는 콤보도 올립니다' },
+    desc: 'X 칸을 발파하면 두 걸음 안의 X 칸이 모두 함께 터지고, 터진 지뢰 자리마다 금 알갱이가 남습니다. 이 금 알갱이로도 콤보가 오릅니다' },
   { id: 'moontongs', axis: '발파', rarity: '합침', name: '달빛 집게', short: '달빛 집게', price: 550, kind: 'passive', icon: 'moontongs', sets: ['22'], fusion: ['tongs', 'sieve'],
-    desc: '불을 붙인 X 칸이 지뢰가 아니면 제값으로 꺼냅니다. X 칸이 모두 지뢰가 아니면 촛불도 들지 않습니다. 불 한 번에 지뢰가 2개 이상 터지면 범위 안 보물이 그을리지 않습니다' },
+    desc: '발파한 X 칸이 지뢰가 아니면 제값으로 꺼냅니다. X 칸이 모두 지뢰가 아니었으면 촛불도 들지 않습니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
   { id: 'deadcrown', axis: '콤보', rarity: '합침', name: '막장 왕관', short: '막장 왕관', price: 490, kind: 'passive', icon: 'deadcrown', sets: ['22'], fusion: ['lastcard', 'crown'],
-    desc: '콤보 상한이 ×4입니다. 체력이 1이면 ×6까지 오르고, 보물을 캘 때마다 촛불 +1',
+    desc: '콤보가 ×4까지 오르고, 체력이 1 남으면 ×6까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
     hooks: { on_treasure: function (ctx, ev) { if (ctx.run.d && ctx.run.d.hp === 1 && !ev.scorch) ctx.addCandle(1, '막장 왕관'); } } },
   // v2.1에만 있는 도구(수치만 올리는 도구라 재미 보고서에서 뺐어요)
   { id: 'ledger', axis: '와르르', rarity: '고급', name: '연쇄 장부', short: '장부', price: 230, kind: 'passive', icon: 'ledger', sets: ['21'],
