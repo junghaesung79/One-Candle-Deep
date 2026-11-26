@@ -87,8 +87,9 @@
   #toolsBox { padding: 6px 12px 8px; }
   .slots { display: flex; gap: 6px; margin-top: 4px; }
   #useWrap { margin-top: 6px; }
-  .panel[data-rar="1"], .slot[data-rar="1"] { border-color: #b8862a; } .panel[data-rar="2"], .slot[data-rar="2"] { border-color: #2a8f99; }
-  .panel[data-rar="3"], .slot[data-rar="3"] { border-color: #e5484d; } .panel[data-rar="4"], .slot[data-rar="4"] { border-color: #8e7fb0; }   /* 도구 테두리 = 보물 등급 색 */
+  .panel[data-rar="1"], .slot[data-rar="1"] { border-color: #7c7889; } .panel[data-rar="2"], .slot[data-rar="2"] { border-color: #4f9a4a; }
+  .panel[data-rar="3"], .slot[data-rar="3"] { border-color: #3d7fd9; } .panel[data-rar="4"], .slot[data-rar="4"] { border-color: #9b6fd6; }
+  .panel[data-rar="5"], .slot[data-rar="5"] { border-color: #d9a62a; }   /* 희귀도 색(관습 순서, R125): 일반 회색, 고급 녹색, 희귀 청색, 합침 보라, 유물 금색 */
   .tipNote { background: #2a2418; border: 1px solid #a8781c; padding: 6px 10px; margin: 6px 0 8px; font-size: 13px; line-height: 18px; color: #efe7d6; }   /* 처음 만남 풀이 한 줄(R124) */
   .tipNote b { color: #ffd25a; margin-right: 6px; }
   .gRow { display: flex; gap: 12px; padding: 5px 0; border-bottom: 1px solid #2a2633; font-size: 14px; line-height: 20px; } .gRow b { flex: none; width: 150px; color: #ffd25a; } .gRow.unseen { color: #6f6880; } .gRow.unseen b { color: #6f6880; }
@@ -100,7 +101,7 @@
   .unknown { color: #8f86a3; font-style: italic; }
   .charPick.locked { cursor: default; opacity: 0.75; }
   .charPick.locked .sil img { filter: brightness(0) opacity(0.55); }
-  .keep { display: inline-flex; padding: 1px; border: 1px solid #3a3542; background: #1c1a24; }
+  .keep { display: inline-flex; padding: 1px; border: 1px solid #d9a62a; background: #1c1a24; }   /* 유물은 금색 테두리(R125) */
   .keep.reveal { animation: reveal 1.2s ease-out; }
   /* 도구 경험 정리: 처음 보는 도구 도장, 연장함 알림, 도감 */
   #candleBox.flick { animation: flick 0.9s ease-out; }

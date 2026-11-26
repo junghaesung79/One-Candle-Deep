@@ -1703,7 +1703,7 @@ function bindOverlay() {
   for (i = 0; i < kq.length; i++) if (kq[i].dataset.keep) kq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var k = Core.KEEP_BY_ID[this.dataset.keep]; sd.innerHTML = '<b class="acc">' + esc(k.name) + '</b> <span class="muted">' + esc(TEXT.keep.row) + '</span><br>' + esc(k.desc); };
   for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
 }
-function rarAttr(id) { var t = Core.TOOL_BY_ID[id]; var n = t && { '일반': 1, '고급': 2, '희귀': 3, '합침': 4 }[t.rarity]; return n ? ' data-rar="' + n + '"' : ''; }   // 테두리 색: 보물 등급과 같은 색(일반 금 알갱이, 고급 청록 보석, 희귀 금잔, 합침 보라)
+function rarAttr(id) { var t = Core.TOOL_BY_ID[id]; var n = t ? { '일반': 1, '고급': 2, '희귀': 3, '합침': 4 }[t.rarity] : Core.KEEP_BY_ID[id] ? 5 : 0; return n ? ' data-rar="' + n + '"' : ''; }   // 테두리 색(R125): 일반 회색, 고급 녹색, 희귀 청색, 합침 보라, 유물 금색
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
@@ -1752,7 +1752,7 @@ function keepHtml() {
   markTip('relic');   // 풀이는 아래 줄(유물 설명)이 늘 하고 있어서 안내서에만 남겨요
   var h = '<div class="dim" style="background:rgba(11,10,16,0.78)"></div><div class="dlg" style="width:560px"><h2 style="display:flex;align-items:center;gap:8px">' + iconHtml('icons.box', 30) + esc(TEXT.keep.title) + '</h2>';
   h += '<div class="quote">구조꾼 곽 씨: "' + esc(B.quote) + '"</div>';
-  h += '<div class="fork panel sel" style="min-height:150px;margin-top:10px;cursor:default">' + iconHtml('icons.' + k.icon, 44) + '<div class="nm' + (codex.seen[k.id] ? '' : ' unknown') + '">' + esc(kName(k.id)) + '</div><div class="tx">' + esc(k.desc) + '</div></div>';
+  h += '<div class="fork panel"' + rarAttr(k.id) + ' style="min-height:150px;margin-top:10px;cursor:default">' + iconHtml('icons.' + k.icon, 44) + '<div class="nm' + (codex.seen[k.id] ? '' : ' unknown') + '">' + esc(kName(k.id)) + '</div><div class="tx">' + esc(k.desc) + '</div></div>';
   h += '<div class="note" style="margin-top:8px">' + esc(TEXT.keep.note) + '</div>';
   h += '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px"><button id="oBoxPass">' + esc(TEXT.keep.leave) + '</button><button class="primary" id="oBoxTake">' + esc(TEXT.keep.take) + '</button></div></div>';
   return h;
@@ -1773,7 +1773,7 @@ function codexHtml() {   // 못 얻은 칸은 실루엣과 ???만. 얻는 법은
   function cnt(list) { return list.filter(function (x) { return codex.seen[x.id]; }).length; }
   function cell(x, sub, desc, hint) {
     var seen = !!codex.seen[x.id];
-    return '<div class="panel codexCell' + (seen ? '' : ' unseen') + '"' + (seen && x.rarity ? rarAttr(x.id) : '') + (seen ? '' : ' title="' + esc(hint) + '"') + '>' + iconHtml('icons.' + x.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(x.name) : '???') + '</div><div class="note">' + sub + '</div>' + (seen ? '<div class="d">' + esc(desc) + '</div>' : '') + '</div></div>';
+    return '<div class="panel codexCell' + (seen ? '' : ' unseen') + '"' + (seen ? rarAttr(x.id) : '') + (seen ? '' : ' title="' + esc(hint) + '"') + '>' + iconHtml('icons.' + x.icon, 30) + '<div style="min-width:0"><div class="n">' + (seen ? esc(x.name) : '???') + '</div><div class="note">' + sub + '</div>' + (seen ? '<div class="d">' + esc(desc) + '</div>' : '') + '</div></div>';
   }
   var h = '<div class="dim" style="background:rgba(11,10,16,0.85)"></div><div class="dlg" style="width:1000px;height:640px;display:flex;flex-direction:column"><h2>도감</h2>' +
     '<div class="note" style="margin-bottom:12px">한 번 얻으면 이름과 효과가 열립니다. 상점, 옛 연장함, 도장 선물에서 얻습니다. 이 브라우저에 남습니다</div><div style="flex:1;overflow:auto">';
