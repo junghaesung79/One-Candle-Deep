@@ -1283,7 +1283,12 @@ var Core = (function () {
     if ((rule === 'minepair' || twinDay(run)) && m % 2) m++;
     if (rule === 'rows') t = Math.max(6, t);
     var tw = row.tiers.slice(), tot = tw.reduce(function (a, b) { return a + b; }, 0) || 1;
-    return { t: t, m: m, tiers: tw.map(function (x) { return Math.round(100 * x / tot); }), tierUp: rule === 'minepair' };   // 보물 등급 확률(금 알갱이, 청록 보석, 금잔)
+    // 다 캐면 어림 값: 보물 수 × 등급 평균 값 × 시세 × 캐릭터 · 갈림길 덤. 콤보, 큰 덩이, 유물은 빼요
+    var up = rule === 'minepair' ? 1 : 0, avg = 0;
+    tw.forEach(function (w, i) { avg += (w / tot) * CONFIG.treasureValue[Math.min(3, i + 1 + up)]; });
+    var vm = stage(run).valueMul * (charOf(run).valueMul || 1) * (bonus === 'value' ? CONFIG.forkBonus.valueMul : 1);
+    return { t: t, m: m, tiers: tw.map(function (x) { return Math.round(100 * x / tot); }), tierUp: rule === 'minepair',   // 보물 등급 확률(금 알갱이, 청록 보석, 금잔)
+             v: Math.round(t * avg * vm / 10) * 10 };
   }
   function enterFloor(run, depth, rule, sx, sy, bonus) {
     var gr;

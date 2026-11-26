@@ -1164,7 +1164,7 @@ function forkHtml() {   // 고를 때 다른 것만 보여요. 지금 콤보·�
     if (o.kind === 'floor') {
       var R = RULES[o.rule], fresh = !(settings.rulesSeen || {})[o.rule];   // 이 브라우저에서 처음 보는 광맥에만 풀이 한 줄(표시는 따로 달지 않아요)
       h += iconHtml('rules.' + o.rule, 48) + '<div class="nm">' + R.name + '</div><div class="tx">' + esc(R.sign) + '</div>' + veinDiagram(o.rule) + '<div class="hp2">' + (fresh ? esc(R.help) : '') + '</div>';   // 처음 보는 광맥만 풀이를 붙여요(자리는 늘 같아요)
-      if (o.est) h += '<div class="tx forkNum">' + (CONFIG.countsShown ? '보물 ' + o.est.t + ' · 지뢰 ' + o.est.m : '보물 ' + o.est.t + '쯤 · 지뢰 ' + o.est.m + '쯤') + (o.est.tierUp ? ' · 보물 한 등급 위' : '') + '</div>';
+      if (o.est) h += '<div class="tx forkNum">' + (CONFIG.countsShown ? '보물 ' + o.est.t + ' · 지뢰 ' + o.est.m : '보물 ' + o.est.t + '쯤 · 지뢰 ' + o.est.m + '쯤') + (o.est.tierUp ? ' · 보물 한 등급 위' : '') + (o.est.v ? ' · 다 캐면 약 ' + o.est.v : '') + '</div>';
       h += '<div class="forkExtra">' + (o.bonus ? '<div class="acc" style="font-weight:700">' + esc(bonusText(o.bonus)) + '</div>' : '') + (o.chunk ? '<span class="badge gold">큰 덩이 ' + d.chunkSpec.w + '×' + d.chunkSpec.h + '</span>' : '') + '</div>';
     } else if (o.kind === 'spring') {
       h += iconHtml('icons.spring', 48) + '<div class="nm">샘</div><div class="tx">체력 +1이나 촛불 +' + CONFIG.spring.candle + ' 중 하나를 고릅니다</div><div class="hp2">그다음 지하 ' + o.depth + '층(맨땅)</div>';
