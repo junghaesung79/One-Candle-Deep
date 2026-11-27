@@ -14,9 +14,9 @@ const DESC: Record<string, string> = {
   nervemark: '숫자로 확실한 칸이 하나도 없을 때 친 칸이 보물이면 콤보가 2개 단계 오릅니다',
   countlamp: '숫자로 확실히 알 수 있는 칸이 없으면 등불이 꺼져 알려 줍니다',
   scale: '층마다 한 번, 숫자 하나를 지뢰 몇 개와 보물 몇 개로 나눠 보여 줍니다(촛불 3)',
-  dowse: '하루 한 번, 고른 칸 둘레 5×5 안에 보물이 몇 개인지 알려 줍니다',
+  dowse: '하루 한 번, 고른 칸 주변 5×5 안에 보물이 몇 개인지 알려 줍니다',
   paireye: '짝 광맥 층에서 보물을 캐면 짝이 있는 쪽이 반짝입니다',
-  borderline: '테두리 광맥 층의 보물은 값이 20 높습니다',
+  borderline: '테두리 광맥 층의 보물은 값이 60 높습니다',
   tallyrule: '눈금 광맥 층에서 한 줄의 보물을 다 캐면 촛불 3을 얻습니다',
   minepairbook: '지뢰 짝 광맥 층에서 짝 지뢰 둘을 한 번에 발파하면 그 자리에 금 알갱이가 남습니다',
   veincollector: '오늘 서로 다른 광맥 층에 들어갈 때마다 그날 보물 값이 10% 오릅니다',
@@ -26,7 +26,9 @@ const DESC: Record<string, string> = {
   plumbline: '세로줄 광맥 층에서 보물을 캐면 그 세로줄 바로 양옆 줄의 덮인 칸에 X가 그어집니다',
   crosspick: '대각선 광맥 층에서 대각선으로 붙은 두 보물을 잇달아 캐면 콤보가 1개 단계 더 오릅니다',
   triosack: '무리 광맥 층에서 한 무리의 셋째 보물을 캐면 그 보물 값이 40 높습니다',
-  bandcharm: '금 띠 광맥 층에서 처음 친 지뢰는 체력을 줄이지 않습니다'
+  bandcharm: '금 띠 광맥 층에서 보물을 캐면 콤보가 2개 단계 더 오릅니다',
+  lonechest: '외톨이 광맥 층에서 캔 보물은 값이 두 배입니다',
+  colsledger: '세로줄 광맥 층에서 한 세로줄의 마지막 보물을 캐면 그 보물 값이 세 배입니다'
 };
 
 // 첫날 광산 안. 도구는 하루를 열기 전에 쥐여요(on_day_start·on_floor_enter가 돌게)
@@ -160,9 +162,9 @@ describe('분필·정보·보물·광맥 도구', () => {
     check(!run([]), 'no glint without the tool');
   });
 
-  it('테두리 금줄: 테두리 층 보물 값 +20', () => {
+  it('테두리 금줄: 테두리 층 보물 값 +60', () => {
     const run = (owned: string[]) => { const r = fresh(owned), f = useFloor(r, 'border', 12), t = treasures(f)[0]; r.d.streak = 0; const p0 = r.d.pocket; dig(r, t); return r.d.pocket - p0; };
-    check(run(['borderline']) - run([]) === 20, 'plus 20 at stage 1, combo x1');
+    check(run(['borderline']) - run([]) === 60, 'plus 60 at stage 1, combo x1');
   });
 
   it('눈금 자: 한 줄을 다 캐면 촛불 3', () => {
@@ -256,16 +258,14 @@ describe('분필·정보·보물·광맥 도구', () => {
     check(run([]).every(x => x === 0), 'nothing without the tool');
   });
 
-  it('띠 부적: 금 띠 층에서 처음 친 지뢰는 체력이 그대로', () => {
-    const run = (owned: string[]) => {
-      const r = fresh(owned), f = useFloor(r, 'band', 37);
-      const ms = f.cells.filter((c: any) => c.haz === 'mine' && freeNb(f, c));
-      const h0 = r.d.hp; dig(r, ms[0]); const h1 = r.d.hp;
-      const far = ms.find((m: any) => m.cover !== 'open' && Core.cheb(m.x, m.y, ms[0].x, ms[0].y) > 3); dig(r, far);
-      return [h0 - h1, h1 - r.d.hp];
-    };
-    const w = run(['bandcharm']), wo = run([]);
-    check(w[0] === 0 && w[1] === 1, 'first mine free, second hurts');
-    check(wo[0] === 1, 'without the tool the first mine hurts');
+  it('띠 부적: 금 띠 층에서 보물을 캐면 콤보 2개 단계 더(R141)', () => {
+    const run = (owned: string[]) => { const r = fresh(owned), f = useFloor(r, 'band', 37), t = treasures(f)[0]; r.d.streak = 0; dig(r, t); return r.d.streak; };
+    check(run(['bandcharm']) === 3 && run([]) === 1, 'band: +2 extra steps');
+  });
+
+  it('외톨이 보물함: 외톨이 층 보물 값 두 배(R141)', () => {
+    const run = (owned: string[]) => { const r = fresh(owned), f = useFloor(r, 'lonely', 21), t = treasures(f)[0]; r.d.streak = 0; const p0 = r.d.pocketLines.treasure; dig(r, t); return r.d.pocketLines.treasure - p0; };   // 와르르 자갈은 빼고 보물 값만
+    const a = run(['lonechest']), b = run([]);
+    check(b > 0 && a >= b * 2 - 1 && a <= b * 2 + 1, 'lonely: double value ' + a + ' ' + b);
   });
 });

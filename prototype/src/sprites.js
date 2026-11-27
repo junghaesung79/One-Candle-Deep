@@ -49,6 +49,9 @@ function iconHtml(name, size, cls) {
   var MINER = ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "..oYYYYYYYYYYo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"];
   var MIP = { o: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', f: '#f0c39a', F: '#c9936a', e: '#1a1420', r: '#c4432b', d: '#3e5f8a' };
   SPR.miner = mkSprite(MINER, MIP);
+  SPR.icons.lonechest = mkSprite(["..........", ".oooooooo.", ".obbbbbbo.", ".oooyyooo.", ".obbyybbo.", ".obbbbbbo.", ".obbbbbbo.", ".oooooooo.", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#5fe0e8' });   // 외톨이 보물함(R141)
+  SPR.icons.colsledger = mkSprite(["..........", "oooooooooo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "oooooooooo", ".........."], { o: '#6b4a30', w: '#efe7d6', y: '#f2c14e' });   // 세로줄 장부(R141)
+  SPR.pillar = mkSprite(["................", "...oooooooooo...", "...obbBbbbBbo...", "...oooooooooo...", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", "...oooooooooo...", "...obbBbbbBbo...", "...oooooooooo...", "................"], { o: '#3d2a1c', b: '#9a6532', B: '#c9894a' });   // 목수가 세운 기둥(R141)
   // 캐릭터마다 모습이 달라요: 광부 헬멧과 곡괭이, 해체공 고글과 집게, 노름꾼 헌팅캡과 카드, 측량사 넓은 모자와 줄자 막대, 폭파공 머리띠와 화약
   var MINER_BY = {
     miner: ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "ppoYYYYYYYYYYo..", "pw.offffffffo...", ".w.ofeffffefo...", ".w.offffffffo...", ".w..oFFFFFFo....", ".woorrrrrrrroo..", ".wrroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],

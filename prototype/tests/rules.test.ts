@@ -266,7 +266,7 @@ describe('규칙 단위 검사', () => {
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
       check(CONFIG.rulePool.join() === 'pair,border,lonely,tally,minepair,cols,diag,trio,band' && r.plan.firstRule.slice(1).every((x: string) => CONFIG.rulePool.includes(x)), 'every vein, any grade (plain only day 1)');
-      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 85 && !Core.toolPool().some((t: any) => ['match', 'bigblast', 'moontongs', 'deadcrown', 'toughcharm', 'betchalk', 'fuse', 'tongs'].includes(t.id)), '85 tools in v22 set, no fused or character-only tools in the pool'); }
+      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 87 && !Core.toolPool().some((t: any) => ['match', 'bigblast', 'moontongs', 'deadcrown', 'toughcharm', 'betchalk', 'fuse', 'tongs'].includes(t.id)), '87 tools in v22 set, no fused or character-only tools in the pool'); }
     // 캐릭터는 X·O 칸 행동 하나만 바꿔요(R135): 따로 붙는 능력치가 없어요
     { const cs = Object.values(Core.CHAR_BY_ID) as any[];
       check(cs.every(c => !c.candleDelta && !c.capPlus && !c.valueMul && !c.digMineExtra && !c.perk && !c.weak), 'characters have no extra stats');
@@ -278,7 +278,7 @@ describe('규칙 단위 검사', () => {
       const nb = Core.neighbors(f, c.x, c.y).find((n: any) => n.cover === 'open'); r.d.px = nb.x; r.d.py = nb.y; c.mark = 1;
       const c0 = r.d.candle, h0 = r.d.hp; Core.ignite(r, c.x, c.y);
       if (ch === 'defuser') check(r.d.candle === c0 - 5 && r.d.hp === h0, 'defuser pays 5 on a wrong X, no refund');
-      if (ch === 'blaster') check(r.d.candle === c0 - 4 && r.d.hp === h0 - 1, 'blaster loses 1 hp on a wrong X');
+      if (ch === 'blaster') check(r.d.candle === c0 - 8 && r.d.hp === h0, 'blaster pays 4 more candles per wrong X (R141)');
       if (ch === 'miner') check(r.d.candle === c0 - 4 && r.d.hp === h0, 'miner: wrong X costs candles only');
     }
     // 질긴 부적: 배짱 장갑과 곽 씨 부적이 하루 두 번
@@ -378,7 +378,7 @@ describe('규칙 단위 검사', () => {
       check(extra === 0 && wrong === 0, 'faded marks: at most one O and two X per floor, always right');
       check(cntO[1] > 60 && cntO[1] < 140 && cntX.every(n => n > 60 && n < 140), 'faded marks: O about 1 in 3 floors, X 0/1/2 about equally');
       check(locked, 'right-click does not change a faded mark'); }
-    // 둘레 한꺼번에 열기
+    // 주변 한꺼번에 열기
     { const r = Core.newRun(6105); Core.startDay(r); const f = r.d.floor;
       const num = f.cells.find(c => c.cover === 'open' && Core.numAt(f, c) > 0 && Core.neighbors(f, c.x, c.y).some(q => q.cover !== 'open' && !q.haz && !q.stair));
       const nbs = Core.neighbors(f, num.x, num.y).filter(q => q.cover !== 'open');

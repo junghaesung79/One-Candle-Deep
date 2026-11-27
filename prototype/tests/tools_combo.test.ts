@@ -116,7 +116,7 @@ describe('콤보·발파·열림 도구', () => {
     check(mc(r) === 1, 'not from step 3');
   });
 
-  it('화약 장갑: 곡괭이로 지뢰를 쳐서 다치면 둘레 X가 촛불 없이 터짐', () => {
+  it('화약 장갑: 곡괭이로 지뢰를 쳐서 다치면 주변 X가 촛불 없이 터짐', () => {
     const r = setup(['firegloves'], put(BLANK, [[8, 5, 'm'], [9, 5, 'X'], [9, 6, 'm'], [7, 5, '@']]));
     Core.hit(r, 8, 5);
     check(cell(r, 9, 5).removed && cell(r, 9, 6).removed, 'X mine and its neighbor blew');
@@ -190,7 +190,7 @@ describe('콤보·발파·열림 도구', () => {
     check(r.d.streak === 2 && !r.toolRun.charmthread.armed, 'kept once');
   });
 
-  it('부채 삽: 보물을 캐면 둘레의 안전이 확실한 칸이 열림', () => {
+  it('부채 삽: 보물을 캐면 주변의 안전이 확실한 칸이 열림', () => {
     const map = put(BLANK, [[8, 5, 'g'], [9, 4, 'm'], [6, 5, 'm'], [3, 3, 'm'], [12, 8, 'm'], [7, 5, '@']]);
     const prep = (r: any) => { const m = cell(r, 9, 4); m.faded = 1; m.mark = 1; return r; };
     const r = prep(setup(['fanshovel'], map)); Core.hit(r, 8, 5);
@@ -204,7 +204,7 @@ describe('콤보·발파·열림 도구', () => {
     check(mc(r) === 1, 'one matchstick');
   });
 
-  it('날랜 손: 둘레 한꺼번에 열기로 8칸 이상이면 촛불 1을 돌려받음', () => {
+  it('날랜 손: 주변 한꺼번에 열기로 8칸 이상이면 촛불 1을 돌려받음', () => {
     const r = setup(['quickhand'], put(WIDE, [[6, 4, 'X']]));
     const res = Core.chord(r, 7, 5);
     check(res.ok && r.d.candle === 60, 'chord cost refunded');

@@ -11,7 +11,7 @@
      "79dd9c89",
      "d2565714"
     ],
-    "shop": "minepairbook,firegloves,triosack"
+    "shop": "veincollector,fusebundle,triosack"
    },
    {
     "day": 2,
@@ -44,7 +44,7 @@
      "722ff7fa",
      "c8e69855"
     ],
-    "shop": "firegloves,apron,fadebrush"
+    "shop": "firegloves,horseshoe,sootmap"
    },
    {
     "day": 5,
@@ -77,7 +77,7 @@
      "cc104b6e",
      "81a3aaa7"
     ],
-    "shop": "sieve,firegloves,firstdig"
+    "shop": "sieve,fusebundle,firstdig"
    },
    {
     "day": 8,
@@ -88,7 +88,7 @@
      "518251b9",
      "29152e5e"
     ],
-    "shop": "interest,regular,stairchart"
+    "shop": "interest,regular,colsledger"
    },
    {
     "day": 9,
@@ -99,7 +99,7 @@
      "c8bb8a5e",
      "04d64cd3"
     ],
-    "shop": "whetstone,pick7,bandcharm"
+    "shop": "whetstone,pick7,colsledger"
    },
    {
     "day": 10,
@@ -154,7 +154,7 @@
      "e28c2993",
      "66b6322c"
     ],
-    "shop": "firstknot,plumbline,surveybook"
+    "shop": "firstknot,crosspick,surveybook"
    },
    {
     "day": 15,
@@ -189,7 +189,7 @@
      "0cc1a4fa",
      "123f976a"
     ],
-    "shop": "triosack,gravelbox,moonsieve"
+    "shop": "bandcharm,gravelbox,moonsieve"
    },
    {
     "day": 3,
@@ -211,7 +211,7 @@
      "16a21d70",
      "3d4cc91a"
     ],
-    "shop": "crown,nervemark,flint"
+    "shop": "crown,nervemark,firegloves"
    },
    {
     "day": 5,
@@ -222,7 +222,7 @@
      "d1bc9735",
      "660df406"
     ],
-    "shop": "herbbag,interest,fadebrush"
+    "shop": "herbbag,interest,sootmap"
    },
    {
     "day": 6,
@@ -233,7 +233,7 @@
      "8dfa055a",
      "3ca32950"
     ],
-    "shop": "stairchart,waistpouch,fusebundle"
+    "shop": "stairchart,waistpouch,counterfire"
    },
    {
     "day": 7,
@@ -277,7 +277,7 @@
      "81c9034d",
      "fb1f0167"
     ],
-    "shop": "borderline,fadedfuse,dripdish"
+    "shop": "tallyrule,fadedfuse,whetstone"
    },
    {
     "day": 11,
@@ -288,7 +288,7 @@
      "f1377eed",
      "08d15e6c"
     ],
-    "shop": "tireless,kwakbox,stairchart"
+    "shop": "tireless,kwakbox,colsledger"
    },
    {
     "day": 12,
@@ -310,7 +310,7 @@
      "cc3e6687",
      "cd871c70"
     ],
-    "shop": "bandcharm,bigtumble,kwakmark"
+    "shop": "lonechest,gravelbox,kwakmark"
    },
    {
     "day": 14,
@@ -367,7 +367,7 @@
      "b1abfa7d",
      "19a94c85"
     ],
-    "shop": "surveybook,flint,lastcard"
+    "shop": "charmthread,firegloves,lastcard"
    },
    {
     "day": 4,
@@ -378,7 +378,7 @@
      "afeef5f5",
      "6f076c8d"
     ],
-    "shop": "stairchart,countlamp,apron"
+    "shop": "stairchart,scale,apron"
    },
    {
     "day": 5,
@@ -400,7 +400,7 @@
      "4e508888",
      "67d0ba29"
     ],
-    "shop": "matchtin,flint,herbbag"
+    "shop": "quickhand,flint,herbbag"
    },
    {
     "day": 7,
@@ -444,7 +444,7 @@
      "ead022d0",
      "70d27272"
     ],
-    "shop": "paireye,sparkbook,quickhand"
+    "shop": "borderline,sparkbook,quickhand"
    },
    {
     "day": 11,
@@ -466,7 +466,7 @@
      "0c66f5c7",
      "d37570f2"
     ],
-    "shop": "flint,amulet,dowse"
+    "shop": "firegloves,amulet,dowse"
    },
    {
     "day": 13,
@@ -488,7 +488,7 @@
      "4231dc1e",
      "53d4584a"
     ],
-    "shop": "busyhand,resthand,triosack"
+    "shop": "busyhand,surveybook,bandcharm"
    },
    {
     "day": 15,
@@ -545,7 +545,7 @@
      "ecc33918",
      "e2342684"
     ],
-    "shop": "quickhand,fadedfuse,plumbline"
+    "shop": "quickhand,fadedfuse,crosspick"
    },
    {
     "day": 5,
@@ -556,7 +556,7 @@
      "dc2f2cda",
      "d800d996"
     ],
-    "shop": "matchtin,mimic,quickhand"
+    "shop": "matchtin,fullset,bigtumble"
    },
    {
     "day": 6,
@@ -578,7 +578,7 @@
      "36be6a07",
      "7362a353"
     ],
-    "shop": "firstknot,belt,crosspick"
+    "shop": "busyhand,regular,bandcharm"
    },
    {
     "day": 8,
@@ -589,7 +589,7 @@
      "0eef92f1",
      "63f90208"
     ],
-    "shop": "wickshears,matchbundle,belt"
+    "shop": "wickshears,atlas,belt"
    },
    {
     "day": 9,
@@ -600,7 +600,7 @@
      "b5b105e5",
      "aa5f88e0"
     ],
-    "shop": "waistpouch,goldtooth,crown"
+    "shop": "waistpouch,kwakmark,crown"
    },
    {
     "day": 10,
@@ -622,7 +622,7 @@
      "b56a1eae",
      "26830488"
     ],
-    "shop": "crackedhelm,dusk,bigtumble"
+    "shop": "crackedhelm,dusk,gravelbox"
    },
    {
     "day": 12,
@@ -633,7 +633,7 @@
      "79fe61c5",
      "5de77194"
     ],
-    "shop": "triosack,dusk,nervemark"
+    "shop": "triosack,dusk,countlamp"
    },
    {
     "day": 13,
@@ -644,7 +644,7 @@
      "45859248",
      "b18ea527"
     ],
-    "shop": "dowse,plumbline,waistpouch"
+    "shop": "paireye,plumbline,waistpouch"
    },
    {
     "day": 14,
@@ -655,7 +655,7 @@
      "258397f0",
      "25fcd69e"
     ],
-    "shop": "mimic,shortwick,nervemark"
+    "shop": "fullset,crackedhelm,nervemark"
    },
    {
     "day": 15,
@@ -679,7 +679,7 @@
      "9f9133c5",
      "9c3a71c1"
     ],
-    "shop": "piggy,sparkbook,tallyrule"
+    "shop": "piggy,sparkbook,minepairbook"
    },
    {
     "day": 2,
@@ -778,7 +778,7 @@
      "02b49b33",
      "84028043"
     ],
-    "shop": "fanshovel,fullset,minepairbook"
+    "shop": "matchtin,fullset,veincollector"
    },
    {
     "day": 11,
@@ -811,7 +811,7 @@
      "35de4398",
      "8fdd9ad1"
     ],
-    "shop": "interest,lonelamp,regular"
+    "shop": "goldtooth,firstdig,regular"
    },
    {
     "day": 14,
@@ -822,7 +822,7 @@
      "222b197c",
      "2e676e4e"
     ],
-    "shop": "firstknot,borderline,tallyrule"
+    "shop": "firstknot,borderline,minepairbook"
    },
    {
     "day": 15,

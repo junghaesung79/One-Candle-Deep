@@ -31,7 +31,7 @@ export interface Floor {
   diagPairs?: [number, number][];
   /** 무리 광맥: 셋 묶음(칸 번호 셋씩) */
   groups?: [number, number, number][];
-  /** 금 띠 광맥: 보물 둘레 8칸 가운데 보물이 아닌 칸(지뢰가 없는 띠, 칸 번호) */
+  /** 금 띠 광맥: 보물 주변 8칸 가운데 보물이 아닌 칸(지뢰가 없는 띠, 칸 번호) */
   band?: number[];
   [k: string]: any;
 }
@@ -120,7 +120,7 @@ export interface CoreApi {
   remaining(f: Floor): { t: number; m: number };
   /** 프리셋 바꾸기: 'v21'(2차 기획 v2.1) / 'v22'(재미 보고서, 기본) */
   applyPreset(name: 'v21' | 'v22' | string): boolean;
-  /** 둘레 한꺼번에 열기: 서 있는 숫자 칸에서 */
+  /** 주변 한꺼번에 열기: 서 있는 숫자 칸에서 */
   chord(run: Run, x: number, y: number): ActResult;
   /** 처음부터 보이는 계단 칸 번호, 없으면 -1 */
   shownStair(f: Floor): number;
@@ -164,9 +164,9 @@ export interface CoreApi {
   useTool(run: Run, id: string, x: number, y: number): { ok: boolean; msg?: string; label?: string; bad?: boolean; spent?: boolean; short?: boolean; [k: string]: any };
   /** 숫자로 확실한 칸 번호(안전, 보물 확실, X 없는 지뢰 확실). 셈 등불과 배짱 표 */
   sureCells(run: Run): number[];
-  /** 숫자 하나의 둘레: 남은 지뢰 m, 보물 t, 큰 덩이 칸 k */
+  /** 숫자 하나의 주변: 남은 지뢰 m, 보물 t, 큰 덩이 칸 k */
   scaleSplit(f: Floor, c: Cell): { m: number; t: number; k: number };
-  /** 둘레 5×5에 묻힌 보물 수 */
+  /** 주변 5×5에 묻힌 보물 수 */
   dowseCount(f: Floor, x: number, y: number): number;
   [k: string]: any;
 }

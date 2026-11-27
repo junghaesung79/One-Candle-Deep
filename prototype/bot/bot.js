@@ -29,7 +29,7 @@ const POLICY = {
 
 const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, cols: 4, diag: 4, trio: 4, band: 4, plain: 1 };
 // 구매 선호(보통·욕심). 측정으로 정한 순서(05 문서 8.3)
-const TOOL_PREF = ['bigblast', 'moontongs', 'deadcrown', 'refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'firstdig', 'belt', 'gloves', 'lonelamp', 'tapper', 'nuggetbag', 'lastcard', 'betchalk', 'crackedhelm', 'dripdish', 'shortwick', 'regular'];   // 합친 도구는 내려놓지 않아요
+const TOOL_PREF = ["bigblast", "toughcharm", "deadcrown", "emptycharm", "refiner", "gravelbox", "sieve", "borderline", "wedge", "ledger", "sheet", "sparkbook", "counterfire", "veincollector", "firstdig", "fusebundle", "moonsieve", "stairchart", "bigtumble", "jewelglass", "fullset", "horseshoe", "pick7", "tireless", "fadebrush", "quickhand", "charmthread", "gobletstand", "chunkchisel", "fadedfuse", "nuggetbag", "deeppick", "amulet", "goldtooth", "apron", "mimic", "gloves", "deeppocket", "bandcharm", "interest", "lonechest", "fanshovel", "crosspick", "lonelamp", "triosack", "bignum", "busyhand", "kwakbox", "junkbox", "waistpouch", "wickshears", "bundle", "crown", "minepairbook", "tallyrule", "whetstone"];   // R141: 도구 하나를 Day 1부터 들고 15일(보통 16판, 사지 않음)로 잰 순서. 판 수입이 100 넘게 오르는 것만 사요. 합친 도구는 내려놓지 않아요
 const ORDER_PREF = ['reach5', 'deepStreak', 'gems2', 'bigNum', 'chain20', 'streak3', 'floor5', 'noProbe', 'blast4', 'chalkO', 'chain3', 'clean3', 'emberT', 'keep20', 'noMine', 'xRight'];
 
 class Bot {
@@ -38,6 +38,7 @@ class Bot {
     const pol = POLICY[(opts && opts.policy) || 'normal'];
     this.o = Object.assign({ spend: true, lazy: false, fizzleProbe: false, buyList: null }, pol, opts || {});
     this.o.thr = Object.assign({}, pol.thr, (opts && opts.thr) || {});
+    if (opts && opts.char === 'powderman') { this.o.fireThr = 0; this.o.fizzleProbe = false; }   // 화약 장수는 틀린 X에 다쳐서, 확실한 지뢰에만 X 동작을 써요(R141)
     this.rng = this.Core.rngFrom(((opts && opts.botSeed) || 1) * 7919 + 13);
     this.m = { gambles: 0, gambleWins: 0, ruleDigs: 0, safeDigs: 0, stairDigs: 0, guessDigs: 0, blasts: 0, fizzleProbes: 0, fizzleProbeT: 0, slips: 0, fireBets: 0, fireMiss: 0,
                floorsLeft: 0, tLeft: 0, tTotal: 0 };
@@ -213,7 +214,7 @@ class Bot {
         this.tried.add(best);
       }
     }
-    // 3) 발파: 아는 지뢰 중 둘레에 덮인 칸이 많은 것
+    // 3) 발파: 아는 지뢰 중 주변에 덮인 칸이 많은 것
     if (!chunkFloor && d.candle >= Core.igniteCost(run) + nextCost && !o.lazy && !(rush && stairKnown)) {
       let best = null, bv = 0;
       for (const m of mines) {
@@ -238,7 +239,7 @@ class Bot {
       const cands0 = D.stairCand.map(cell).filter(ok);
       if (cands0.length && d.candle >= cost) return this.dig(run, this.nearest(run, cands0), 'stairDigs');
     }
-    // 3-2) 둘레 한꺼번에 열기: 둘레 위험 칸이 숫자만큼 다 밝혀진 숫자 칸에서 안전 칸 둘 이상을 촛불 한 번에 연다
+    // 3-2) 주변 한꺼번에 열기: 주변 위험 칸이 숫자만큼 다 밝혀진 숫자 칸에서 안전 칸 둘 이상을 촛불 한 번에 연다
     if (CONFIG.features.chord && !o.noChord && !overBudget && d.candle >= cost + reserve) {
       const ch = this.chordTarget(run, D);
       if (ch) {
@@ -471,9 +472,9 @@ class Bot {
     return run.cash - price >= need;
   }
   wants(run, id) {
-    const L = this.o.buyList;
-    if (L) return L.indexOf(id) >= 0;
-    return true;
+    if (this.o.buy === 'naive' && !this.o.buyList) return true;   // 신중(처음 하는 사람)은 아무거나 사요
+    const L = this.o.buyList || TOOL_PREF;   // R141: 잰 값이 없는(봇이 못 쓰는) 도구는 사지 않아요
+    return L.indexOf(id) >= 0;
   }
   // 옛 연장함: 가장 앞 순위를 고르고, 칸이 가득이면 가진 것 가운데 가장 뒤 순위와 바꿔요(새 것이 더 앞일 때만). 아니면 곽 씨에게 넘겨요
   takeBox(run) {

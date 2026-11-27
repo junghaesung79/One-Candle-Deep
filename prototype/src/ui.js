@@ -303,7 +303,7 @@ function drainFx() {
         addShake(4, 220, true); anim.hurtT = now + 60;
         anim.pops.push({ x: e.x, y: e.y, t0: now + 60, kind: 'fizzle' });
         break;
-      case 'fee': {   // 갱 반장 일꾼 치료비: 주머니에서 빠져요
+      case 'fee': {   // 갱 반장 일꾼 일당: 주머니에서 빠져요
         var fq = stageXY(e.x, e.y);
         addFly({ x: Math.max(80, Math.min(730, fq.x)), y: fq.y - 6, showAt: 150, flyAt: null, fadeAt: 1300, size: 14, rise: 10, color: '#ff9a4d', steps: [{ t: 150, h: '치료비 −' + fmt(e.total) }] });
         break;
@@ -473,7 +473,8 @@ function drawBoard(now) {
       // R40·R49: 열린 땅에 닿은 계단 바위는 틈새 빛 + 지그재그 계단 단면. 잠든 계단 날과 막힌 계단은 그리지 않는다(검수 4번)
       // 재미 보고서 1주차: 계단은 층에 도착할 때부터 보여요(stairShown)
       var stairLit = c.stair && !(f.stair && f.stair.blocked) && (CONFIG.stairShown || (!Core.mut(run, 'sleepy') && Core.neighbors(f, x, y).some(function (n) { return n.cover === 'open' && !anim.pend[n.y * BW + n.x]; })));
-      if (stairLit) { drawStairRock(g, X, Y, vi, now); if (!CONFIG.stairShown && run.tutorial && run.day <= 3) teachRock(f, x, y); }
+      if (c.sealed) { g.drawImage(SPR.ground[vi], X, Y, T, T); g.drawImage(SPR.pillar, X, Y, T, T); }   // 목수의 기둥: 땅처럼 지나가요
+      else if (stairLit) { drawStairRock(g, X, Y, vi, now); if (!CONFIG.stairShown && run.tutorial && run.day <= 3) teachRock(f, x, y); }
       else g.drawImage(SPR.rock[vi], X, Y, T, T);
       if (f.glow && f.glow.some(function (q) { return q[0] === x && q[1] === y; })) {
         var gl = 0.6 + 0.4 * Math.sin(now / 200);
@@ -481,7 +482,7 @@ function drawBoard(now) {
       }
     }
   }
-  // 1b) 계단 빛 번짐(R56·R60): 중심은 계단에서 0~1칸 어긋난 칸, 둘레 2칸. 층 도착 때부터, 잠든 계단 날·막힌 계단은 없음. 숫자보다 먼저 그려 숫자를 가리지 않는다
+  // 1b) 계단 빛 번짐(R56·R60): 중심은 계단에서 0~1칸 어긋난 칸, 주변 2칸. 층 도착 때부터, 잠든 계단 날·막힌 계단은 없음. 숫자보다 먼저 그려 숫자를 가리지 않는다
   if (f.light && f.stair && !f.stair.blocked && !Core.mut(run, 'sleepy')) {
     var LX = f.light.x, LY = f.light.y, fl = 0.92 + 0.08 * Math.sin(now / 700);
     for (y = Math.max(0, LY - 2); y <= Math.min(BH - 1, LY + 2); y++) for (x = Math.max(0, LX - 2); x <= Math.min(BW - 1, LX + 2); x++) {
@@ -923,7 +924,7 @@ function updateHUD() {
   if ($('charBox')._k !== ckey) {
     $('charBox')._k = ckey;
     var xExtra = '촛불 ' + (d ? Core.igniteCost(run) : CONFIG.igniteCost + (chc.igniteDelta || 0));
-    var oExtra = chc.id === 'surveyor' ? (d ? '오늘 ' + d.survey + '/' + d.surveyMax + '번' : '하루 ' + chc.surveyPerDay + '번') : chc.oSkill === 'gentle' || chc.oSkill === 'crew' ? '촛불 ' + (d ? Core.oCost(run) : chc.oSkill === 'crew' ? 0 : CONFIG.hitCost + chc.oExtra) : '';
+    var oExtra = chc.id === 'surveyor' ? (d ? '오늘 ' + d.survey + '/' + d.surveyMax + '번' : '하루 ' + chc.surveyPerDay + '번') : chc.oSkill === 'crew' ? '일당 ' + (d ? Core.crewWage(run) : chc.crewWage) : chc.oSkill === 'gentle' ? '촛불 ' + (d ? Core.oCost(run) : CONFIG.hitCost + chc.oExtra) : '';
     var plainO = chc.o.name === '캐기';   // O가 그냥 캐기면 보일 것이 없어요
     $('charBox').innerHTML = '<div class="prow" title="' + esc(chc.weak ? '약점: ' + chc.weak : chc.perk || '') + '">' + iconHtml('minerBy.' + chc.id, 32) + '<b style="font-size:15px">' + esc(chc.name) + '</b>' +
       '<span class="prow" style="gap:14px;margin-left:auto"><span data-skill="x">' + skillRow('x', chc.x, xExtra) + '</span>' + (plainO ? '' : '<span data-skill="o">' + skillRow('o', chc.o, oExtra) + '</span>') + '</span></div>';
@@ -1059,7 +1060,7 @@ function hintText() {
   }
   if (h.x === d.px && h.y === d.py && Core.onStair(run)) return esc(TEXT.ops.stair);
   if (c.scaled && Core.numAt(d.floor, c) > 0) { var sS = Core.scaleSplit(d.floor, c); return '보물 저울: 지뢰 ' + sS.m + ' · 보물 ' + sS.t + (sS.k ? ' · 큰 덩이 ' + sS.k : ''); }
-  var ci = Core.chordInfo(run, h.x, h.y);   // 둘레 한꺼번에 열기
+  var ci = Core.chordInfo(run, h.x, h.y);   // 주변 한꺼번에 열기
   if (ci && ci.ready && (!settings.aim || (h.x === d.px && h.y === d.py))) ui.preCost = Core.hitCost(run);
   if (ci && ci.ready) return h.x === d.px && h.y === d.py ? esc(TEXT.chord.hint.replace('{n}', Core.hitCost(run))) : !settings.aim ? '누르면 걸어가서 주변 칸을 한꺼번에 엽니다 · 촛불 −' + Core.hitCost(run) : '누르면 그 숫자로 걸어갑니다. 한 번 더 누르면 주변 칸을 한꺼번에 엽니다';
   var fs0 = d.floor.stair;
@@ -1328,7 +1329,7 @@ function settleHtml() {
   });
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
-  if (S.lines.fee) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 일꾼 치료비</span><span>−' + fmt(S.lines.fee) + '</span></div>'; delay += 120; }
+  if (S.lines.fee) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 일꾼 일당</span><span>−' + fmt(S.lines.fee) + '</span></div>'; delay += 120; }
   if (S.lines.kwak) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>' + esc(TEXT.vaultTools.kwakLine) + '</span><span>' + fmt(S.lines.kwak) + '</span></div>'; delay += 120; }
   if (S.lines.tooth) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>' + esc(TEXT.vaultTools.toothLine) + '</span><span>−' + fmt(S.lines.tooth) + '</span></div>'; delay += 120; }
   if (S.lines.drip) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>촛농 받이(남은 촛불)</span><span>' + fmt(S.lines.drip) + '</span></div>'; delay += 120; }
@@ -1997,7 +1998,7 @@ function afterAction() {
   }
   if (ph !== afterAction.lastPhase || ph !== 'mine' || ui.sub) { if (ph === 'settle' || ph === 'room') ui.shownAt = performance.now(); renderOverlay(); }
   afterAction.lastPhase = ph;
-  if (ph === 'mine' && run.tutorial) {   // 말풍선 6: X 칸이 처음 둘레 8칸에 들어온 순간(첫 판 끝까지 유효). 낙서 7은 Day 1~3
+  if (ph === 'mine' && run.tutorial) {   // 말풍선 6: X 칸이 처음 주변 8칸에 들어온 순간(첫 판 끝까지 유효). 낙서 7은 Day 1~3
     var d = run.d, nx = Core.neighbors(d.floor, d.px, d.py).filter(function (c) { return c.cover !== 'open' && c.mark === 1; });
     if (nx.length) { bubble('xmark', TEXT.bubbles.xmark, { cell: { x: nx[0].x, y: nx[0].y } }); if (run.day <= 3) teachHere('x', TUTORIAL.b3Graffiti.x, { x: nx[0].x, y: nx[0].y }); }
     if (run.day <= 3 && d.candle <= 20 && d.candle > 0 && CONFIG.features.embers) teachHere('ember', TUTORIAL.b3Graffiti.o, { x: d.px, y: d.py });   // 낙서 8: 촛불이 처음 20 이하가 된 자리

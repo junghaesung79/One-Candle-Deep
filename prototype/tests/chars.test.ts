@@ -57,9 +57,9 @@ describe('캐릭터', () => {
     const b = scene('jeweler'); b.put(1, 0, 'mine', 2);
     const c2 = b.d.candle; b.press(1, 0);
     expect(b.d.hp).toBe(2); expect(c2 - b.d.candle).toBe(3);
-    // 촛불이 모자라면 캐지 않아요
+    // 촛불이 모자라도 효과는 다 나고 촛불은 0에서 멈춰요(R141)
     const sh = scene('jeweler'); sh.put(1, 0, 'treasure', 2); sh.d.candle = 2;
-    expect(sh.press(1, 0).ok).toBe(false); expect(sh.at(1, 0).cover).not.toBe('open');
+    expect(sh.press(1, 0).ok).toBe(true); expect(sh.at(1, 0).removed).toBe(true); expect(sh.d.candle).toBe(0);
   });
 
   it('광맥꾼: 이어진 O를 잇달아 캐고 촛불은 첫 칸만, 지뢰에서 멈추고 피해 +1', () => {
@@ -80,46 +80,41 @@ describe('캐릭터', () => {
     expect(b.d.streak).toBe(0);
   });
 
-  it('갱 반장: 일꾼이 촛불 없이 캐요. 보물은 콤보 그대로, 지뢰는 치료비 10%', () => {
-    const s = scene('foreman'); s.d.streak = 2;
+  it('갱 반장: O 칸은 촛불 대신 일당, 콤보는 평소처럼, 지뢰는 평소처럼 다쳐요(R141)', () => {
+    const s = scene('foreman'); s.d.pocket = 100;
     s.put(1, 0, 'treasure', 2);
-    const mult = Core.streakMult(s.run), c0 = s.d.candle;
+    const wage = Core.crewWage(s.run), c0 = s.d.candle;
+    expect(wage).toBe(Math.round(10 * Core.stage(s.run).valueMul));
     expect(s.press(1, 0).ok).toBe(true);
     expect(s.d.candle).toBe(c0);
-    expect(s.d.streak).toBe(2);
-    expect(s.d.pocketLines.treasure).toBe(Math.floor(T1() * Core.stage(s.run).valueMul * (s.f.valueMul || 1) * mult + 1e-6));
-    const b = scene('foreman'); b.d.streak = 2; b.d.pocket = 205;
-    const mine = b.put(1, 0, 'mine', 2), nb = b.put(2, 0, 'treasure', 0);
-    const mines0 = b.d.stats.mines, num0 = Core.numAt(b.f, b.at(0, 0));
+    expect(s.d.streak).toBe(1);
+    expect(s.d.pocketLines.fee).toBe(wage);
+    const b = scene('foreman'); b.d.pocket = 100; b.put(1, 0, 'mine', 2);
     b.press(1, 0);
-    expect(mine.removed).toBe(true);
-    expect(b.d.hp).toBe(3);
-    expect(b.d.streak).toBe(2);
-    expect(b.d.stats.mines).toBe(mines0);
-    expect(b.d.pocketLines.fee).toBe(20);
-    expect(Core.numAt(b.f, b.at(0, 0))).toBe(num0 - 1);
-    expect(nb.cover).not.toBe('open');
+    expect(b.d.hp).toBe(3 - CONFIG.mineDmg);
+    // 주머니가 모자라면 촛불로 캐요
+    const p = scene('foreman'); p.d.pocket = 0; p.put(1, 0, 'treasure', 2);
+    const c1 = p.d.candle; p.press(1, 0);
+    expect(c1 - p.d.candle).toBe(1); expect(p.d.pocketLines.fee || 0).toBe(0);
   });
 
-  it('목수: X 칸 버팀목은 촛불 1, 지뢰는 조용히 빠지고 둘레는 안 열려요. 지뢰가 아니면 보물이 묻혀요', () => {
+  it('목수: X 칸을 묻고 기둥을 세워요. 무엇이었는지 알리지 않고 숫자도 그대로예요(R141)', () => {
     const s = scene('carpenter');
     const mine = s.put(1, 0, 'mine', 1), nb = s.put(2, 0, 'treasure', 0);
     expect(Core.igniteCost(s.run)).toBe(1);
-    const c0 = s.d.candle, ok0 = s.d.xOk, r = s.press(1, 0);
-    expect(r.ok).toBe(true);
+    const num0 = Core.numAt(s.f, s.at(0, 0)), c0 = s.d.candle, r = s.press(1, 0);
+    expect(r.ok && r.sealed).toBe(true);
     expect(c0 - s.d.candle).toBe(1);
-    expect(mine.removed && mine.cover === 'open' && !mine.scorch).toBe(true);
-    expect(s.d.xOk).toBe(ok0 + 1);
+    expect(mine.sealed && !mine.removed && mine.cover !== 'open' && mine.mark === 0).toBe(true);
+    expect(Core.numAt(s.f, s.at(0, 0))).toBe(num0);
     expect(s.d.hp).toBe(3);
     expect(nb.removed).toBe(false); expect(nb.cover).not.toBe('open');
-    expect(s.d.stats.blasts).toBe(0);
+    expect(Core.hit(s.run, mine.x, mine.y).ok).toBe(false);
     const b = scene('carpenter');
     const t = b.put(1, 0, 'treasure', 1);
     b.press(1, 0);
-    expect(t.removed && t.melted && t.cover === 'open').toBe(true);
+    expect(t.sealed && !t.removed).toBe(true);
     expect(b.d.pocketLines.treasure).toBe(0);
-    expect(b.d.hp).toBe(3);
-    expect(b.d.xBad).toBe(1);
     // 성냥을 켜 두면(d.freeX) X 칸 스킬도 촛불 없이 하고 성냥이 타요
     const m = scene('powderman'); m.put(1, 0, 'mine', 1); m.d.freeX = { id: 'matchstick' };
     const c1 = m.d.candle; m.press(1, 0);
@@ -148,9 +143,9 @@ describe('캐릭터', () => {
     expect(e.d.hp).toBe(2);
   });
 
-  it('둘레 한꺼번에 열기는 스킬과 상관없이 O·X를 믿어요', () => {
+  it('주변 한꺼번에 열기는 스킬과 상관없이 O·X를 믿어요', () => {
     const s = scene('foreman');
-    // 숫자 칸 (1,0) 위에 서서, 둘레의 O 칸 하나를 믿고 나머지를 열어요
+    // 숫자 칸 (1,0) 위에 서서, 주변의 O 칸 하나를 믿고 나머지를 열어요
     s.put(2, 0, 'treasure', 2); s.at(1, 0).cover = 'open'; s.d.px += 1;
     const r = Core.chord(s.run, s.d.px, s.d.py);
     expect(r.ok).toBe(true);
