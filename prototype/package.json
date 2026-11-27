@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tests",
     "test": "vitest run",
+    "test:quick": "vitest run --maxWorkers=2 --exclude tests/generator.test.ts --exclude tests/veins.test.ts --exclude tests/bot.test.ts",
     "test:watch": "vitest",
     "bot": "tsx bot/cli.ts"
   },
