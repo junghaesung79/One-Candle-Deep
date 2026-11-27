@@ -160,6 +160,14 @@ export interface CoreApi {
   emptySlots(run: Run): number;
   /** 오늘 밤 상점 도구 진열 수(진열대 +1) */
   shopToolCount(run: Run): number;
+  /** 누르는 도구(보물 저울, 수맥 추) 쓰기. bad: 고를 수 없는 칸, spent: 남은 횟수 없음, short: 촛불 모자람 */
+  useTool(run: Run, id: string, x: number, y: number): { ok: boolean; msg?: string; label?: string; bad?: boolean; spent?: boolean; short?: boolean; [k: string]: any };
+  /** 숫자로 확실한 칸 번호(안전, 보물 확실, X 없는 지뢰 확실). 셈 등불과 배짱 표 */
+  sureCells(run: Run): number[];
+  /** 숫자 하나의 둘레: 남은 지뢰 m, 보물 t, 큰 덩이 칸 k */
+  scaleSplit(f: Floor, c: Cell): { m: number; t: number; k: number };
+  /** 둘레 5×5에 묻힌 보물 수 */
+  dowseCount(f: Floor, x: number, y: number): number;
   [k: string]: any;
 }
 
