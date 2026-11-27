@@ -223,6 +223,33 @@ function iconHtml(name, size, cls) {
   SPR.icons.emptyslot = mkSprite(["..........", ".ww.ww.ww.", ".w......w.", "..........", ".w......w.", ".w......w.", "..........", ".w......w.", ".ww.ww.ww.", ".........."], { w: '#c9c3d6' });
   SPR.icons.toolset = mkSprite(["g.......g.", "gg.....gg.", ".gg...gg..", "..gg.gg...", "...ggg....", "...ggg....", "..bb.bb...", ".bb...bb..", "bb.....bb.", "b.......b."], { b: '#9a6532', g: '#9aa0b0' });
   SPR.icons.mirror = mkSprite(["...oooo...", "..oTTTTo..", ".oTttttTo.", ".oTttttTo.", ".oTttttTo.", "..oTTTTo..", "...oooo...", "....bb....", "....bb....", "...bbbb..."], { T: '#e8f4ff', b: '#6b4a30', o: '#b8862e', t: '#a8c4d0' });
+  // 콤보·발파·열림 도구 그림(reviews/23 3.1~3.3, 도감 그림 그대로). 다른 갈래가 같은 그림을 먼저 넣었으면 그대로 둬요
+  (function () {
+    var B = { o: '#3d2a1c', w: '#efe7d6', y: '#f2c14e', h: '#fff1b8', r: '#c4432b', g: '#9aa0b0', G: '#c3c7d2', k: '#3a3542', b: '#9a6532', c: '#c9894a', s: '#5d6270', t: '#5fe0e8' };
+    var A = {
+      whet: [["..........", ".......y..", "......yhy.", ".......y..", "..........", ".gggggggg.", "gGGGGGGGgs", "gggggggggs", ".ssssssss.", ".........."], { G: '#c3c7d2', s: '#5d6270', y: '#ffd25a', h: '#fff4c2' }],
+      tag5: [["...oo.....", "..o..o....", ".wwwwwwww.", ".wwkkkkww.", ".wwkwwwww.", ".wwkkkkww.", ".wwwwwkww.", ".wwkkkkww.", ".wwwwwwww.", ".........."], { o: '#9a6532', k: '#c4432b' }],
+      dusk: [["....y...m.", "...yhy.mm.", "....y...m.", "...www....", "..wwwww...", "..wwwww...", ".bbbbbbb..", ".bcccccb..", "..bbbbb...", ".........."], { m: '#c9c3d6', b: '#6b4a2a', c: '#9a6532' }],
+      pick7: [["..gggggg..", ".g..bb..g.", "g...bb...g", "....bb....", "....bb..yy", "....bb...y", "....bb...y", "....bb..y.", "....bb..y.", ".........."], {}],
+      pickgold: [["..yyyyyy..", ".y..bb..y.", "y...bb...y", "....bb....", "....bb..e.", "....bb.eee", "....bb..e.", "....bb....", "....bb....", ".........."], { e: '#7fd17f' }],
+      apron: [["..b....b..", "...b..b...", "..wwwwww..", "..wwwwww..", ".wwwwwwww.", ".wwccccww.", ".wwcwwcww.", ".wwccccww.", ".wwwwwwww.", "..wwwwww.."], { w: '#c9b49c', b: '#6b4a30', c: '#8a5a3a' }],
+      shoe: [["..........", ".gg....gg.", ".gG....Gg.", ".gG....Gg.", ".gG....Gg.", ".gG....Gg.", ".ggG..Ggg.", "..ggGGgg..", "...gggg...", ".........."], { g: '#7c8292', G: '#d9dde6' }],
+      flint: [["......y...", ".....yhy..", "......y.y.", "...ss...y.", "..sSSs....", ".sSSSSs...", ".sSSSSs...", "..ssss....", "bbbbbbbb..", "bggggggb.."], { s: '#454956', S: '#6c7182', b: '#6b4a30' }],
+      fireglove: [[".......y.y", "..g.g.g...", ".ggggggg..", ".gGgGgGg..", ".gggggggg.", ".ggggggggg", ".gggggggg.", "..gggggg..", "..cccccc..", "..cccccc.."], { g: '#7a2f28', G: '#c4432b', c: '#3a3542' }],
+      bundle: [[".y..y..y..", ".c..c..c..", ".c..c..c..", "..c.c.c...", "...ccc....", "..rrrrr...", "...ccc....", "..c.c.c...", ".c..c..c..", ".........."], {}],
+      twofire: [["..........", ".y......y.", ".yy....yy.", "yhy....yhy", "yrhy..yhry", "yrry..yrry", ".yry..yry.", "..yy..yy..", "...k..k...", ".........."], {}],
+      firebook: [["....y.....", "...yry....", "...yry....", "oooooooooo", "owwwwowwwo", "owkkwowkko", "owwwwowwwo", "owkkwowkko", "oooooooooo", ".........."], { o: '#7a2f28', k: '#a59fb3' }],
+      hand: [["..........", "...c.c.c..", "...c.c.c..", "...c.c.c.c", "...ccccccc", ".c.ccccccc", ".ccccccccc", "..cccccc..", "...ccccc..", ".........."], { c: '#d9a070' }],
+      xbook: [["..........", "oooooooooo", "owwwwwwwwo", "owrwwwrwwo", "owwrwrwwwo", "owwwrwwwwo", "owwrwrwwwo", "owrwwwrwwo", "oooooooooo", ".........."], { o: '#2f5a36' }],
+      spool: [["..........", ".oooooo...", "..rrrr....", "..rRrr....", "..rrRr....", "..rrrr....", ".oooooo...", ".....r....", "......r..y", ".......ryy"], { o: '#6b4a30', R: '#e06a52' }],
+      fan: [["g.g.g.g.g.", ".gGgGgGg..", "..gGGGg...", "...gGg....", "....b.....", "....b.....", "....b.....", "....b.....", "...bbb....", ".........."], { g: '#7c8292' }],
+      matchbox: [["..y..y....", "..r..r....", "..w..w....", "..w..w....", ".bbbbbbbb.", ".bkkkkkkb.", ".bkrrrrkb.", ".bkkkkkkb.", ".bbbbbbbb.", ".........."], { b: '#9a6532', k: '#6b4a30' }],
+      quick: [["..........", "....c.c.c.", "....c.c.c.", "w...ccccc.", "...cccccc.", "ww.cccccc.", "...ccccc..", "w...cccc..", "..........", ".........."], { c: '#d9a070' }],
+      tumble: [["s.........", ".s..ss....", "...sSSs...", "..sSSSSs..", ".sSSssSSs.", "sSSs..sSSs", "sSs.yy.sSs", ".s..yy..s.", "..........", ".........."], { s: '#454956', S: '#7d8394' }],
+      crate: [["..s.S.s...", ".sSsSsSs..", "oooooooooo", "obbbbbbbbo", "oooooooooo", "obbbbbbbbo", "obbbbbbbbo", "oooooooooo", "..........", ".........."], { S: '#9aa0b0' }]
+    };
+    Object.keys(A).forEach(function (k) { if (!SPR.icons[k]) SPR.icons[k] = mkSprite(A[k][0], Object.assign({}, B, A[k][1])); });
+  })();
 })();
 
 // 오른쪽 패널 단추 그림(12×12): 달력, 설정. 화면 위 표시(10×10): 남은 보물, 콤보

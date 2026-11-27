@@ -965,7 +965,7 @@ function updateHUD() {
   renderLog();
 }
 // 도구 그림 오른쪽 아래 숫자(쌓기·셈 도구). 도구 표의 badge(run)가 빈 값이면 안 붙여요
-function toolBadge(t) { var b = t.badge ? t.badge(run) : ''; return b === '' || b == null ? '' : '<span class="cnt px">' + esc(String(b)) + '</span>'; }
+function toolBadge(t) { var b = Core.toolBadge(run, t.id); return b === '' || b == null ? '' : '<span class="cnt px">' + esc(String(b)) + '</span>'; }
 // 도구 자리 바꾸기: 도구를 끌어 다른 칸(도구·소모품·빈 칸)에 놓아요. 본뜬 연장은 바로 오른쪽 도구를 베껴요
 function bindReorder(nodes, done) {
   for (var i = 0; i < nodes.length; i++) {
