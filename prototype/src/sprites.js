@@ -252,6 +252,33 @@ function iconHtml(name, size, cls) {
   })();
 })();
 
+// 도구 그림 분필·정보·보물·광맥(reviews/23 3.4~3.6). 도감 그림을 옮김: 줄은 '/'로 나누고, 기본 색 P에 도구마다 덧칠
+(function () {
+  var P = { o: '#3d2a1c', w: '#efe7d6', y: '#f2c14e', h: '#fff1b8', r: '#c4432b', g: '#9aa0b0', G: '#c3c7d2', k: '#3a3542', b: '#9a6532', c: '#c9894a', s: '#5d6270', t: '#5fe0e8' };
+  var I = {
+    brush: ['.......bb./......bb../.....bb.../....bb..../...oo...../..wwww..../.wwwwww.../.w.w.w.w../....p.p.../...p...p..', { o: '#6b4a30', w: '#e6e1d6', p: '#a59fb3' }],
+    sootmap: ['........../.wwwwwwww./.wkkwwwww./.wkkkwwrw./.wwkwwrwr./.wwwwwwrw./.wwkkwwww./.wwwkkkww./.wwwwwwww./..........', { w: '#c9b49c' }],
+    ticket: ['........../........../yyyyyyyyyy/.ykykykyk./yyyyyyyyyy/.yhhhhhhy./yyyyyyyyyy/........../........../..........', { k: '#c4432b' }],
+    lantern: ['...oooo.../...o..o.../..oooooo../..oyyyyo../..oyhhyo../..oyhhyo../..oyyyyo../..oooooo../...oooo.../..........', { o: '#454956', y: '#ffd25a', h: '#fff4c2' }],
+    lanternOff: ['...oooo.../...o..o.../..oooooo../..oyyyyo../..oyhhyo../..oyhhyo../..oyyyyo../..oooooo../...oooo.../..........', { o: '#454956', y: '#25212d', h: '#3a3542' }],   // 셈 등불이 꺼진 그림
+    scale: ['....kk..../.kkkkkkkk./.k..kk..k./k.k.kk.k.k/yyy.kk.rrr/....kk..../....kk..../..kkkkkk../........../..........', { k: '#9aa0b0', y: '#ffd25a' }],
+    pendulum: ['....k...../....k...../....k...../....k...../...ttt..../..tTtt..../..tttt..../...tt...../....t...../..........', { k: '#a59fb3', t: '#3f8fa0', T: '#8fe0e8' }],
+    eyes: ['........../........../.ww....ww./wtkw..wtkw/wkkw..wkkw/.ww....ww./........../........../........../..........', { k: '#1a1420' }],
+    frame: ['yyyyyyyyyy/y........y/y.ssssss.y/y.s....s.y/y.s.hh.s.y/y.s.hh.s.y/y.s....s.y/y.ssssss.y/y........y/yyyyyyyyyy', { s: '#454956' }],
+    ruler: ['........../........../yyyyyyyyyy/ykyyykyyyk/ykykykykyk/yyyyyyyyyy/........../........../........../..........', { y: '#c9894a', k: '#3d2a1c' }],
+    twomine: ['..k......./.kkk....../kkwkk...../.kkk....../..k..r..../.....r.k../......kkk./.....kkwkk/......kkk./.......k..', { k: '#1a1420', w: '#c9c3d6' }],
+    jar: ['...oooo.../..wwwwww../.w......w./.w.y..t.w./.w..p...w./.w.t..y.w./.w..y.p.w./.wwwwwwww./........../..........', { o: '#6b4a30', w: '#a8c4d0', p: '#c24fd0' }],
+    loupe: ['..oooo..../.o.tt.o.../o.tTTt.o../o.tttt.o../o..tt..o../.o....o.../..oooooww./........ww/.........w/..........', { o: '#b8c1d6', t: '#2aa8b8', T: '#8fe0e8', w: '#9a6532' }],
+    cup: ['........../.yyyyyyyy./.yhyyyyyy./..yyyyyy../...yyyy.../....yy..../....yy..../..yyyyyy../bbbbbbbbbb/.bbbbbbbb.', { b: '#6b4a30' }],
+    chisel: ['..g......./..gg....../...gg...../....bb..../.....bb.../...yyyyy../..yyhyyyy./..yyyyyyy./...yyyyy../..........', { g: '#c3c7d2', b: '#6b4a30' }],
+    thread: ['........../.y......y./..r....r../...r..r.../....rr..../...r..r.../..r....r../.y......y./........../..........', { y: '#ffd25a' }],
+    tape: ['........../.yyyyy..../yyyyyyy.../yykkkyy.../yykkkyy.../yyyyyyywww/.yyyyy.kwk/........../........../..........', {}],
+    coins: ['........g./.......ggg/........g./..yyyy..../.yhhhhy.../..yyyy..../.yhhhhy.../..yyyy..../.yhhhhy.../..yyyy....', { g: '#7fd17f', y: '#b8862e', h: '#f2c14e' }],
+    insure: ['.wwwwwww../.wkkkkkw../.wwwwwww../.wkkkkkw../.wwwwwww../.wkkkwrr../.wwwwrRRr./.wwwwrRRr./......rr../..........', { k: '#a59fb3', r: '#7a2f28', R: '#c4432b' }]
+  };
+  Object.keys(I).forEach(function (k) { if (!SPR.icons[k]) SPR.icons[k] = mkSprite(I[k][0].split('/'), Object.assign({}, P, I[k][1])); });
+})();
+
 // 오른쪽 패널 단추 그림(12×12): 달력, 설정. 화면 위 표시(10×10): 남은 보물, 콤보
 SPR.ui = {
   cal: mkSprite(["..k.....k...", ".rkrrrrrkrr.", ".rrrrrrrrrr.", ".wwwwwwwwww.", ".wdwwdwwdww.", ".wwwwwwwwww.", ".wdwwdwwyyw.", ".wwwwwwwyyw.", ".wdwwdwwwww.", ".wwwwwwwwww.", ".ssssssssss.", "............"],
