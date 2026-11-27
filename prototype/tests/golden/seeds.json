@@ -6,164 +6,164 @@
     "day": 1,
     "floors": [
      "13a93b51",
-     "efb1d4fd",
-     "4091c281",
-     "efa24571",
-     "33faabcb"
+     "8105d634",
+     "edcf16da",
+     "79dd9c89",
+     "d2565714"
     ],
-    "shop": "shortwick,refiner,crackedhelm"
+    "shop": "minepairbook,firegloves,triosack"
    },
    {
     "day": 2,
     "floors": [
-     "1dbf7a4a",
-     "31e6674a",
-     "c8015502",
-     "d72103de",
-     "1965fc59"
+     "3316cb2e",
+     "978a5baf",
+     "74e1b08e",
+     "bf58c49e",
+     "b2ee374c"
     ],
-    "shop": "dripdish,crown,regular"
+    "shop": "waistpouch,dripdish,nervemark"
    },
    {
     "day": 3,
     "floors": [
-     "612ed823",
-     "2f2c683f",
-     "5e0798ad",
-     "56ae4f4d",
-     "3fde0f84"
+     "04fe94f2",
+     "8a7a1cf9",
+     "f1333537",
+     "6bc6f602",
+     "9b0edce7"
     ],
-    "shop": "crackedhelm,nuggetbag,dripdish"
+    "shop": "plumbline,firstknot,fadedfuse"
    },
    {
     "day": 4,
     "floors": [
-     "08b2fda4",
-     "aee54ee7",
-     "36b3a3fd",
-     "44454fae",
-     "431f9367"
+     "7921f996",
+     "92099148",
+     "79e9cf6d",
+     "722ff7fa",
+     "c8e69855"
     ],
-    "shop": "refiner,amulet,belt"
+    "shop": "firegloves,apron,fadebrush"
    },
    {
     "day": 5,
     "floors": [
-     "4fa81576",
-     "6dc41cd5",
-     "fbc4b3df",
-     "96b736c7",
-     "c76b07e4"
+     "fb53a3ca",
+     "ad5500bc",
+     "e1e35b71",
+     "dacf1918",
+     "d03b3d3e"
     ],
-    "shop": "crackedhelm,gloves,refiner"
+    "shop": "triosack,refiner,pick7"
    },
    {
     "day": 6,
     "floors": [
-     "112ac52e",
-     "73a262dd",
-     "d5528e37",
-     "b146da4f",
+     "f0acb99a",
+     "eea6e10c",
+     "d4845c2e",
+     "a71d6310",
      "42a0ccaf"
     ],
-    "shop": "crackedhelm,sieve,dripdish"
+    "shop": "bandcharm,nervemark,stubjar"
    },
    {
     "day": 7,
     "floors": [
      "e9fb1784",
      "b022d295",
-     "b86728af",
-     "45e53ad2",
-     "9637a9cc"
+     "0e5042cd",
+     "cc104b6e",
+     "81a3aaa7"
     ],
-    "shop": "gloves,sieve,crown"
+    "shop": "sieve,firegloves,firstdig"
    },
    {
     "day": 8,
     "floors": [
-     "edd0b562",
-     "314da6cf",
-     "0a0e5327",
-     "7902971f",
-     "24f959ad"
+     "423f9d78",
+     "cf3ff5d0",
+     "f7b064b4",
+     "518251b9",
+     "29152e5e"
     ],
-    "shop": "firstdig,gloves,crackedhelm"
+    "shop": "interest,regular,stairchart"
    },
    {
     "day": 9,
     "floors": [
-     "fe068d3d",
-     "16754c78",
-     "77d5785a",
-     "c70fe253",
-     "884bf692"
+     "558742dd",
+     "9acfa8d5",
+     "c1744f77",
+     "c8bb8a5e",
+     "04d64cd3"
     ],
-    "shop": "crown,amulet,crackedhelm"
+    "shop": "whetstone,pick7,bandcharm"
    },
    {
     "day": 10,
     "floors": [
-     "bb2712e3",
-     "38458d32",
-     "4c4fe66d",
-     "2a737942",
-     "eaf86afd"
+     "84186688",
+     "819d4a0f",
+     "c530bfd1",
+     "8f83f11b",
+     "383cbfdf"
     ],
-    "shop": "lastcard,sieve,crown"
+    "shop": "lonelamp,matchtin,nuggetbag"
    },
    {
     "day": 11,
     "floors": [
-     "ca74fc85",
-     "50a58de1",
-     "53a6a2d3",
-     "e40faa70",
-     "67ec64c5"
+     "eebcb593",
+     "7ce03b78",
+     "171b5046",
+     "a70cb06a",
+     "8c8639f1"
     ],
-    "shop": "amulet,lonelamp,crown"
+    "shop": "flint,giftwrap,tireless"
    },
    {
     "day": 12,
     "floors": [
-     "e4b9c042",
-     "a7e4809c",
-     "9e55659f",
-     "0ae3cd98",
-     "d15ef561"
+     "802e1772",
+     "8bc2d61f",
+     "0733b1bb",
+     "4aa94a7e",
+     "404e61ff"
     ],
-    "shop": "gloves,dripdish,sieve"
+    "shop": "gloves,junkbox,nervemark"
    },
    {
     "day": 13,
     "floors": [
-     "dd9fc45a",
-     "190d4b0c",
-     "1b588dc1",
-     "8b73483f",
-     "66d42d61"
+     "c498bd16",
+     "f8f235f5",
+     "607925cc",
+     "cfebf6a9",
+     "f69a8552"
     ],
-    "shop": "sieve,gloves,crown"
+    "shop": "matchtin,crown,wedge"
    },
    {
     "day": 14,
     "floors": [
-     "1f047eef",
-     "40e07ebe",
-     "4ced9d4f",
-     "c4fed520",
-     "e55ddd34"
+     "dc8a4346",
+     "6d65f23a",
+     "3c13e316",
+     "e28c2993",
+     "66b6322c"
     ],
-    "shop": "firstdig,wedge,amulet"
+    "shop": "firstknot,plumbline,surveybook"
    },
    {
     "day": 15,
     "floors": [
-     "6dc10b4c",
-     "29b229d9",
-     "968eeddc",
-     "bb1ff194",
-     "aed19bd9"
+     "b51df65f",
+     "decf4f4d",
+     "880714b7",
+     "f7cacb40",
+     "5f0cdf03"
     ],
     "shop": ""
    }
@@ -173,164 +173,164 @@
     "day": 1,
     "floors": [
      "7e4ee3e4",
-     "1b95d0fb",
-     "9b8695c7",
-     "b6c6e1d5",
-     "db663f11"
+     "6298fb1a",
+     "cde143e2",
+     "34529d2e",
+     "cf7f7e9e"
     ],
-    "shop": "refiner,lonelamp,dripdish"
+    "shop": "flint,wickshears,ledger"
    },
    {
     "day": 2,
     "floors": [
-     "4d6ce13b",
-     "17303e13",
-     "e743fc3e",
-     "e0d227da",
-     "3de6d936"
+     "6b42b17e",
+     "14bcb401",
+     "860e9878",
+     "0cc1a4fa",
+     "123f976a"
     ],
-    "shop": "crackedhelm,wedge,dripdish"
+    "shop": "triosack,gravelbox,moonsieve"
    },
    {
     "day": 3,
     "floors": [
-     "758d8268",
-     "ebed4bbf",
-     "ae24a0ef",
-     "f90a45ac",
-     "3b97aefc"
+     "8304efe9",
+     "a22aa24a",
+     "6ab95e13",
+     "d259539c",
+     "2fc5b7d1"
     ],
-    "shop": "wedge,lonelamp,amulet"
+    "shop": "gravelbox,herbbag,horseshoe"
    },
    {
     "day": 4,
     "floors": [
-     "61a042ba",
-     "14b15894",
-     "d57e9698",
-     "21e76de6",
-     "8ba9e9da"
+     "e50f1936",
+     "0fbf9516",
+     "33731e42",
+     "16a21d70",
+     "3d4cc91a"
     ],
-    "shop": "gloves,regular,sieve"
+    "shop": "crown,nervemark,flint"
    },
    {
     "day": 5,
     "floors": [
-     "fc6a6625",
-     "7fde9cb0",
-     "bd657a21",
-     "00bdf911",
-     "7fe2df6f"
+     "4d4974eb",
+     "a29ab9b2",
+     "31d9cf59",
+     "d1bc9735",
+     "660df406"
     ],
-    "shop": "firstdig,crackedhelm,sieve"
+    "shop": "herbbag,interest,fadebrush"
    },
    {
     "day": 6,
     "floors": [
-     "885c268c",
-     "bca0a854",
-     "bd34590b",
-     "aafd44e5",
-     "5763c992"
+     "32d689be",
+     "3dcc4b64",
+     "dda33c72",
+     "8dfa055a",
+     "3ca32950"
     ],
-    "shop": "shortwick,nuggetbag,amulet"
+    "shop": "stairchart,waistpouch,fusebundle"
    },
    {
     "day": 7,
     "floors": [
-     "ec45b65d",
-     "bac5b5fb",
-     "ad7a564e",
-     "9d544d44",
-     "32621229"
+     "c5910be8",
+     "8faa21e4",
+     "578628e2",
+     "fa03882a",
+     "645e7a63"
     ],
-    "shop": "gloves,shortwick,crackedhelm"
+    "shop": "sieve,plumbline,goldtooth"
    },
    {
     "day": 8,
     "floors": [
-     "6e3e7cf6",
-     "ef4d9651",
-     "d6ef9024",
-     "63936632",
-     "8e50fce2"
+     "6b08b082",
+     "769e42ea",
+     "29a11f9e",
+     "855897ee",
+     "06d429e3"
     ],
-    "shop": "crackedhelm,belt,wedge"
+    "shop": "haggle,tallyrule,paireye"
    },
    {
     "day": 9,
     "floors": [
-     "6732f175",
-     "edfe7421",
-     "6fc45267",
-     "9a2c86d8",
-     "9f3cd613"
+     "97e53fcd",
+     "c0408861",
+     "4f54c336",
+     "c674074d",
+     "6b73b2cf"
     ],
-    "shop": "regular,lastcard,gloves"
+    "shop": "deeppocket,lonelamp,crown"
    },
    {
     "day": 10,
     "floors": [
-     "e7ab11d8",
-     "8c71e583",
-     "88d82cf0",
-     "edb25af8",
-     "e2a910c6"
+     "66eb428b",
+     "132ea37e",
+     "ad4721a2",
+     "81c9034d",
+     "fb1f0167"
     ],
-    "shop": "belt,lonelamp,crown"
+    "shop": "borderline,fadedfuse,dripdish"
    },
    {
     "day": 11,
     "floors": [
-     "5ff34be7",
-     "80a4d362",
-     "cb49701c",
-     "1c2738ed",
-     "68715496"
+     "8ded5403",
+     "8e6259ce",
+     "2672585c",
+     "f1377eed",
+     "08d15e6c"
     ],
-    "shop": "crown,lonelamp,regular"
+    "shop": "tireless,kwakbox,stairchart"
    },
    {
     "day": 12,
     "floors": [
-     "46e76092",
-     "feb295e5",
-     "c0f3af3d",
-     "80ed30ea",
-     "6e506185"
+     "f17f8973",
+     "cd0e8009",
+     "d8f030cd",
+     "7dde5f96",
+     "5dff59f5"
     ],
-    "shop": "regular,amulet,crackedhelm"
+    "shop": "chunkchisel,flint,fullset"
    },
    {
     "day": 13,
     "floors": [
      "7576ea4f",
-     "3b4bdbec",
-     "0607553f",
-     "89098224",
-     "b4a0e473"
+     "7b253fbc",
+     "039051d4",
+     "cc3e6687",
+     "cd871c70"
     ],
-    "shop": "regular,sieve,crackedhelm"
+    "shop": "bandcharm,bigtumble,kwakmark"
    },
    {
     "day": 14,
     "floors": [
-     "8b26e145",
-     "8a86ba0b",
-     "a8a08f3f",
-     "2a36e914",
-     "e5a7401f"
+     "56a6db95",
+     "088df996",
+     "474aa747",
+     "56222a70",
+     "140d2d66"
     ],
-    "shop": "refiner,regular,belt"
+    "shop": "flint,tallyrule,chunkchisel"
    },
    {
     "day": 15,
     "floors": [
-     "f732b737",
-     "0e6ec435",
-     "77c9b282",
-     "a052fda0",
-     "56122bf1"
+     "4d05b16b",
+     "0a5b8863",
+     "3ffb4fef",
+     "d3664de5",
+     "7b90ce0d"
     ],
     "shop": ""
    }
@@ -340,164 +340,164 @@
     "day": 1,
     "floors": [
      "2ba09470",
-     "38a693f1",
-     "d8938ca6",
-     "6c3d6c6c",
-     "887188e2"
+     "ada185e5",
+     "25fe0312",
+     "680d3b75",
+     "2dc2b983"
     ],
-    "shop": "refiner,belt,regular"
+    "shop": "flint,fadebrush,gravelbox"
    },
    {
     "day": 2,
     "floors": [
-     "0cd65ee9",
-     "89bf243d",
-     "196e6aa4",
-     "01250077",
-     "177e0109"
+     "d6f2c6bc",
+     "a75bc49b",
+     "e0a79afd",
+     "9ba6fd13",
+     "1118fb92"
     ],
-    "shop": "refiner,lonelamp,firstdig"
+    "shop": "horseshoe,fullset,herbbag"
    },
    {
     "day": 3,
     "floors": [
      "018f93fc",
-     "94d30c5d",
-     "43e0ecb6",
-     "9f7917a9",
-     "9a4194b8"
+     "38e95173",
+     "5a6080c3",
+     "b1abfa7d",
+     "19a94c85"
     ],
-    "shop": "sieve,amulet,gloves"
+    "shop": "surveybook,flint,lastcard"
    },
    {
     "day": 4,
     "floors": [
-     "3f6fc055",
-     "7c622bca",
-     "299db0c1",
-     "862f8c38",
-     "4e139aa4"
+     "fe117acb",
+     "71aa1023",
+     "97c6fcdb",
+     "afeef5f5",
+     "6f076c8d"
     ],
-    "shop": "shortwick,belt,amulet"
+    "shop": "stairchart,countlamp,apron"
    },
    {
     "day": 5,
     "floors": [
-     "fc328359",
-     "99da8f29",
-     "e154966b",
-     "02f493ed",
-     "98e2afd7"
+     "39f02f7d",
+     "cc9aa484",
+     "57c49c05",
+     "78073245",
+     "dfc91f81"
     ],
-    "shop": "nuggetbag,firstdig,regular"
+    "shop": "tornsleeve,interest,deeppocket"
    },
    {
     "day": 6,
     "floors": [
-     "535f6242",
-     "74b5dcc3",
-     "97898121",
-     "65410c6e",
-     "fb243402"
+     "15ce83c6",
+     "140ee7c8",
+     "beffa078",
+     "4e508888",
+     "67d0ba29"
     ],
-    "shop": "sieve,amulet,nuggetbag"
+    "shop": "matchtin,flint,herbbag"
    },
    {
     "day": 7,
     "floors": [
-     "9459216c",
-     "0e991947",
-     "43938abb",
-     "190d8b5f",
-     "e01b74f6"
+     "b60ff3f4",
+     "85163a61",
+     "4ab92de5",
+     "5f64a7b6",
+     "31771436"
     ],
-    "shop": "crown,regular,sieve"
+    "shop": "bignum,jewelglass,resthand"
    },
    {
     "day": 8,
     "floors": [
-     "11eccbb8",
-     "acd1e884",
-     "a305a663",
-     "0941dc93",
-     "5cf9e807"
+     "10677425",
+     "cfb8d14b",
+     "2a69eeaf",
+     "81ad819a",
+     "89572024"
     ],
-    "shop": "nuggetbag,firstdig,sieve"
+    "shop": "herbbag,wickshears,fadebrush"
    },
    {
     "day": 9,
     "floors": [
-     "4ea6d27b",
-     "40eda469",
-     "4f9bd364",
-     "f87e8471",
-     "f224a55f"
+     "74949f4e",
+     "cab7b59a",
+     "3b63e8c3",
+     "c5df1926",
+     "443c9f39"
     ],
-    "shop": "regular,nuggetbag,refiner"
+    "shop": "plumbline,herbbag,matchtin"
    },
    {
     "day": 10,
     "floors": [
-     "6188c43a",
-     "1b664132",
-     "b58b26d8",
-     "f5480b56",
-     "aec3a90e"
+     "ae8b4383",
+     "6aa73f0c",
+     "e25eb247",
+     "ead022d0",
+     "70d27272"
     ],
-    "shop": "regular,refiner,sieve"
+    "shop": "paireye,sparkbook,quickhand"
    },
    {
     "day": 11,
     "floors": [
-     "64268ea8",
-     "cdcee396",
-     "6f8a6a72",
-     "f867f1dc",
-     "cf09ceb1"
+     "b9f3ad89",
+     "b683acf1",
+     "691d0e2d",
+     "4442cfd8",
+     "653b3410"
     ],
-    "shop": "gloves,refiner,nuggetbag"
+    "shop": "wedge,dusk,emptycharm"
    },
    {
     "day": 12,
     "floors": [
-     "fe4da44a",
-     "4b8d8bb7",
-     "e61dc22f",
-     "bdff8135",
-     "dec966b7"
+     "1ed6fa1b",
+     "9e7a08d8",
+     "738c147e",
+     "0c66f5c7",
+     "d37570f2"
     ],
-    "shop": "amulet,gloves,regular"
+    "shop": "flint,amulet,dowse"
    },
    {
     "day": 13,
     "floors": [
-     "a130fabf",
-     "df711f55",
-     "f009eed8",
-     "37297e9c",
-     "bcfe167b"
+     "781034f1",
+     "c6a6943a",
+     "d9160d94",
+     "21b2dc7a",
+     "48312f45"
     ],
-    "shop": "shortwick,amulet,nuggetbag"
+    "shop": "minecart,firegloves,fullset"
    },
    {
     "day": 14,
     "floors": [
      "ec5f5ad2",
      "ff4ee865",
-     "6e59132e",
-     "cf2db5ab",
-     "5bc39211"
+     "ba9cc4e2",
+     "4231dc1e",
+     "53d4584a"
     ],
-    "shop": "nuggetbag,refiner,regular"
+    "shop": "busyhand,resthand,triosack"
    },
    {
     "day": 15,
     "floors": [
-     "dbf55f7b",
-     "7ca4e18a",
-     "45d5a8a7",
-     "dff0c6d2",
-     "508d8070"
+     "5a1b2d03",
+     "39d76327",
+     "888b0c0f",
+     "3b57a9c7",
+     "4bdb4ffb"
     ],
     "shop": ""
    }
@@ -507,164 +507,164 @@
     "day": 1,
     "floors": [
      "98c540b6",
-     "2302407c",
-     "51f72a04",
-     "a9de2af5",
-     "bf81fcb4"
+     "590695e9",
+     "d70e46ee",
+     "7588c621",
+     "62fb1b0b"
     ],
-    "shop": "lonelamp,gloves,crackedhelm"
+    "shop": "herbbag,shortwick,stairchart"
    },
    {
     "day": 2,
     "floors": [
      "39e08aca",
-     "7c932c28",
-     "476f5c0c",
-     "4e5d7c37",
-     "b21ad705"
+     "8a593f3c",
+     "7acd39ff",
+     "9a735ecc",
+     "014e1153"
     ],
-    "shop": "regular,dripdish,lonelamp"
+    "shop": "countlamp,kwakbox,herbbag"
    },
    {
     "day": 3,
     "floors": [
-     "6196232d",
-     "ab453410",
-     "757695e4",
-     "d60c229b",
-     "69cb6a21"
+     "dd05185a",
+     "975bd93a",
+     "ef0c9756",
+     "dd536ea0",
+     "b1e00c6a"
     ],
-    "shop": "dripdish,refiner,amulet"
+    "shop": "waistpouch,sparkbook,flint"
    },
    {
     "day": 4,
     "floors": [
-     "d9d40a2e",
-     "49ced6a2",
-     "677b3940",
-     "177ab79c",
-     "5a668d52"
+     "e60f11da",
+     "736fb31a",
+     "8f9113e9",
+     "ecc33918",
+     "e2342684"
     ],
-    "shop": "wedge,dripdish,regular"
+    "shop": "quickhand,fadedfuse,plumbline"
    },
    {
     "day": 5,
     "floors": [
-     "1e254b0d",
-     "595b33ac",
-     "486cb5f5",
-     "81832cf9",
-     "56ebdb47"
+     "ab223ec7",
+     "33a9343a",
+     "8458e01e",
+     "dc2f2cda",
+     "d800d996"
     ],
-    "shop": "wedge,lonelamp,sieve"
+    "shop": "matchtin,mimic,quickhand"
    },
    {
     "day": 6,
     "floors": [
-     "16f65b53",
-     "ea498424",
-     "61d5734d",
-     "a4a555d7",
-     "c7b50134"
+     "7beb9bf6",
+     "7ee7b98e",
+     "7966bcb8",
+     "5bc06577",
+     "d283e13b"
     ],
-    "shop": "crown,firstdig,gloves"
+    "shop": "lonelamp,deeppocket,amulet"
    },
    {
     "day": 7,
     "floors": [
-     "549e9aaa",
-     "10c6ca31",
-     "cc4aa766",
-     "d0ee086e",
-     "073ce19d"
+     "9c48a3a2",
+     "10c1f738",
+     "f6abc0da",
+     "36be6a07",
+     "7362a353"
     ],
-    "shop": "nuggetbag,gloves,shortwick"
+    "shop": "firstknot,belt,crosspick"
    },
    {
     "day": 8,
     "floors": [
-     "7b004c3c",
-     "72ee8db4",
-     "b3ab23a3",
-     "245b7f37",
-     "e6bd0f06"
+     "ec5dfb0a",
+     "a7b500df",
+     "eff84ce7",
+     "0eef92f1",
+     "63f90208"
     ],
-    "shop": "nuggetbag,lonelamp,gloves"
+    "shop": "wickshears,matchbundle,belt"
    },
    {
     "day": 9,
     "floors": [
-     "2a50d06e",
-     "2e428907",
-     "6b3f195e",
-     "d43d16c9",
-     "4a446aef"
+     "addfdf40",
+     "52094f22",
+     "1582a937",
+     "b5b105e5",
+     "aa5f88e0"
     ],
-    "shop": "dripdish,firstdig,gloves"
+    "shop": "waistpouch,goldtooth,crown"
    },
    {
     "day": 10,
     "floors": [
      "518f8a90",
      "492eddf3",
-     "54c65b2d",
-     "3deb7a57",
-     "05d118dc"
+     "278d881a",
+     "04c7de6d",
+     "78bebb2b"
     ],
-    "shop": "amulet,gloves,dripdish"
+    "shop": "flint,sieve,fadedfuse"
    },
    {
     "day": 11,
     "floors": [
-     "46d67583",
-     "4a224306",
-     "eb8ed095",
-     "d07a9df8",
-     "33254ccb"
+     "6a1844d2",
+     "0081e735",
+     "cc9cbf59",
+     "b56a1eae",
+     "26830488"
     ],
-    "shop": "gloves,amulet,shortwick"
+    "shop": "crackedhelm,dusk,bigtumble"
    },
    {
     "day": 12,
     "floors": [
-     "eac6602e",
-     "cbbbf5f5",
-     "15f0666b",
-     "d6841d2c",
-     "105f1ae0"
+     "60ea1dd7",
+     "a3a1bf0a",
+     "54c4b3fc",
+     "79fe61c5",
+     "5de77194"
     ],
-    "shop": "firstdig,amulet,shortwick"
+    "shop": "triosack,dusk,nervemark"
    },
    {
     "day": 13,
     "floors": [
-     "94c87461",
-     "a6b2c427",
-     "6047a5ca",
-     "b5375c9a",
-     "27330db8"
+     "cafda3cf",
+     "07568dc2",
+     "7ba3b985",
+     "45859248",
+     "b18ea527"
     ],
-    "shop": "shortwick,lonelamp,dripdish"
+    "shop": "dowse,plumbline,waistpouch"
    },
    {
     "day": 14,
     "floors": [
      "debc0375",
      "ceebe355",
-     "13cbeca7",
-     "d4865b2f",
-     "b783449e"
+     "5ee26a6f",
+     "258397f0",
+     "25fcd69e"
     ],
-    "shop": "nuggetbag,crown,shortwick"
+    "shop": "mimic,shortwick,nervemark"
    },
    {
     "day": 15,
     "floors": [
-     "ce7d24c0",
-     "be5dde17",
-     "cf7b8e18",
-     "78e6af10",
-     "2b91bc4f"
+     "52574320",
+     "bbbb6a3d",
+     "c278c3f8",
+     "5a27824d",
+     "59c66242"
     ],
     "shop": ""
    }
@@ -674,164 +674,164 @@
     "day": 1,
     "floors": [
      "a7dbcf78",
-     "f3481bb7",
-     "4705744e",
-     "caf4d97d",
-     "37ee5508"
+     "1e27a027",
+     "35a61d5c",
+     "9f9133c5",
+     "9c3a71c1"
     ],
-    "shop": "firstdig,sieve,shortwick"
+    "shop": "piggy,sparkbook,tallyrule"
    },
    {
     "day": 2,
     "floors": [
-     "afe7947f",
-     "5b509f61",
-     "d05bf435",
-     "603e5833",
-     "b2ade366"
+     "28a353dd",
+     "5b8ab674",
+     "e1a1d189",
+     "4cd1fd10",
+     "593616f9"
     ],
-    "shop": "firstdig,crown,shortwick"
+    "shop": "interest,dripdish,minepairbook"
    },
    {
     "day": 3,
     "floors": [
-     "2ed84dff",
-     "a586154a",
-     "cada9cfc",
-     "b84ebba2",
-     "32528102"
+     "8a4547c3",
+     "d12fa0d3",
+     "5749bbe3",
+     "5455c5b4",
+     "8a51b780"
     ],
-    "shop": "shortwick,gloves,crackedhelm"
+    "shop": "bandcharm,belt,stairchart"
    },
    {
     "day": 4,
     "floors": [
-     "615cd8eb",
-     "151153ab",
-     "c09f95f0",
-     "1fe41aaf",
-     "8c3d734b"
+     "0e44e10e",
+     "c9acce0d",
+     "bec25dc1",
+     "fd0f0a37",
+     "b98a1025"
     ],
-    "shop": "crown,shortwick,gloves"
+    "shop": "lonelamp,crosspick,gloves"
    },
    {
     "day": 5,
     "floors": [
-     "9def914d",
-     "abc70397",
-     "e2734504",
-     "6872b589",
-     "2c9bafac"
+     "92e34a53",
+     "7a4ad1d9",
+     "09598fe1",
+     "949567f1",
+     "18e12ae4"
     ],
-    "shop": "crackedhelm,shortwick,regular"
+    "shop": "interest,deeppick,plumbline"
    },
    {
     "day": 6,
     "floors": [
-     "9ea6310e",
-     "f62c6e80",
-     "4fac1db9",
-     "e63b07d0",
-     "cb2a8d73"
+     "7479b149",
+     "188cae39",
+     "ec619291",
+     "2cfc669f",
+     "c06438c4"
     ],
-    "shop": "belt,gloves,lonelamp"
+    "shop": "gravelbox,sieve,giftwrap"
    },
    {
     "day": 7,
     "floors": [
-     "5dea11f0",
-     "1afed623",
-     "a13cc0a9",
-     "dacad282",
-     "a8e93db2"
+     "17e02335",
+     "870647e5",
+     "b5f1cb17",
+     "30025192",
+     "22bbd236"
     ],
-    "shop": "amulet,crackedhelm,gloves"
+    "shop": "flint,triosack,gloves"
    },
    {
     "day": 8,
     "floors": [
-     "14676946",
-     "97c8cd84",
-     "1c4d7574",
-     "09324942",
-     "14da21b3"
+     "a11b9c4c",
+     "142aa03c",
+     "22fff128",
+     "c6c55b7a",
+     "3312f609"
     ],
-    "shop": "lonelamp,gloves,sieve"
+    "shop": "firstknot,crown,resthand"
    },
    {
     "day": 9,
     "floors": [
-     "2a759c3b",
-     "51d231ac",
-     "9cba17a9",
-     "d7965b8d",
-     "849905f3"
+     "bd46e642",
+     "82ac391a",
+     "595521ac",
+     "19e9385c",
+     "84e4a3c3"
     ],
-    "shop": "refiner,crackedhelm,firstdig"
+    "shop": "horseshoe,deeppocket,haggle"
    },
    {
     "day": 10,
     "floors": [
-     "9f984506",
-     "5eb21704",
-     "76e2ec2c",
-     "75d5b9f6",
-     "96633593"
+     "4c9099eb",
+     "ccdb66ed",
+     "c7a888c7",
+     "02b49b33",
+     "84028043"
     ],
-    "shop": "belt,lonelamp,regular"
+    "shop": "fanshovel,fullset,minepairbook"
    },
    {
     "day": 11,
     "floors": [
-     "75fe2197",
-     "df566dcc",
-     "2cc2b5fe",
-     "293b5ed1",
-     "3c1c48cc"
+     "4bc6100e",
+     "5aac139f",
+     "96716b8a",
+     "7f45e54d",
+     "9eef4647"
     ],
-    "shop": "dripdish,sieve,regular"
+    "shop": "windguard,surveybook,gravelbox"
    },
    {
     "day": 12,
     "floors": [
-     "8db63d39",
-     "a0292c29",
-     "b6063965",
-     "b77394de",
-     "4cd88025"
+     "0303422a",
+     "1c72b7e1",
+     "bd9d86be",
+     "18f2661b",
+     "6a670903"
     ],
-    "shop": "crackedhelm,firstdig,sieve"
+    "shop": "bandcharm,interest,matchtin"
    },
    {
     "day": 13,
     "floors": [
-     "13292c9d",
-     "dd137546",
-     "d929269d",
-     "ad91356c",
-     "2e1c0ccf"
+     "ea0b5cf9",
+     "7374e024",
+     "6f44d3f8",
+     "35de4398",
+     "8fdd9ad1"
     ],
-    "shop": "firstdig,gloves,amulet"
+    "shop": "interest,lonelamp,regular"
    },
    {
     "day": 14,
     "floors": [
-     "eac84d21",
-     "5c2038fe",
-     "95a4572d",
-     "994a7374",
-     "67e6695e"
+     "ed596da7",
+     "6fded316",
+     "e9d603d6",
+     "222b197c",
+     "2e676e4e"
     ],
-    "shop": "lonelamp,regular,shortwick"
+    "shop": "firstknot,borderline,tallyrule"
    },
    {
     "day": 15,
     "floors": [
-     "59b805de",
-     "233b8fdb",
-     "ddb3db52",
-     "54ae9527",
-     "9a0cb524"
+     "c1c7dafa",
+     "e5798dfc",
+     "a2d8f154",
+     "a31602aa",
+     "911067ab"
     ],
     "shop": ""
    }

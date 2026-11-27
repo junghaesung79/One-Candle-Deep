@@ -541,7 +541,7 @@ var TOOLS = [
   // ctx.keep: 판 내내 남는 도구 상태(run.toolRun). ctx.state는 날마다 비워져요. badge: 도구 그림 오른쪽 아래 숫자(빈 값이면 안 붙어요)
   { id: 'stairchart', axis: '깊이', rarity: '일반', name: '계단 표', short: '계단 표', price: 120, kind: 'passive', icon: 'stairchart', sets: ['22'],
     desc: '계단을 세 번 내려갈 때마다 세 번째는 촛불이 들지 않습니다',
-    badge: function (ctx) { var run = ctx.run; var s = run.toolRun && run.toolRun.stairchart; return (s && s.n ? s.n % 3 : 0) + '/3'; },
+    badge: function (ctx) { var run = ctx.run; var s = run.toolRun && run.toolRun.stairchart; return s && s.n % 3 ? s.n % 3 : ''; },   // 세 번째까지 남은 셈(0이면 안 붙음)
     hooks: {
       on_descend_cost: function (ctx, ev) { if (((ctx.keep.n || 0) + 1) % 3 === 0) { ev.cost = 0; if (!ev.preview) ctx.proc('세 번째 계단'); } },
       on_descend: function (ctx) { ctx.keep.n = (ctx.keep.n || 0) + 1; }
