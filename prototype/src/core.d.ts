@@ -2,7 +2,7 @@
 // 지금은 자주 쓰는 모양(칸, 층, 하루, 한 판)과 바깥에서 부르는 함수만 적었고, 나머지 필드는 느슨하게 열어 뒀어요.
 // 여기를 하나씩 좁혀 가면 TypeScript 쪽(봇, 테스트, 앞으로의 코드)이 그만큼 검사를 받아요.
 
-export type RuleId = 'plain' | 'pair' | 'lonely' | 'rows' | 'tally' | 'minepair' | 'border';
+export type RuleId = 'plain' | 'pair' | 'lonely' | 'rows' | 'tally' | 'minepair' | 'border' | 'cols' | 'diag' | 'trio' | 'band';
 export type Phase = 'deed' | 'gift' | 'board' | 'ready' | 'mine' | 'room' | 'settle' | 'payment' | 'shop' | 'final';
 
 /** 판의 한 칸 */
@@ -25,6 +25,14 @@ export interface Floor {
   rule: RuleId;
   cells: Cell[];
   stair: (Cell & { blocked?: boolean }) | null;
+  /** 세로줄 광맥: 보물이 있는 세로줄 셋(왼쪽부터, 0부터 센 열 번호) */
+  treasureCols?: number[];
+  /** 대각선 광맥: 대각선으로 붙은 보물 짝(칸 번호 y*W+x 둘씩) */
+  diagPairs?: [number, number][];
+  /** 무리 광맥: 셋 묶음(칸 번호 셋씩) */
+  groups?: [number, number, number][];
+  /** 금 띠 광맥: 보물 둘레 8칸 가운데 보물이 아닌 칸(지뢰가 없는 띠, 칸 번호) */
+  band?: number[];
   [k: string]: any;
 }
 
@@ -103,6 +111,7 @@ export interface CoreApi {
   genFloor(spec: { depth: number; rule: RuleId | string; sx: number; sy: number; seed: number; twin?: boolean; chunk?: unknown }): Floor;
   cellAt(f: Floor, x: number, y: number): Cell;
   neighbors(f: Floor, x: number, y: number): Cell[];
+  diagN(f: Floor, x: number, y: number): Cell[];
   numAt(f: Floor, c: Cell): number;
   deduce(f: Floor, opt?: unknown): { safe: number[]; [k: string]: any };
   /** 층에 남은(없어지지 않은) 보물·지뢰 수 */

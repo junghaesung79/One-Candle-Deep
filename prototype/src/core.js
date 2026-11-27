@@ -48,8 +48,9 @@ var CONFIG = {
   twinBoth: false,                           // 쌍둥이 지뢰 변덕 날 보물도 둘씩 붙는다(05 확인 필요)
   fizzle: 'melt',                            // 불발한 칸이 보물일 때: keep 그대로 남음 / scorch 그을림(반값, 콤보 안 오름) / melt 녹아서 없어짐
   usefulMin: 2, usefulTries: 25,
-  usefulRules: ['pair', 'tally', 'minepair'],   // R35: 광맥 규칙으로 보물로 확정되는 칸 usefulMin개 이상
-  usefulMineRules: ['lonely', 'rows', 'border'], usefulMineMin: 3,   // R35: 이 셋은 지뢰로 확정되는 칸 3개 이상             // R30 쓸모 검사: 규칙으로 보물로 확정되는 칸 하한, 이 횟수 안에 못 맞추면 생략
+  usefulRules: ['pair', 'tally', 'minepair', 'diag', 'trio', 'band'],   // R35: 광맥 규칙으로 보물로 확정되는 칸 usefulMin개 이상. 대각선·무리·금 띠는 규칙으로 보물을 확정하는 광맥
+  usefulMinBy: { band: 1 },   // 광맥마다 다른 하한. 금 띠는 보물이 흩어져 '둘레는 전부 보물'이 첫 보물 뒤에야 쓰여 1칸(2칸이면 넷에 하나가 25번 안에 못 맞춤)
+  usefulMineRules: ['lonely', 'rows', 'border', 'cols'], usefulMineMin: 3,   // R35: 이 셋은 지뢰로 확정되는 칸 3개 이상             // R30 쓸모 검사: 규칙으로 보물로 확정되는 칸 하한, 이 횟수 안에 못 맞추면 생략
   sheetCap: 6,                               // 현장 검수표: 층마다 받는 촛불 상한
   matchCandle: 10,
   refinerMin: 3,                             // 설익이 정제기: 불 한 번에 이만큼 터져야 금 알갱이
@@ -140,9 +141,14 @@ var RULES = {   // 02 6.5(해요체)
   rows:     { name: '가로줄 광맥', sign: '보물은 가로 세 줄에만 있습니다', help: '세 줄은 서로 붙어 있지 않습니다. 그 밖의 줄에 묻힌 것은 전부 지뢰입니다', icon: 'rRows' },
   tally:    { name: '눈금 광맥', sign: '왼쪽 벽 눈금이 그 줄에 남은 보물 수입니다', help: '눈금이 0인 줄에 묻힌 것은 전부 지뢰입니다', icon: 'rTally' },
   minepair: { name: '지뢰 짝 광맥', sign: '지뢰가 둘씩 붙어 있습니다. 보물 값은 한 등급 높습니다', help: '위·아래·왼쪽·오른쪽으로 붙습니다. 대각선은 아닙니다. 혼자 떨어져 묻힌 것은 보물입니다', icon: 'rMinePair' },
-  border:   { name: '테두리 광맥', sign: '보물은 바깥 두 줄에만 있습니다', help: '안쪽에 묻힌 것은 전부 지뢰입니다', icon: 'rBorder' }
+  border:   { name: '테두리 광맥', sign: '보물은 바깥 두 줄에만 있습니다', help: '안쪽에 묻힌 것은 전부 지뢰입니다', icon: 'rBorder' },
+  // 새 광맥 넷(01 9.2, 02 6.5)
+  cols:     { name: '세로줄 광맥', sign: '보물은 세로 세 줄에만 있습니다', help: '세 줄은 서로 붙어 있지 않습니다. 그 밖의 줄에 묻힌 것은 전부 지뢰입니다', icon: 'rCols' },
+  diag:     { name: '대각선 광맥', sign: '보물 대각선 옆에 보물이 하나 더 있습니다', help: '대각선 네 칸 중 한 칸입니다. 위·아래·왼쪽·오른쪽에는 보물이 없습니다', icon: 'rDiag' },
+  trio:     { name: '무리 광맥', sign: '보물은 셋씩 모여 있습니다', help: '위·아래·왼쪽·오른쪽으로 이어진 셋입니다. 무리끼리는 닿지 않습니다', icon: 'rTrio' },
+  band:     { name: '금 띠 광맥', sign: '보물 둘레에는 지뢰가 없습니다', help: '보물을 캤다면 그 둘레에 묻힌 것은 전부 보물입니다', icon: 'rBand' }
 };
-var RULE_IDS = ['plain', 'pair', 'lonely', 'rows', 'tally', 'minepair', 'border'];
+var RULE_IDS = ['plain', 'pair', 'lonely', 'rows', 'tally', 'minepair', 'border', 'cols', 'diag', 'trio', 'band'];   // 순서가 층 시드 열쇠(광맥 번호)라 새 광맥은 뒤에 붙여요
 var CHUNK_RULES = ['plain', 'lonely', 'border'];   // 덩이 층은 덩이와 헷갈리지 않는 규칙만
 
 // 갱 상태 13종(01 11.2, 02 6.3 게시판 문구). 1~12번 평소, 13번 쌍둥이 지뢰는 한 판 한 번 오는 '좋은 날'(납부일 제외)
@@ -617,8 +623,11 @@ PRESETS.v22 = {
              { startDepth: 1, rowShift: 2, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }],
     chunks: { 3: { depth: 3, w: 2, h: 2, value: 60 }, 6: { depth: 4, w: 2, h: 2, value: 100 }, 9: { depth: 5, w: 2, h: 2, value: 160 },
               12: { depth: 5, w: 3, h: 2, value: 220 }, 15: { depth: 5, w: 3, h: 2, value: 260 } },
-    rulePool: ['pair', 'border', 'lonely', 'tally', 'minepair'],   // 맨땅은 첫날 첫 층만. 광맥은 등급과 상관없이 모두(R132)
-    ruleTune: { pair: { t: -2 }, border: { t: 2 }, lonely: { t: 4 }, tally: { t: -7 }, minepair: { t: -6, up: 0 } },   // 광맥별 수입을 맞춤(봇 60~80판씩). 눈금·지뢰 짝은 R132에서 모든 등급에 나오며 줄임: 지뢰 짝은 보물 등급을 올리지 않음
+    rulePool: ['pair', 'border', 'lonely', 'tally', 'minepair', 'cols', 'diag', 'trio', 'band'],   // 맨땅은 첫날 첫 층만. 광맥은 등급과 상관없이 모두(R132). 세로줄·대각선·무리·금 띠(R131)
+    // 새 광맥 넷(R131)의 보물 수: 짝과 수입이 비슷하게 어림으로 정함(보통 봇 10판씩 한 번 재 봄, 짝 -2가 기준).
+    // 대각선은 짝을 돌린 꼴이라 짝과 같은 -2, 무리는 셋씩 이어 캐 콤보가 길고 3의 배수로 올려 -3,
+    // 세로줄은 가로줄처럼 지뢰만 가려 외톨이와 같은 +4, 금 띠는 보물이 흩어져 있어 '둘레는 전부 보물'이 드물게 쓰여 +4(0이면 짝의 절반쯤)
+    ruleTune: { pair: { t: -2 }, border: { t: 2 }, lonely: { t: 4 }, tally: { t: -7 }, minepair: { t: -6, up: 0 }, cols: { t: 4 }, diag: { t: -2 }, trio: { t: -3 }, band: { t: 4 } },   // 광맥별 수입을 맞춤(봇 60~80판씩). 눈금·지뢰 짝은 R132에서 모든 등급에 나오며 줄임: 지뢰 짝은 보물 등급을 올리지 않음
     stairShown: true, countsShown: true,
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
                 sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true,
@@ -651,6 +660,8 @@ var Core = (function () {
   var W = CONFIG.W, H = CONFIG.H, N = W * H;
   var DIRS = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
   var ORTH = [[0, -1], [-1, 0], [1, 0], [0, 1]];
+  var DIAG = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+  var TROMINO = [[[0, 0], [1, 0], [2, 0]], [[0, 0], [0, 1], [0, 2]], [[0, 0], [1, 0], [0, 1]], [[0, 0], [1, 0], [1, 1]], [[0, 0], [0, 1], [1, 1]], [[1, 0], [0, 1], [1, 1]]];   // 무리 광맥의 셋 묶음: 일자 둘, ㄱ자 넷
   var TOOL_BY_ID = {}; TOOLS.forEach(function (t) { TOOL_BY_ID[t.id] = t; });
   var KEEP_BY_ID = {}; KEEPSAKES.forEach(function (k) { KEEP_BY_ID[k.id] = k; });
   function keepSum(run, key) { return (run.keeps || []).reduce(function (a, id) { return a + (KEEP_BY_ID[id][key] || 0); }, 0) + (run.owned || []).reduce(function (a, id) { var t = TOOL_BY_ID[id]; return a + ((t && t[key]) || 0); }, 0); }   // 유물 + 능력치를 바꾸는 도구(R129)
@@ -699,6 +710,14 @@ var Core = (function () {
   function idx(c) { return c.y * W + c.x; }
   function neighbors(f, x, y) { var out = []; for (var i = 0; i < 8; i++) { var c = cellAt(f, x + DIRS[i][0], y + DIRS[i][1]); if (c) out.push(c); } return out; }
   function orthN(f, x, y) { var out = []; for (var i = 0; i < 4; i++) { var c = cellAt(f, x + ORTH[i][0], y + ORTH[i][1]); if (c) out.push(c); } return out; }
+  function diagN(f, x, y) { var out = []; for (var i = 0; i < 4; i++) { var c = cellAt(f, x + DIAG[i][0], y + DIAG[i][1]); if (c) out.push(c); } return out; }
+  // 새 광맥의 보물 수 맞춤(01 9.4): 세로줄은 6개 이상, 대각선은 짝수, 무리는 3의 배수로 올림
+  function veinCount(rule, t) {
+    if (rule === 'cols') return Math.max(6, t);
+    if (rule === 'diag') return t % 2 ? t + 1 : t;
+    if (rule === 'trio') return Math.max(3, Math.ceil(t / 3) * 3);
+    return t;
+  }
   function liveHaz(c) { return !!c.haz && !c.removed; }
   function numAt(f, c) { var n = 0, nb = neighbors(f, c.x, c.y); for (var i = 0; i < nb.length; i++) if (liveHaz(nb[i])) n++; return n; }
   function covered(c) { return c.cover !== 'open'; }
@@ -813,7 +832,7 @@ var Core = (function () {
     var rng = rngFrom(spec.seed), best = null, bestSolv = null;
     var mineRule = CONFIG.usefulMineRules.indexOf(spec.rule) >= 0;
     var needUse = (CONFIG.usefulRules.indexOf(spec.rule) >= 0 || mineRule) && CONFIG.usefulMin > 0;
-    var useMin = mineRule ? CONFIG.usefulMineMin : CONFIG.usefulMin;
+    var useMin = mineRule ? CONFIG.usefulMineMin : (CONFIG.usefulMinBy[spec.rule] || CONFIG.usefulMin);
     for (var a = 0; a < CONFIG.genRetries; a++) {
       var f = tryGen(rng, spec, a);
       f.attempts = a + 1;
@@ -854,6 +873,8 @@ var Core = (function () {
     var pairT = rule === 'pair' || (spec.twin && CONFIG.twinBoth), pairM = rule === 'minepair' || spec.twin;
     if (pairT && t % 2) t++;
     if (pairM && m % 2) m++;
+    t = veinCount(rule, t);
+    var bandR = rule === 'band';   // 금 띠: 보물을 먼저 놓고 그 둘레 8칸을 뺀 곳에 지뢰를 놓는다(01 9.4)
     var reserved = {};
     for (var y = sy - 1; y <= sy + 1; y++) for (var x = sx - 1; x <= sx + 1; x++) if (inB(x, y)) reserved[y * W + x] = 1;
     // 계단 1개
@@ -882,30 +903,45 @@ var Core = (function () {
     }
     function nearChunk(c) { if (!f.chunk) return false; var C = f.chunk; return c.x >= C.x - 1 && c.x <= C.x + C.w && c.y >= C.y - 1 && c.y <= C.y + C.h; }
     // 지뢰
-    if (pairM) {
-      var placed = 0, guard = 0;
-      while (placed < m && guard++ < 400) {
-        var a = pick(cells, rng), dir = pick(ORTH, rng), b = cellAt(f, a.x + dir[0], a.y + dir[1]);
-        if (!b || !free(a) || !free(b)) continue;
-        // 둘 다 다른 지뢰와 상하좌우로 닿지 않아야 정확히 '둘씩'
-        var touch = orthN(f, a.x, a.y).concat(orthN(f, b.x, b.y)).some(function (n) { return n.haz === 'mine'; });
-        if (touch) continue;
-        a.haz = 'mine'; b.haz = 'mine'; placed += 2;
+    function freeM(c) { return free(c) && !(bandR && neighbors(f, c.x, c.y).some(function (n) { return n.haz === 'treasure'; })); }
+    function placeMines() {
+      if (pairM) {
+        var placed = 0, guard = 0;
+        while (placed < m && guard++ < 400) {
+          var a = pick(cells, rng), dir = pick(ORTH, rng), b = cellAt(f, a.x + dir[0], a.y + dir[1]);
+          if (!b || !freeM(a) || !freeM(b)) continue;
+          // 둘 다 다른 지뢰와 상하좌우로 닿지 않아야 정확히 '둘씩'
+          var touch = orthN(f, a.x, a.y).concat(orthN(f, b.x, b.y)).some(function (n) { return n.haz === 'mine'; });
+          if (touch) continue;
+          a.haz = 'mine'; b.haz = 'mine'; placed += 2;
+        }
+        if (placed < m) return false;
+      } else {
+        var fr = shuffle(cells.filter(freeM), rng);
+        if (bandR && fr.length < m) return false;
+        for (var q = 0; q < m && q < fr.length; q++) fr[q].haz = 'mine';
       }
-      if (placed < m) return f;
-    } else {
-      var fr = shuffle(cells.filter(free), rng);
-      for (i = 0; i < m && i < fr.length; i++) fr[i].haz = 'mine';
+      return true;
     }
+    if (!bandR && !placeMines()) return f;
     // 보물
     var rowsSel = null;
     if (rule === 'rows') {   // 01 9.2: 세 줄은 위아래로 이웃하지 않는다
       var order = shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], rng); rowsSel = [];
       order.forEach(function (r) { if (rowsSel.length < 3 && rowsSel.every(function (q) { return Math.abs(q - r) > 1; })) rowsSel.push(r); }); f.treasureRows = rowsSel.slice().sort(function (p, q) { return p - q; }); }
+    var colsSel = null, colCnt = {}, diagPairs = [], groups = [];
+    if (rule === 'cols') {   // 01 9.2: 세로줄 15개 중 셋, 좌우로 이웃하지 않는다. 줄마다 보물 2개 이상
+      var corder = [], cq; for (cq = 0; cq < W; cq++) corder.push(cq);
+      shuffle(corder, rng); colsSel = [];
+      corder.forEach(function (r) { if (colsSel.length < 3 && colsSel.every(function (q) { return Math.abs(q - r) > 1; })) colsSel.push(r); });
+      colsSel.sort(function (p, q) { return p - q; }); colsSel.forEach(function (x) { colCnt[x] = 0; });
+    }
     function allowT(c) {
       if (!free(c) || nearChunk(c)) return false;
       if (rule === 'border' && !isBorder(c.x, c.y)) return false;
       if (rule === 'rows' && rowsSel.indexOf(c.y) < 0) return false;
+      if (rule === 'cols' && colsSel.indexOf(c.x) < 0) return false;
+      if ((rule === 'diag' || rule === 'trio') && neighbors(f, c.x, c.y).some(function (n) { return n.haz === 'treasure'; })) return false;   // 묶음 둘레 8칸에는 다른 묶음을 놓지 않는다
       if (rule === 'lonely' && neighbors(f, c.x, c.y).some(function (n) { return n.haz === 'treasure'; })) return false;
       if (pairT && orthN(f, c.x, c.y).some(function (n) { return n.haz === 'treasure'; })) return false;
       return true;
@@ -914,6 +950,7 @@ var Core = (function () {
     var tPlaced = 0;
     for (i = 0; tPlaced < t && i < 400; i++) {
       var pool = cells.filter(allowT);
+      if (colsSel) { var need = colsSel.filter(function (x) { return colCnt[x] < 2; }); if (need.length) pool = pool.filter(function (c) { return need.indexOf(c.x) >= 0; }); }   // 세 줄에 2개씩 먼저
       if (!pool.length) break;
       if (rng() < CONFIG.treasureNearMine) { var near = pool.filter(nearMine); if (near.length) pool = near; }
       var tc = pick(pool, rng);
@@ -926,9 +963,28 @@ var Core = (function () {
         if (!mates.length) continue;
         var mt = pick(mates, rng);
         tc.haz = 'treasure'; mt.haz = 'treasure'; tPlaced += 2;
-      } else { tc.haz = 'treasure'; tPlaced++; }
+      } else if (rule === 'diag') {   // 대각선 2칸 묶음
+        var dms = diagN(f, tc.x, tc.y).filter(allowT);
+        if (!dms.length) continue;
+        var dm = pick(dms, rng);
+        tc.haz = 'treasure'; dm.haz = 'treasure'; tPlaced += 2; diagPairs.push([idx(tc), idx(dm)]);
+      } else if (rule === 'trio') {   // 일자나 ㄱ자 3칸 묶음: 둘째는 첫 칸 옆, 셋째는 둘 중 하나의 옆
+        var b1 = orthN(f, tc.x, tc.y).filter(allowT);
+        if (!b1.length) continue;
+        var tb = pick(b1, rng);
+        var b2 = orthN(f, tc.x, tc.y).concat(orthN(f, tb.x, tb.y)).filter(function (n) { return n !== tc && n !== tb && allowT(n); });
+        if (!b2.length) continue;
+        var t3 = pick(b2, rng);
+        tc.haz = 'treasure'; tb.haz = 'treasure'; t3.haz = 'treasure'; tPlaced += 3; groups.push([idx(tc), idx(tb), idx(t3)]);
+      } else { tc.haz = 'treasure'; tPlaced++; if (colsSel) colCnt[tc.x]++; }
     }
     if (tPlaced < t) return f;
+    if (bandR && !placeMines()) return f;
+    // 도구가 쓸 광맥 자료(reviews/23 3.6): 세로줄의 세 줄, 대각선 짝, 무리 묶음, 금 띠(보물 둘레의 지뢰 없는 칸)
+    if (colsSel) f.treasureCols = colsSel;
+    if (rule === 'diag') f.diagPairs = diagPairs;
+    if (rule === 'trio') f.groups = groups;
+    if (bandR) { var bandSet = {}; cells.forEach(function (c) { if (c.haz === 'treasure') neighbors(f, c.x, c.y).forEach(function (n) { if (n.haz !== 'treasure') bandSet[idx(n)] = 1; }); }); f.band = Object.keys(bandSet).map(Number).sort(function (p, q) { return p - q; }); }
     f.twin = !!spec.twin;
     var tierUp = (rule === 'minepair' ? minepairUp() : 0);
     var tiers = row.tiers.slice();
@@ -958,6 +1014,27 @@ var Core = (function () {
     if (rule === 'border') for (i = 0; i < T.length; i++) { if (!isBorder(T[i].x, T[i].y)) return false; }
     if (rule === 'rows') { var rs = {}; T.forEach(function (c) { rs[c.y] = 1; }); var ks = Object.keys(rs).map(Number); if (ks.length > 3) return false; if (ks.some(function (a) { return rs[a + 1]; })) return false; }
     if (rule === 'minepair' || f.twin) for (i = 0; i < M.length; i++) { if (orthN(f, M[i].x, M[i].y).filter(function (n) { return n.haz === 'mine'; }).length !== 1) return false; }
+    if (rule === 'cols') {   // 세 줄 이하, 좌우로 이웃하지 않음, 줄마다 2개 이상
+      var cs = {}; T.forEach(function (c) { cs[c.x] = (cs[c.x] || 0) + 1; }); var ck = Object.keys(cs).map(Number);
+      if (ck.length > 3 || ck.some(function (a) { return cs[a + 1] || cs[a] < 2; })) return false;
+    }
+    if (rule === 'diag') for (i = 0; i < T.length; i++) {   // 대각선에 정확히 하나, 위·아래·왼쪽·오른쪽에는 없음
+      if (orthN(f, T[i].x, T[i].y).some(function (n) { return n.haz === 'treasure'; })) return false;
+      if (diagN(f, T[i].x, T[i].y).filter(function (n) { return n.haz === 'treasure'; }).length !== 1) return false;
+    }
+    if (rule === 'trio') {   // 위·아래·왼쪽·오른쪽으로 이어진 셋씩, 묶음끼리는 둘레 8칸으로도 닿지 않음
+      var gseen = {};
+      for (i = 0; i < T.length; i++) {
+        if (gseen[idx(T[i])]) continue;
+        var comp = [T[i]], gq = [T[i]]; gseen[idx(T[i])] = 1;
+        while (gq.length) { var gp = gq.pop(); neighbors(f, gp.x, gp.y).forEach(function (n) { if (n.haz === 'treasure' && !gseen[idx(n)]) { gseen[idx(n)] = 1; comp.push(n); gq.push(n); } }); }
+        if (comp.length !== 3) return false;   // 8칸으로 이어진 덩어리가 곧 한 무리
+        var oc = comp.filter(function (a) { return comp.some(function (b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1; }); });
+        var mid = comp.filter(function (a) { return comp.filter(function (b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1; }).length === 2; });
+        if (oc.length !== 3 || mid.length !== 1) return false;   // 셋이 위·아래·왼쪽·오른쪽으로 한 줄로 이어짐(가운데 칸 하나)
+      }
+    }
+    if (rule === 'band') for (i = 0; i < T.length; i++) { if (neighbors(f, T[i].x, T[i].y).some(function (n) { return n.haz === 'mine'; })) return false; }
     if (f.chunk) {   // 덩이 둘레에는 보통 보물이 없다
       for (i = 0; i < T.length; i++) { c = T[i]; var C = f.chunk; if (c.x >= C.x - 1 && c.x <= C.x + C.w && c.y >= C.y - 1 && c.y <= C.y + C.h) return false; }
     }
@@ -1021,6 +1098,48 @@ var Core = (function () {
     function isDugM(c) { return c.cover === 'open' && c.removed && c.haz === 'mine'; }
     function defT(i) { return st[i] === 2 && !canM[i] && !isC[i]; }
     function defM(i) { return st[i] === 2 && !canT[i] && !isC[i]; }
+    // 무리 광맥(01 9.3): 보물로 확인된 칸 둘레에 놓일 수 있는 셋 묶음을 모두 세어 본다.
+    // 묶음은 위·아래·왼쪽·오른쪽으로 이어진 셋(일자·ㄱ자)이고, 묶음 둘레 8칸에는 다른 보물이 없다
+    function trioDeduce() {
+      var known = new Int8Array(N), q, p;
+      for (q = 0; q < N; q++) { var kc = f.cells[q]; if (isDugT(kc) || (kc.cover !== 'open' && defT(q) && !chunkFloor)) known[q] = 1; }
+      function maybe(j) { var z = f.cells[j]; return z.cover !== 'open' && canT[j] && st[j] !== 1; }
+      function shapes(cx, cy, one) {   // (cx, cy)를 품는 셋 묶음 가운데 지금 정보와 어긋나지 않는 것(one이면 하나만 찾고 멈춤)
+        var out = [];
+        for (var s = 0; s < TROMINO.length; s++) for (var k = 0; k < 3; k++) {
+          var ox = cx - TROMINO[s][k][0], oy = cy - TROMINO[s][k][1], G = [], ok = true;
+          for (var e = 0; e < 3 && ok; e++) { var gx = ox + TROMINO[s][e][0], gy = oy + TROMINO[s][e][1]; if (!inB(gx, gy)) ok = false; else { var gj = gy * W + gx; if (!known[gj] && !maybe(gj)) ok = false; else G.push(gj); } }
+          if (!ok) continue;
+          for (e = 0; e < 3 && ok; e++) { var gc = f.cells[G[e]]; var nb = neighbors(f, gc.x, gc.y); for (var h = 0; h < nb.length; h++) { var hj = idx(nb[h]); if (known[hj] && G.indexOf(hj) < 0) { ok = false; break; } } }
+          if (ok) { out.push(G); if (one) return out; }
+        }
+        return out;
+      }
+      var done = new Int8Array(N);
+      for (q = 0; q < N; q++) {
+        if (!known[q] || done[q]) continue;
+        // 8칸으로 이어진 확인된 보물은 같은 무리
+        var comp = [q], stack = [q]; done[q] = 1;
+        while (stack.length) { p = f.cells[stack.pop()]; neighbors(f, p.x, p.y).forEach(function (n) { var j = idx(n); if (known[j] && !done[j]) { done[j] = 1; comp.push(j); stack.push(j); } }); }
+        if (comp.length > 3) continue;
+        var c0 = f.cells[comp[0]];
+        var Gs = shapes(c0.x, c0.y).filter(function (G) { return comp.every(function (j) { return G.indexOf(j) >= 0; }); });
+        if (!Gs.length) continue;
+        // 모든 묶음에 드는 칸은 보물, 어느 묶음에도 들지 않는 둘레 칸은 보물이 아니다
+        var cnt = {}, inAny = {};
+        Gs.forEach(function (G) { G.forEach(function (j) { cnt[j] = (cnt[j] || 0) + 1; inAny[j] = 1; }); });
+        Object.keys(cnt).forEach(function (k) { var j = +k; if (cnt[j] === Gs.length && !known[j]) { setSt(j, 2); noM(j); } });
+        var halo = {};
+        Gs.forEach(function (G) { G.forEach(function (j) { var gc = f.cells[j]; neighbors(f, gc.x, gc.y).forEach(function (n) { halo[idx(n)] = 1; }); }); });
+        Object.keys(halo).forEach(function (k) { var j = +k; if (!inAny[j] && f.cells[j].cover !== 'open') {
+          // 이 무리가 어떤 묶음이 되든 닿는 칸이면 보물이 아니다
+          var gx = f.cells[j].x, gy = f.cells[j].y;
+          if (Gs.every(function (G) { return G.some(function (g) { return cheb(f.cells[g].x, f.cells[g].y, gx, gy) === 1; }); })) noT(j);
+        } });
+      }
+      // 아직 모르는 칸: 그 칸을 품는 셋 묶음이 하나도 안 되면 보물이 아니다
+      for (q = 0; q < N; q++) { var uc = f.cells[q]; if (uc.cover === 'open' || !canT[q] || known[q]) continue; if (!shapes(uc.x, uc.y, true).length) noT(q); }
+    }
     var changed = true, guard = 0;
     function setSt(i, v) { if (st[i] !== v) { if (st[i] === 0) { st[i] = v; changed = true; } } }
     function noT(i) { if (canT[i]) { canT[i] = 0; changed = true; } }
@@ -1061,6 +1180,36 @@ var Core = (function () {
         // 01 9.3 가로줄 (1): 보물이 나온 줄의 바로 위·아래 줄에는 보물이 없다(세 줄은 서로 붙지 않는다)
         for (i = 0; i < N; i++) { c = f.cells[i]; if (c.cover !== 'open' && !rs[c.y] && (rs[c.y - 1] || rs[c.y + 1])) noT(i); }
         if (Object.keys(rs).length >= 3) for (i = 0; i < N; i++) { c = f.cells[i]; if (c.cover !== 'open' && !rs[c.y]) noT(i); }
+      }
+      if (rule === 'cols') {   // 01 9.3 세로줄: 가로줄을 돌린 꼴
+        var cs = {}; TP.forEach(function (p) { cs[p.x] = 1; });
+        for (i = 0; i < N; i++) { c = f.cells[i]; if (c.cover !== 'open' && !cs[c.x] && (cs[c.x - 1] || cs[c.x + 1])) noT(i); }
+        if (Object.keys(cs).length >= 3) for (i = 0; i < N; i++) { c = f.cells[i]; if (c.cover !== 'open' && !cs[c.x]) noT(i); }
+      }
+      if (rule === 'diag') {   // 01 9.3 대각선: 짝은 대각선 네 칸 중 하나, 위·아래·왼쪽·오른쪽에는 보물이 없다
+        TP.forEach(function (p) {
+          orthN(f, p.x, p.y).forEach(function (n) { if (n.cover !== 'open') noT(idx(n)); });
+          var dn = diagN(f, p.x, p.y);
+          var known = dn.filter(function (n) { return isDugT(n) || (n.cover !== 'open' && defT(idx(n))); });
+          if (known.length) dn.forEach(function (n) { if (n.cover !== 'open' && known.indexOf(n) < 0) noT(idx(n)); });
+          else {
+            var cand = dn.filter(function (n) { return n.cover !== 'open' && canT[idx(n)] && st[idx(n)] !== 1; });
+            if (cand.length === 1) { setSt(idx(cand[0]), 2); noM(idx(cand[0])); }
+          }
+        });
+        for (i = 0; i < N; i++) {   // 짝이 될 대각선 칸이 하나도 없으면 보물이 아니다
+          c = f.cells[i]; if (c.cover === 'open' || !canT[i]) continue;
+          var anyD = diagN(f, c.x, c.y).some(function (n) {
+            if (isDugT(n)) return !diagN(f, n.x, n.y).some(function (z) { return z !== c && (isDugT(z) || (z.cover !== 'open' && defT(idx(z)))); });
+            return n.cover !== 'open' && canT[idx(n)] && st[idx(n)] !== 1;
+          });
+          if (!anyD) noT(i);
+        }
+      }
+      if (rule === 'trio') trioDeduce();
+      if (rule === 'band') {   // 01 9.3 금 띠: 보물 둘레에는 지뢰가 없고, 지뢰 둘레에는 보물이 없다
+        TP.forEach(function (p) { neighbors(f, p.x, p.y).forEach(function (n) { if (n.cover !== 'open') noM(idx(n)); }); });
+        for (i = 0; i < N; i++) { c = f.cells[i]; if (isDugM(c) || (c.cover !== 'open' && defM(i) && !chunkFloor)) neighbors(f, c.x, c.y).forEach(function (n) { if (n.cover !== 'open') noT(idx(n)); }); }
       }
       if (rule === 'tally') {
         for (var y = 0; y < H; y++) {
@@ -1163,9 +1312,9 @@ var Core = (function () {
     return false;
   }
   // 쓸모 검사용: 안전한 칸을 다 열고, 규칙으로 정체가 밝혀진 칸을 캐거나 없애기를 되풀이했을 때 '보물로 확정'된 칸 수.
-  // 규칙이 첫 보물을 캐야 열리는 층(짝·외톨이·가로줄)은 경계의 보물 하나를 먼저 캔 것으로 친다(그 칸은 세지 않는다)
+  // 규칙이 첫 보물을 캐야 열리는 층(짝·외톨이·가로줄·세로줄·대각선·무리·금 띠)은 경계의 보물 하나를 먼저 캔 것으로 친다(그 칸은 세지 않는다)
   function usefulCount(f0) {
-    var g = cloneFloor(f0), n = 0, nm = 0, openers = 0, maxOpen = g.rule === 'pair' ? 3 : g.rule === 'lonely' ? 2 : 1;
+    var g = cloneFloor(f0), n = 0, nm = 0, openers = 0, maxOpen = g.rule === 'pair' || g.rule === 'diag' || g.rule === 'trio' ? 3 : g.rule === 'lonely' ? 2 : 1;
     simOpen(g, cellAt(g, g.sx, g.sy));
     for (var it = 0; it < 200; it++) {
       var D = deduce(g), prog = false;
@@ -1174,7 +1323,7 @@ var Core = (function () {
       D.tre.forEach(function (i) { var c = g.cells[i]; if (c.cover !== 'open' && c.haz === 'treasure') { n++; c.cover = 'open'; c.removed = true; simChainAround(g, c); prog = true; } });
       D.mine.forEach(function (i) { var c = g.cells[i]; if (c.cover !== 'open' && c.haz === 'mine') { nm++; c.cover = 'open'; c.removed = true; simChainAround(g, c); prog = true; } });
       if (prog) continue;
-      if (openers < maxOpen && ['pair', 'lonely', 'rows'].indexOf(g.rule) >= 0) {
+      if (openers < maxOpen && ['pair', 'lonely', 'rows', 'cols', 'diag', 'trio', 'band'].indexOf(g.rule) >= 0) {
         var t = g.cells.filter(function (c) { return c.cover !== 'open' && c.haz === 'treasure' && neighbors(g, c.x, c.y).some(function (z) { return z.cover === 'open'; }); })[0];
         if (t) { openers++; t.cover = 'open'; t.removed = true; simChainAround(g, t); continue; }
       }
@@ -1267,7 +1416,7 @@ var Core = (function () {
     return out;
   }
   function rulePoolFor(run, depth, twin) {
-    var pool = depth <= 2 ? ['plain', 'pair', 'lonely', 'border', 'tally'] : RULE_IDS.slice();
+    var pool = depth <= 2 ? ['plain', 'pair', 'lonely', 'border', 'tally', 'cols', 'diag', 'trio', 'band'] : RULE_IDS.slice();
     var PL = poolList(run);
     if (PL) {   // 등급별 광맥 풀(01 14.2). 얕은 층에 나올 광맥이 풀에 없으면 깊이 제한 없이 풀 그대로
       var inPool = pool.filter(function (r) { return PL.indexOf(r) >= 0; });
@@ -1412,6 +1561,7 @@ var Core = (function () {
     if (rule === 'pair' && t % 2) t++;
     if ((rule === 'minepair' || twinDay(run)) && m % 2) m++;
     if (rule === 'rows') t = Math.max(6, t);
+    t = veinCount(rule, t);
     var tw = row.tiers.slice(), tot = tw.reduce(function (a, b) { return a + b; }, 0) || 1;
     // 다 캐면 어림 값: 보물 수 × 등급 평균 값 × 시세 × 캐릭터 · 갈림길 덤. 콤보, 큰 덩이, 유물은 빼요
     var up = rule === 'minepair' ? minepairUp() : 0, avg = 0;
@@ -2805,7 +2955,7 @@ var Core = (function () {
     consumableFits: consumableFits, useConsumable: useConsumable, discardConsumable: discardConsumable, mapTargets: mapTargets, toolValue: toolValue, canRemove: canRemove, chooseBox: chooseBox, boxPassValue: boxPassValue, fuse: fuse, fusionsReady: fusionsReady,
     loanInfo: loanInfo, takeLoan: takeLoan, payNow: payNow,
     nextDay: nextDay, priceOf: priceOf, rerollPrice: rerollPrice, servicePrice: servicePrice, stage: stage, orderPocket: orderPocket, goalInfo: goalInfo, nextPayment: nextPayment, paymentFor: paymentFor,
-    deduce: deduce, numAt: numAt, cellAt: cellAt, neighbors: neighbors, orthN: orthN, cheb: cheb, liveHaz: liveHaz, idx: idx,
+    deduce: deduce, numAt: numAt, cellAt: cellAt, neighbors: neighbors, orthN: orthN, diagN: diagN, cheb: cheb, liveHaz: liveHaz, idx: idx,
     genFloor: genFloor, usefulCount: usefulCount, checkRule: checkRule, checkFloor: checkFloor, isSolvable: isSolvable, startChainSize: startChainSize, tallyRow: tallyRow, remaining: remaining, shownStair: shownStair, forkOptions: forkOptions,
     gradePen: gradePen, hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, oCost: oCost, igniteCost: igniteCost,
     isBorder: isBorder, owns: owns, mut: mut, gang: gang, canAct: canAct,

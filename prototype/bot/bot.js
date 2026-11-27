@@ -27,7 +27,7 @@ const POLICY = {
               forkSkill: 1.0, buy: 'synergy', useCons: true, slip: 0, lastCardThr: 0.6, betO: 0.65, openerHp: 2, opener: 0.25, endThr: 0.38, fireThr: 0.3, fireUp: 0.1 }
 };
 
-const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, plain: 1 };
+const RULE_PREF = { border: 6, lonely: 5, minepair: 5, rows: 4, tally: 4, pair: 4, cols: 4, diag: 4, trio: 4, band: 4, plain: 1 };
 // 구매 선호(보통·욕심). 측정으로 정한 순서(05 문서 8.3)
 const TOOL_PREF = ['bigblast', 'moontongs', 'deadcrown', 'refiner', 'sieve', 'tongs', 'ledger', 'wedge', 'fuse', 'crown', 'moonsieve', 'amulet', 'sheet', 'lens', 'firstdig', 'belt', 'gloves', 'lonelamp', 'tapper', 'nuggetbag', 'lastcard', 'betchalk', 'crackedhelm', 'dripdish', 'shortwick', 'regular'];   // 합친 도구는 내려놓지 않아요
 const ORDER_PREF = ['reach5', 'deepStreak', 'gems2', 'bigNum', 'chain20', 'streak3', 'floor5', 'noProbe', 'blast4', 'chalkO', 'chain3', 'clean3', 'emberT', 'keep20', 'noMine', 'xRight'];
@@ -180,7 +180,7 @@ class Bot {
     const rush = !!(d.chunkSpec && !d.chunkDone && f.depth < d.chunkSpec.depth && o.rush !== false);
     const overBudget = stairKnown && (this.safeOnFloor >= (rush ? 2 : o.safeBudget));
     // 2) 걸기(정책 문턱). 첫 보물이 규칙 추리를 여는 층에서는 체력이 넉넉하면 문턱을 낮춘다
-    const opener = this.useRule && o.opener && ['lonely', 'pair', 'rows', 'minepair'].indexOf(f.rule) >= 0 && f.treasuresDug === 0 && d.hp >= (o.openerHp || 3);
+    const opener = this.useRule && o.opener && ['lonely', 'pair', 'rows', 'minepair', 'cols', 'diag', 'trio', 'band'].indexOf(f.rule) >= 0 && f.treasuresDug === 0 && d.hp >= (o.openerHp || 3);
     let g = rush ? null : gamble(opener ? Math.min(this.thr(run), o.opener) : this.thr(run));
     if (g) return this.dig(run, g, 'gambles');
     // 2-1) 불발 확인(측정용 악용 봇): 걸지 않을 칸에 X를 긋고 불을 붙여 정체를 본다
@@ -378,6 +378,22 @@ class Bot {
         if (n.cover === 'open' && n.removed && n.haz === 'treasure') {
           const k = Core.orthN(f, n.x, n.y).filter(z => z.cover !== 'open' && D.canT[Core.idx(z)] && D.st[Core.idx(z)] !== 1).length;
           if (k) p = Math.max(p, 1 / k);
+        }
+      }
+    }
+    if (this.useRule && f.rule === 'diag') {   // 대각선 광맥: 짝 광맥을 대각선으로 돌린 꼴
+      for (const n of Core.diagN(f, c.x, c.y)) {
+        if (n.cover === 'open' && n.removed && n.haz === 'treasure') {
+          const k = Core.diagN(f, n.x, n.y).filter(z => z.cover !== 'open' && D.canT[Core.idx(z)] && D.st[Core.idx(z)] !== 1).length;
+          if (k) p = Math.max(p, 1 / k);
+        }
+      }
+    }
+    if (this.useRule && f.rule === 'trio') {   // 무리 광맥: 캔 보물 옆에 같은 무리가 또 있다(셋이 다 나오기 전까지)
+      for (const n of Core.orthN(f, c.x, c.y)) {
+        if (n.cover === 'open' && n.removed && n.haz === 'treasure') {
+          const k = Core.orthN(f, n.x, n.y).filter(z => z.cover !== 'open' && D.canT[Core.idx(z)] && D.st[Core.idx(z)] !== 1).length;
+          if (k) p = Math.max(p, Math.min(0.9, 1 / k));
         }
       }
     }

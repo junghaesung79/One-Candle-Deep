@@ -118,7 +118,12 @@ function iconHtml(name, size, cls) {
     rows: mkSprite(["oooooooooo", "o........o", "oyyyyyyyyo", "o........o", "o........o", "oyyyyyyyyo", "o........o", "oyyyyyyyyo", "o........o", "oooooooooo"], RP),
     tally: mkSprite(["oooooooooo", "ow.......o", "ow.w.....o", "o........o", "ow.w.w...o", "o........o", "o........o", "ow.......o", "o........o", "oooooooooo"], RP),
     minepair: mkSprite(["oooooooooo", "o........o", "o........o", "o.rr.rr..o", "o.rr.rr..o", "o........o", "o......y.o", "o........o", "o........o", "oooooooooo"], RP),
-    border: mkSprite(["oooooooooo", "oyyyyyyyyo", "oy......yo", "oy.gggg.yo", "oy.g..g.yo", "oy.g..g.yo", "oy.gggg.yo", "oy......yo", "oyyyyyyyyo", "oooooooooo"], RP)
+    border: mkSprite(["oooooooooo", "oyyyyyyyyo", "oy......yo", "oy.gggg.yo", "oy.g..g.yo", "oy.g..g.yo", "oy.gggg.yo", "oy......yo", "oyyyyyyyyo", "oooooooooo"], RP),
+    // 새 광맥 넷: 세로 세 줄, 대각선으로 닿은 두 보물, ㄱ자로 이어진 셋, 지뢰 없는 띠를 두른 보물
+    cols: mkSprite(["oooooooooo", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "o.y..y.y.o", "oooooooooo"], RP),
+    diag: mkSprite(["oooooooooo", "o........o", "o.yy.....o", "o.yy.....o", "o...yy...o", "o...yy...o", "o........o", "o........o", "o........o", "oooooooooo"], RP),
+    trio: mkSprite(["oooooooooo", "o........o", "o.yy.yy..o", "o.yy.yy..o", "o........o", "o....yy..o", "o....yy..o", "o........o", "o........o", "oooooooooo"], RP),
+    band: mkSprite(["oooooooooo", "or......ro", "o..wwww..o", "o.w....w.o", "o.w.yy.w.o", "o.w.yy.w.o", "o.w....w.o", "o..wwww..o", "or......ro", "oooooooooo"], RP)
   };
   // 광산 변덕 기호
   SPR.muts = {

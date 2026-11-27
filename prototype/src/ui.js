@@ -791,7 +791,11 @@ var VEIN_PAT = {
   lonely: ['.....', '.xxx.', '.xgx.', '.xxx.', '.....'],
   rows: ['xxxxx', 'oogoo', 'xxxxx', 'xxxxx', 'ooogo'],
   tally: ['1g...', '0xxxx', '2.g.g', '0xxxx', '1...g'],
-  minepair: ['.....', '.mm..', '.....', '...m.', '...m.']
+  minepair: ['.....', '.mm..', '.....', '...m.', '...m.'],
+  cols: ['xgxox', 'xoxox', 'xoxgx', 'xgxox', 'xoxgx'],
+  diag: ['.....', '.g...', '..g..', '....g', '...g.'],
+  trio: ['.....', '.ggg.', '.....', '...g.', '..gg.'],
+  band: ['m...m', '.ooo.', '.ogo.', '.ooo.', 'm..m.']
 };
 function veinDiagram(rule) {
   var P = VEIN_PAT[rule]; if (!P) return '';
