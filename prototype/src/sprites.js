@@ -192,6 +192,21 @@ function iconHtml(name, size, cls) {
   SPR.icons.nuggetbag = mkSprite(["...o..o...", "....oo....", "...bbbb...", "..bbbbbb..", ".bbbyybbb.", ".bbyhyybb.", ".bbbyybbb.", "..bbbbbb..", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#f2c14e', h: '#fff1b8' });
   SPR.icons.dripdish = mkSprite(["....y.....", "...yhy....", "....k.....", "...www....", "...www....", "..wwwww...", "bbwbbbwbbb", ".bbbbbbbb.", "..........", ".........."], { y: '#ffd25a', h: '#fff4c2', k: '#3a3542', w: '#efe7d6', b: '#b8862e' });
   SPR.icons.deadcrown = mkSprite(["y..y..y...", "yy.yy.yy..", "yhyyhyyhy.", "yyyyyyyyy.", "oooooooooo", ".orrrrrro.", ".orwrrwro.", ".orrrrrro.", "..oooooo..", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', r: '#c4432b', w: '#efe7d6' });
+  // 깊이·하루·금고·칸 도구(reviews/23 3.7~3.8). 도구 목록 그림에서 옮김
+  SPR.icons.stairchart = mkSprite(["......kkkk", "......k...", "....kkk...", "....k.....", "..kkk.....", "..k.......", "kkk.......", "..........", "yyyykyyyyy", ".........."], { k: '#9aa0b0', y: '#f2c14e' });
+  SPR.icons.sack = mkSprite(["..o..o....", "...oo.....", "..bbbb....", ".bbbbbb...", ".bbbbbb...", ".bbBbbb...", ".bbbbbb...", ".bbbbbby..", "..bbbbyyy.", "......y.y."], { B: '#80583a', b: '#5a3d28', o: '#3d2a1c', y: '#f2c14e' });
+  SPR.icons.pickdeep = mkSprite(["..tttttt..", ".t..bb..t.", "t...bb...t", "....bb....", "....bb....", "....bb....", "....bb....", "....bb....", "..kkkkkk..", "kkkkkkkkkk"], { b: '#6b4a30', k: '#22242c', t: '#3f8fa0' });
+  SPR.icons.cart = mkSprite(["..........", "..........", ".y.yy.y...", "oooooooooo", ".obbbbbbo.", ".obbbbbbo.", "..oooooo..", "..kk..kk..", "..kk..kk..", "ssssssssss"], { b: '#7c8292', k: '#22242c', o: '#454956', s: '#80583a', y: '#f2c14e' });
+  SPR.icons.flag = mkSprite([".r........", ".rrrr.....", ".rrrrrr...", ".rrrr.....", ".r........", ".b........", ".b........", ".b...yy...", ".b..yyyy..", "ssssssssss"], { b: '#6b4a30', r: '#c4432b', s: '#5d6270', y: '#f2c14e' });
+  SPR.icons.tooth = mkSprite(["..........", "..........", ".yyyyyyyy.", "yhyyyyyyyy", "yhyyyyyyyy", "yyyyyyyyyy", ".yyy..yyy.", ".yyy..yyy.", "..yy..yy..", ".........."], { h: '#fff1b8', y: '#f2c14e' });
+  SPR.icons.interest = mkSprite(["........g.", ".......ggg", "........g.", "..yyyy....", ".yhhhhy...", "..yyyy....", ".yhhhhy...", "..yyyy....", ".yhhhhy...", "..yyyy...."], { g: '#7fd17f', h: '#f2c14e', y: '#b8862e' });
+  SPR.icons.bank = mkSprite(["....kk....", "..oooooo..", ".obbbbbbo.", "obbbbbbbbo", "obbyybbbbo", "obbyybbbbo", "obbbbbbbbo", ".obbbbbbo.", "..oooooo..", ".........."], { b: '#c9894a', k: '#3a3542', o: '#5a3d28', y: '#f2c14e' });
+  SPR.icons.haggle = mkSprite(["..........", ".oooooooo.", ".owwwwwwo.", ".owgwwrwo.", ".oggwwrro.", ".owgwwrwo.", ".owgwwrwo.", ".owwwwwwo.", ".oooooooo.", ".........."], { g: '#4f8a4a', o: '#3d6a8a', r: '#c4432b', w: '#efe7d6' });
+  SPR.icons.shelf = mkSprite(["..........", "bbbbbbbbbb", ".y..t..r..", "yyy.tt.rr.", "bbbbbbbbbb", ".g..y..t..", "ggg.yy.tt.", "bbbbbbbbbb", "b........b", "b........b"], { b: '#6b4a30', g: '#9aa0b0', r: '#c4432b', t: '#5fe0e8', y: '#f2c14e' });
+  SPR.icons.giftwrap = mkSprite(["....rr....", "...r..r...", "..rrrrrr..", ".ppprrppp.", "pppppppppp", "pppprrpppp", "pppprrpppp", "pppppppppp", ".pppppppp.", ".........."], { p: '#8e3f6a', r: '#f2c14e' });
+  SPR.icons.emptyslot = mkSprite(["..........", ".ww.ww.ww.", ".w......w.", "..........", ".w......w.", ".w......w.", "..........", ".w......w.", ".ww.ww.ww.", ".........."], { w: '#c9c3d6' });
+  SPR.icons.toolset = mkSprite(["g.......g.", "gg.....gg.", ".gg...gg..", "..gg.gg...", "...ggg....", "...ggg....", "..bb.bb...", ".bb...bb..", "bb.....bb.", "b.......b."], { b: '#9a6532', g: '#9aa0b0' });
+  SPR.icons.mirror = mkSprite(["...oooo...", "..oTTTTo..", ".oTttttTo.", ".oTttttTo.", ".oTttttTo.", "..oTTTTo..", "...oooo...", "....bb....", "....bb....", "...bbbb..."], { T: '#e8f4ff', b: '#6b4a30', o: '#b8862e', t: '#a8c4d0' });
 })();
 
 // 오른쪽 패널 단추 그림(12×12): 달력, 설정. 화면 위 표시(10×10): 남은 보물, 콤보

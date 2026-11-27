@@ -255,25 +255,26 @@ function drainFx() {
       }
       case 'gain': {
         var q = stageXY(e.x, e.y), d0 = gainIdx * 120; gainIdx++; hadGain = true;
-        ui.pocketPending += e.total;
+        var toPocket = e.vault ? 0 : e.total;   // 광차: 금고로 바로 가서 주머니에 쌓이지 않아요
+        ui.pocketPending += toPocket;
         var base = e.scorch ? fmt(e.full || e.base * 2) + ' 반값' : '' + fmt(e.base);   // 01 7.2 "20 반값 ×2 = 20"
         var small = e.scorch || e.label === '정제기' || e.label === '화약';   // 화약 장수가 지뢰에서 캔 화약도 작게
         var plainT = !e.order && !e.chunk && !small;   // 바로 캔 보물: 무엇을 캤는지 크게 보여 준다
         var ic = e.order ? '' : iconHtml(e.chunk ? 'chunk' : e.label === '정제기' ? 'nugget' : e.label === '화약' ? 'icons.powder' : 'tier.' + (e.tier || 1), e.chunk ? 40 : plainT ? 44 : 24);
         if (plainT) anim.pops.push({ x: e.x, y: e.y, t0: now + gainIdx * 120 - 120, kind: 'lift', tier: e.tier || 1 });
         var s1 = ic + (plainT ? '<span class="tname t' + (e.tier || 1) + '">' + TREASURE_NAMES[e.tier || 1] + '</span> ' : '') + base, s2 = s1 + (e.mult > 1 ? ' ' + multTxt(e.mult) : '') + (e.bonus ? ' +' + Math.round(e.bonus * 100) + '%' : '');
-        var s3 = s2 + ((e.mult > 1 || e.bonus || e.scorch) ? ' = ' + fmt(e.total) : '');
+        var s3 = s2 + ((e.mult > 1 || e.bonus || e.scorch || e.vault) ? ' = ' + fmt(e.total) : '') + (e.vault ? ' ' + esc(TEXT.vaultTools.vaultNote) : '');
         if (e.order) { s1 = s2 = s3 = '주문 +' + fmt(e.total); }
         var gi = gainIdx - 1;
         if (small) {   // 발파로 얻은 값: 그 칸 위에 작게, 바로 주머니로(판을 오래 가리지 않게. 03 6.0)
-          addFly({ x: Math.max(80, Math.min(730, q.x)), y: q.y - 6, showAt: 200 + gi * 60, flyAt: 650 + gi * 60, flyDur: 300, size: 13, pocket: e.total, rise: 10,
+          addFly({ x: Math.max(80, Math.min(730, q.x)), y: q.y - 6, showAt: 200 + gi * 60, flyAt: 650 + gi * 60, flyDur: 300, size: 13, pocket: toPocket, rise: 10,
                    steps: [{ t: 200 + gi * 60, h: s3 }] });
           break;
         }
         if (!gainAnchor) { gainAnchor = { x: Math.max(110, Math.min(700, q.x)), y: q.y - 16, down: q.y - 16 - 3 * 24 < 84, n: 0 }; }
         var gn = gainAnchor.n++;
         var gx = gainAnchor.x, gy = gainAnchor.down ? gainAnchor.y + 60 + (gn % 6) * 40 : gainAnchor.y - 14 - (gn % 6) * 40;
-        addFly({ x: gx, y: gy, showAt: 120 + d0, flyAt: (e.chunk ? 1300 : 900) + d0, flyDur: e.chunk ? 500 : 350, size: e.chunk ? 22 : 17, pocket: e.total, rise: e.chunk ? 40 : 24,
+        addFly({ x: gx, y: gy, showAt: 120 + d0, flyAt: (e.chunk ? 1300 : 900) + d0, flyDur: e.chunk ? 500 : 350, size: e.chunk ? 22 : 17, pocket: toPocket, rise: e.chunk ? 40 : 24,
                  steps: [{ t: 120 + d0, h: s1 }, { t: 240 + d0, h: s2 }, { t: 360 + d0, h: s3 }] });
         if (e.chunk) { addShake(4, 300); }
         if (run.tutorial && run.d.floor.rule === 'pair' && !e.chunk && !e.order && e.label !== '정제기' && ui.pairHints < 3) {
@@ -912,9 +913,9 @@ function updateHUD() {
   var os = '', mdc = ui.mode || {};
   for (var s = 0; s < nSl; s++) {
     var id = run.owned[s], ce = s >= run.owned.length ? cl[s - run.owned.length] : null;
-    if (ce) { var ck = Core.CONS_BY_ID[ce.id], cpop = ui.slotPop['c:' + ce.id] && performance.now() - ui.slotPop['c:' + ce.id] < 150; os += '<div class="slot cons' + (mdc.kind === 'cuse' && mdc.id === ce.id ? ' on' : '') + (cpop ? ' pop' : '') + '" data-cons="' + ce.id + '"' + slSt + '>' + iconHtml('icons.' + ck.icon, Math.min(30, slW - 12)) + '<span class="cnt px">' + ce.n + '</span></div>'; }   // 소모품: 점선 테두리, 오른쪽 아래 개수, 누르면 씀
-    else if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + rarAttr(id) + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
-    else os += '<div class="slot empty"' + slSt + '></div>';
+    if (ce) { var ck = Core.CONS_BY_ID[ce.id], cpop = ui.slotPop['c:' + ce.id] && performance.now() - ui.slotPop['c:' + ce.id] < 150; os += '<div class="slot cons' + (mdc.kind === 'cuse' && mdc.id === ce.id ? ' on' : '') + (cpop ? ' pop' : '') + '" data-cons="' + ce.id + '" data-oi="' + s + '"' + slSt + '>' + iconHtml('icons.' + ck.icon, Math.min(30, slW - 12)) + '<span class="cnt px">' + ce.n + '</span></div>'; }   // 소모품: 점선 테두리, 오른쪽 아래 개수, 누르면 씀
+    else if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + (Core.mimicTarget(run) === id && run.owned[s - 1] === 'mimic' ? ' copied' : '') + '" data-tool="' + id + '" data-oi="' + s + '" draggable="true"' + rarAttr(id) + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + toolBadge(t) + '</div>'; }
+    else os += '<div class="slot empty" data-oi="' + s + '"' + slSt + '></div>';
   }
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; $('ownSlots').style.gap = '4px'; bindSlotEvents(); }
   // 유물 줄: 도구 칸 아래 작은 그림. 마우스를 올리면 설명
@@ -963,10 +964,32 @@ function updateHUD() {
   var tall = !ol; if ($('log')._tall !== tall) { $('log')._tall = tall; $('log').classList.toggle('tall', tall); $('log')._k = null; }
   renderLog();
 }
+// 도구 그림 오른쪽 아래 숫자(쌓기·셈 도구). 도구 표의 badge(run)가 빈 값이면 안 붙여요
+function toolBadge(t) { var b = t.badge ? t.badge(run) : ''; return b === '' || b == null ? '' : '<span class="cnt px">' + esc(String(b)) + '</span>'; }
+// 도구 자리 바꾸기: 도구를 끌어 다른 칸(도구·소모품·빈 칸)에 놓아요. 본뜬 연장은 바로 오른쪽 도구를 베껴요
+function bindReorder(nodes, done) {
+  for (var i = 0; i < nodes.length; i++) {
+    var el = nodes[i];
+    if (el.getAttribute('draggable') === 'true') {
+      el.ondragstart = function (e) { ui.dragFrom = +this.dataset.oi; this.classList.add('drag'); try { e.dataTransfer.setData('text/plain', String(ui.dragFrom)); e.dataTransfer.effectAllowed = 'move'; } catch (er) {} };
+      el.ondragend = function () { this.classList.remove('drag'); ui.dragFrom = null; ui.hudDirty = true; };
+    }
+    el.ondragover = function (e) { if (ui.dragFrom != null) { e.preventDefault(); this.classList.add('dropOn'); } };
+    el.ondragleave = function () { this.classList.remove('dropOn'); };
+    el.ondrop = function (e) {
+      e.preventDefault(); this.classList.remove('dropOn');
+      var from = ui.dragFrom, to = +this.dataset.oi; ui.dragFrom = null;
+      if (from == null || isNaN(to)) return;
+      var id = run.owned[from];
+      if (Core.moveTool(run, from, to).ok) { ui.slotPop[id] = performance.now(); ui.hudDirty = true; if (done) done(); }
+    };
+  }
+}
 function bindSlotEvents() {
+  bindReorder($('ownSlots').querySelectorAll('[data-oi]'));
   var els = $('toolsBox').querySelectorAll('[data-tool]');
   for (var i = 0; i < els.length; i++) {
-    els[i].onmouseenter = function () { var t = Core.TOOL_BY_ID[this.dataset.tool]; ui.desc = '<b>' + esc(t.name) + '</b>' + ' <span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc); ui.hudDirty = true; };
+    els[i].onmouseenter = function () { var t = Core.TOOL_BY_ID[this.dataset.tool]; ui.desc = '<b>' + esc(t.name) + '</b>' + ' <span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + mimicLine(t.id); ui.hudDirty = true; };
     els[i].onmouseleave = function () { ui.desc = null; ui.hudDirty = true; };
   }
   var cs = $('toolsBox').querySelectorAll('[data-cons]');
@@ -1228,7 +1251,7 @@ function consRoom(id) {   // 소모품을 더 받을 수 있는 개수
   return n + (CONFIG.shop.consSlots - run.cons.length) * CONFIG.shop.stack;
 }
 function forkHtml() {   // 고를 때 다른 것만 보여요. 지금 콤보·체력·주머니는 오른쪽에 늘 있고, 보물 등급 비율은 두 장이 같아서 뺐어요
-  var d = run.d, f = d.floor, opts = f.forkOptions, cost = Core.travelCost(run, f.depth + 1);
+  var d = run.d, f = d.floor, opts = f.forkOptions, cost = Core.descendCost(run, f.depth + 1);
   var h = '<div class="dim" style="background:rgba(11,10,16,0.6)"></div><div class="dlg" style="width:760px"><h2>지하 ' + (f.depth + 1) + '층으로 내려갑니다</h2>';
   h += '<div style="font-size:16px;margin-bottom:14px">촛불 <b class="acc">-' + cost + '</b> <span class="muted">(' + d.candle + ' → ' + Math.max(0, d.candle - cost) + ')</span>' + (d.candle < cost ? ' <span class="badge">촛불이 모자랍니다</span>' : '') + '</div>';
   h += '<div style="display:flex;gap:14px;align-items:stretch">';
@@ -1274,7 +1297,10 @@ function settleHtml() {
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
   if (S.lines.fee) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 일꾼 치료비</span><span>−' + fmt(S.lines.fee) + '</span></div>'; delay += 120; }
+  if (S.lines.kwak) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>' + esc(TEXT.vaultTools.kwakLine) + '</span><span>' + fmt(S.lines.kwak) + '</span></div>'; delay += 120; }
+  if (S.lines.tooth) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>' + esc(TEXT.vaultTools.toothLine) + '</span><span>−' + fmt(S.lines.tooth) + '</span></div>'; delay += 120; }
   if (S.lines.drip) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>촛농 받이(남은 촛불)</span><span>' + fmt(S.lines.drip) + '</span></div>'; delay += 120; }
+  (S.vault || []).forEach(function (q) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>' + esc(q.label) + ' · ' + esc(TEXT.vaultTools.vaultNote) + '</span><span>' + fmt(q.n) + '</span></div>'; delay += 120; });   // 금고로 바로 들어간 돈(광차, 깊은 주머니, 이자 장부)
   if (S.lines.order) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>주문 보수</span><span>' + fmt(S.lines.order) + '</span></div>'; delay += 120; }
   ui.settleT0 = performance.now(); ui.settleDur = delay + 1100;
   h += '<div style="display:flex;align-items:center;gap:14px;margin:14px 0;font-size:17px">' + iconHtml('pouch', 32) + '<span>오늘 주머니 <b class="px" id="sPocket">' + fmt(S.gross) + '</b></span>' +
@@ -1313,7 +1339,7 @@ function settleTick(now) {
   if (S.lost) { var p0 = Math.min(1, Math.max(0, (k - (tCoin - 200)) / 400)); pocket = Math.round(S.gross - S.lost * p0); if (p0 > 0 && $('sLost')) $('sLost').style.visibility = 'visible'; tCoin += 400; }
   var p = Math.min(1, Math.max(0, (k - tCoin - 230) / 600));
   el.textContent = fmt(Math.round(pocket * (1 - p)));
-  ev.textContent = fmt(Math.round(S.before + S.net * p));
+  ev.textContent = fmt(Math.round(S.before + ((S.after != null ? S.after - S.before : S.net)) * p));
 }
 function paymentHtml() {
   var P = run.payment;
@@ -1420,7 +1446,7 @@ function shopHtml(merchant) {
   });
   run.owned.forEach(function (id) {
     var t = Core.TOOL_BY_ID[id], rm = Core.canRemove(run, id, false);
-    h += '<div class="card panel" style="padding:2px 8px;cursor:default;min-height:0;align-items:center" data-tool="' + id + '"' + rarAttr(id) + '><div class="ic" style="width:24px;height:24px">' + iconHtml('icons.' + t.icon, 20) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div></div>' +   // 효과는 마우스를 올리면 아래 설명 칸에
+    h += '<div class="card panel" style="padding:2px 8px;cursor:grab;min-height:0;align-items:center" data-tool="' + id + '" data-oi="' + run.owned.indexOf(id) + '" draggable="true"' + rarAttr(id) + '><div class="ic" style="width:24px;height:24px;position:relative">' + iconHtml('icons.' + t.icon, 20) + '</div><div class="t"><div class="n" style="font-size:13px">' + t.name + '</div></div>' +   // 효과는 마우스를 올리면 아래 설명 칸에
       (!canSell ? '' : '<button data-sell="' + id + '"' + (rm ? '' : ' disabled title="이걸 빼면 칸이 모자랍니다"') + '>' + (CONFIG.features.toolSell ? '팔기' : '되팔기') + ' +' + Core.sellPrice(run, id) + '</button>') + '</div>';
   });
   (run.consumables || []).forEach(function (e) {   // 소모품: 팔 수 없고 버릴 수만 있어요(돈 0)
@@ -1729,6 +1755,7 @@ function bindOverlay() {
   for (i = 0; i < q.length; i++) q[i].onclick = function () { buyTool(+this.dataset.buy); };
   q = ovAll('[data-sell]');
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var sid = this.dataset.sell; askConfirm(Core.josa(Core.TOOL_BY_ID[sid].name, '을', '를') + ' 파시겠습니까? 금고 +' + Core.sellPrice(run, sid), function () { Core.sellBack(run, sid); ui.hudDirty = true; renderOverlay(); }); };
+  if (run && run.phase === 'shop') bindReorder(ovAll('[data-oi]'), renderOverlay);   // 상점에서도 도구 자리를 끌어 바꿔요
   q = ovAll('[data-cdrop]');   // 소모품 버리기: 화면 안 확인 창
   for (i = 0; i < q.length; i++) q[i].onclick = function (ev) { ev.stopPropagation(); var cid = this.dataset.cdrop, ck = Core.CONS_BY_ID[cid]; askConfirm(TEXT.cons.dropAsk.replace('{name}', ck.name).replace('{n}', Core.consumableCount(run, cid)), function () { Core.discardConsumable(run, cid); ui.hudDirty = true; renderOverlay(); }, { yes: TEXT.cons.drop, no: '그만두기' }); };
   q = ovAll('[data-fuse]');
@@ -1749,9 +1776,15 @@ function bindOverlay() {
   var cq = ovAll('[data-cons]');
   for (i = 0; i < cq.length; i++) cq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; sd.innerHTML = consDesc(this.dataset.cons).replace('<b>', '<b class="acc">') + '<br><span class="note">' + esc(TEXT.cons.noSell) + '</span>'; };
   for (i = 0; i < kq.length; i++) if (kq[i].dataset.keep) kq[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var k = Core.KEEP_BY_ID[this.dataset.keep]; sd.innerHTML = '<b class="acc">' + esc(k.name) + '</b> <span class="muted">' + esc(TEXT.keep.row) + '</span><br>' + esc(k.desc); };
-  for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t); };
+  for (i = 0; i < q.length; i++) q[i].onmouseenter = function () { var sd = $('shopDesc'); if (!sd) return; var t = Core.TOOL_BY_ID[this.dataset.tool]; sd.innerHTML = '<b class="acc">' + esc(t.kind === 'passive' ? tName(t.id) : t.name) + '</b> ' + '<span class="muted">' + axisName(t) + '</span>' + '<br>' + esc(t.desc) + synergyLine(t) + (run.owned.indexOf(t.id) >= 0 ? mimicLine(t.id) : ''); };
 }
 function rarAttr(id) { var t = Core.TOOL_BY_ID[id]; var n = t ? { '일반': 1, '고급': 2, '희귀': 3, '합침': 4 }[t.rarity] : Core.KEEP_BY_ID[id] ? 5 : 0; return n ? ' data-rar="' + n + '"' : ''; }   // 테두리 색(R125): 일반 회색, 고급 녹색, 희귀 청색, 합침 보라, 유물 금색
+// 본뜬 연장: 지금 무엇을 베끼는지 한 줄(자리 바꾸기 안내는 여기 한 곳에만)
+function mimicLine(id) {
+  if (id !== 'mimic' || !run) return '';
+  var mt = Core.mimicTarget(run);
+  return '<br><span class="sub">' + esc(mt ? '지금 베끼는 도구: ' + Core.TOOL_BY_ID[mt].name : '오른쪽 칸에 도구가 없습니다') + ' · ' + esc(TEXT.vaultTools.moveHint) + '</span>';
+}
 function axisName(t) { return t.kind === 'consumable' ? '한 번 쓰는 물건' : TEXT.axisName[t.axis || ''] || TEXT.axisName['']; }   // 02 6.11: 화면에 '축'을 쓰지 않는다
 function synergyLine(t) {
   var same = run.owned.filter(function (id) { var o = Core.TOOL_BY_ID[id]; return o.axis && o.axis === t.axis && id !== t.id; });
@@ -1885,7 +1918,7 @@ function forkGo(i) {
     afterAction(); renderOverlay();
   };
   var leave = function () {   // 촛불이 모자라면 공개 없이 안내만
-    if (d.candle < Core.travelCost(run, o.depth)) { go(); return; }
+    if (d.candle < Core.descendCost(run, o.depth)) { go(); return; }
     ui.sub = null; renderOverlay(); startSweep(go);
   };
   if (f.chunk && !f.chunk.done && f.chunk.dug > 0) askConfirm(TEXT.chunk.leave.replace('{n}', f.chunk.total - f.chunk.dug), leave);
