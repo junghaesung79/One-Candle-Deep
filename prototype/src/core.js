@@ -68,7 +68,7 @@ var CONFIG = {
               relicBox: false, toolSell: false, fusion: false, loan: false, fadedChalk: false, keepsake: false },
   // 도구 경험(reviews/14 15장): 판 위 옛 연장함, 팔기, 합친 도구, 심 씨 돈 외상. v22 프리셋에서 켜요
   relic: { chance: 0.25, fuseNight: 'stamp', fuseFrom: 'box', fuseMax: 0, bigStreak: true, minDepth: 2, minDay: 2, pityDay: 7, n: 2, rarity: { '일반': 30, '고급': 45, '희귀': 25 }, junk: 40,
-           sellSite: 0.25, sellShop: 0.5, sellBonus: 0.25, beltSlots: 2, loanMul: 1.5 },
+           sellSite: 0.25, sellShop: 0.5, sellBonus: 0.5, beltSlots: 2, loanMul: 1.5 },
   chainGravel: { min: 8, per: 1 },
   fadedChalk: { o: [0, 0, 1], x: [0, 1, 2] },
   keepsake: { share: 0.25 },
@@ -231,7 +231,7 @@ var TOOLS = [
   { id: 'belt', axis: '', rarity: '희귀', name: '넓은 연장 띠', short: '연장 띠', price: 260, kind: 'passive', icon: 'belt', sets: ['22'],
     desc: '도구 칸이 두 칸 늘어납니다' },
   { id: 'regular', axis: '', rarity: '일반', name: '심 씨 단골 장부', short: '단골 장부', price: 110, kind: 'passive', icon: 'regular', sets: ['22'],
-    desc: '도구를 팔 때 25%를 더 받습니다' },
+    desc: '도구를 팔 때 상점에서는 산 값 그대로, 판 위에서는 4분의 3을 받습니다' },
   // 맞바꿈(단점이 있는 것)은 팔 수 있는 도구로(유물에서 옮김, R129). candle·hp·treasureBonus·capPlus는 유물과 같은 칸 이름이라 keepSum이 함께 세요
   { id: 'shortwick', axis: '', rarity: '고급', name: '짧은 심지', short: '짧은 심지', price: 180, kind: 'passive', icon: 'kWick', sets: ['22'],
     desc: '하루 촛불이 15 줄어듭니다. 대신 보물 값이 25% 높습니다(큰 덩이는 빼고)', candle: -15, treasureBonus: 0.25 },
@@ -401,7 +401,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
          noPath: '가는 길이 없습니다', returnAsk: '버리는 촛불 {c} · 금고로 가는 주머니 {p}' },
   stairShown: '계단 자리는 처음부터 보입니다. 가는 길을 숫자로 찾습니다',
   candleOut: '촛불이 다 탔습니다. 오늘은 여기까지입니다',
-  perfect: '완벽한 층입니다. 보물을 다 캐고 지뢰를 한 번도 안 밟았습니다',
+  perfect: '완벽한 층입니다. 보물을 다 캐고 지뢰를 한 번도 치지 않았습니다',
   chord: { need: '주변에 그은 X·O 수가 숫자와 같을 때 한꺼번에 열 수 있습니다', none: '주변에 열 칸이 없습니다', hint: '한 번 더 누르면 주변 칸을 한꺼번에 엽니다 · 촛불 −{n}' },
   reward: { title: '도장 선물', enter: '도장 기념입니다. 셋 중 하나 가져가세요.', cashEnter: '도구가 싫으시면 금고에 {cash} 넣어 드리겠습니다.', button: '이걸로 받기', cash: '금고에 {cash} 받기', full: '도구 칸이 가득이라 금고로 받습니다' },
   // 판 위 옛 연장함(곽 씨 대사는 하게체)
