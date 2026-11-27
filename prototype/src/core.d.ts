@@ -54,6 +54,8 @@ export interface Run {
   tutorial?: boolean;
   d: DayState;
   owned: string[];
+  /** 소모품(옛 저장에는 없을 수 있어요) */
+  consumables?: ConsumableStack[];
   giftOpts: string[];
   mutationPlan: Record<number, string[]>;
   plan: { gang: (string | null)[]; orders: string[][]; firstRule: (string | null)[]; [k: string]: any };
@@ -64,6 +66,20 @@ export interface Run {
 }
 
 export interface ActResult { ok: boolean; [k: string]: any }
+
+/** 소모품 id(reviews/24). 도구·유물 id와 겹치지 않아요 */
+export type ConsumableId = 'matchstick' | 'bandage' | 'stub' | 'mapscrap';
+/** 소모품 표 한 줄. target 'x'면 쓸 때 X 칸을 골라요 */
+export interface ConsumableDef { id: ConsumableId; name: string; desc: string; icon: string; target?: 'x' }
+/** 가진 소모품 한 칸(run.consumables). 한 가지가 도구 칸 하나, 개수 제한 없음 */
+export interface ConsumableStack { id: ConsumableId | string; n: number }
+/** useConsumable 결과. refused: 쓸 수 없어서 그대로 둠(체력 가득, 모르는 지뢰 없음 등) */
+export interface ConsumableUseResult {
+  ok: boolean; id?: string; n?: number; refused?: boolean; needTarget?: boolean; noX?: boolean;
+  mines?: number; hp?: number; candle?: number; x?: number; y?: number;
+}
+/** 도구 신호에 오는 값(도구 hooks에서 고쳐 효과를 바꿔요) */
+export interface ConsumableEvent { id: string; n: number; refuse?: string; candle?: number; hp?: number; x?: number; y?: number; source?: string; result?: ConsumableUseResult }
 
 /** 기록 장치(newRun의 record)가 하루에 세는 것. 치기·발파 직전 칸을 화면에 보이는 정보로 가른 결과예요 */
 export interface DayRecord {
@@ -102,6 +118,24 @@ export interface CoreApi {
   mark(run: Run, x: number, y: number, to?: number): { ok: boolean; mark?: number; faded?: boolean };
   probe(run: Run, x: number, y: number): unknown;
   ignite(run: Run, x: number, y: number, free?: boolean): ActResult;
+  /** 도구 칸 수(넓은 연장 띠 포함) */
+  slotsOf(run: Run): number;
+  /** 도구 칸에 든 것: 도구 + 소모품 칸(소모품 칸 셈은 여기 한 곳) */
+  slotsUsed(run: Run): number;
+  CONSUMABLES: ConsumableDef[];
+  CONS_BY_ID: Record<string, ConsumableDef>;
+  /** 소모품 넣기. 넣은 개수를 돌려줘요(같은 것이 없고 칸이 가득이면 0) */
+  addConsumable(run: Run, id: ConsumableId | string, n: number, source?: string): number;
+  consumableCount(run: Run, id: ConsumableId | string): number;
+  consumableTotal(run: Run): number;
+  /** 이 소모품을 하나 더 받을 자리가 있는지(같은 것이 있으면 늘 있음) */
+  consumableFits(run: Run, id: ConsumableId | string): boolean;
+  /** 소모품 쓰기. 성냥은 target(X 칸)이 있어야 해요 */
+  useConsumable(run: Run, id: ConsumableId | string, target?: { x: number; y: number }): ConsumableUseResult;
+  /** 소모품 한 칸을 통째로 버려요(돈 없음) */
+  discardConsumable(run: Run, id: ConsumableId | string): { ok: boolean; n?: number };
+  /** 지도 조각이 바랜 X를 그을 수 있는 지뢰 칸 */
+  mapTargets(run: Run): Cell[];
   [k: string]: any;
 }
 
@@ -109,6 +143,7 @@ export declare const Core: CoreApi;
 export declare const PRESETS: Record<string, { config: Record<string, any>; text: Record<string, string> }>;
 export declare const CONFIG: any;
 export declare const TOOLS: any[];
+export declare const CONSUMABLES: ConsumableDef[];
 export declare const RULES: Record<string, any>;
 export declare const RULE_IDS: RuleId[];
 export declare const CHUNK_RULES: RuleId[];

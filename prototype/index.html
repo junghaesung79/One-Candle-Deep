@@ -97,6 +97,10 @@
   .slot.empty { border-style: dashed; background: transparent; }
   .slot.pop { transform: translateY(-3px); border-color: #ffd25a; }
   .slot.reveal { animation: reveal 1.2s ease-out; }
+  .slot.cons { border-style: dotted; border-color: #c9b49c; cursor: pointer; }   /* 소모품: 점선 테두리(희귀도 색과 빈 칸의 긴 점선과 다르게) + 오른쪽 아래 개수 */
+  .slot.cons:hover { background: #34303f; }
+  .slot.cons.on { border-style: solid; border-color: #ffd25a; background: #3a3220; }
+  .slot .cnt { position: absolute; right: 1px; bottom: -1px; font-size: 11px; line-height: 12px; font-weight: 700; color: #f1ece2; text-shadow: 1px 1px 0 #0b0a10, -1px 0 0 #0b0a10; pointer-events: none; }
   @keyframes reveal { 0% { box-shadow: 0 0 0 0 rgba(255,210,90,0.9); border-color: #ffd25a; } 60% { box-shadow: 0 0 0 8px rgba(255,210,90,0); border-color: #ffd25a; } 100% { box-shadow: 0 0 0 0 rgba(255,210,90,0); } }
   .unknown { color: #8f86a3; font-style: italic; }
   .charPick.locked { cursor: default; opacity: 0.75; }
@@ -263,6 +267,7 @@
   .card.sel { border-color: #ffd25a; }
   .fork { flex: 1; padding: 14px; cursor: pointer; min-height: 196px; position: relative; }
   .fork.sel { border-color: #ffd25a; background: #26222e; }
+  .fork.consCard { border-style: dotted; } .fork.consCard:not(.sel) { border-color: #c9b49c; } .card.consRow { border-style: dotted; border-color: #c9b49c; }   /* 소모품은 점선(희귀도 색 없음) */
   .fork .nm { font-size: 19px; font-weight: 700; margin: 8px 0 4px; }
   .fork .tx { font-size: 15px; color: #efe7d6; line-height: 21px; }
   .fork .hp2 { font-size: 13px; color: #a59fb3; margin-top: 8px; line-height: 18px; }

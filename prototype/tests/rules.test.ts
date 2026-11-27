@@ -322,7 +322,7 @@ describe('규칙 단위 검사', () => {
         check(bc.haz === 'treasure' && bc.box && bc.cover !== 'open', 'box sits in a covered treasure cell');
         const nb = Core.neighbors(fb, bc.x, bc.y)[0]; nb.cover = 'open'; nb.haz = null; rb.d.px = nb.x; rb.d.py = nb.y;
         const t0 = rb.stats.treasures, s0 = rb.d.streak; Core.hit(rb, bc.x, bc.y);
-        check(!!rb.boxOffer && rb.boxOffer.opts.length === 2 && rb.stats.treasures === t0 &&   /* 보물 값은 없어요(와르르 자갈은 들어올 수 있어요) */ rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
+        check(!!rb.boxOffer && rb.boxOffer.opts.length + (rb.boxOffer.cons ? 1 : 0) === 2 && rb.stats.treasures === t0 &&   /* 보물 값은 없어요(와르르 자갈은 들어올 수 있어요) */ rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
         rb.owned = ['gloves', 'lens', 'lastcard', 'crown', 'amulet', 'betchalk', 'fuse', 'wedge'].filter(id => !rb.boxOffer.opts.includes(id)).slice(0, 8);
         while (rb.owned.length < 8) rb.owned.push(['tapper', 'sieve', 'tongs', 'refiner'].find(id => !rb.owned.includes(id) && !rb.boxOffer.opts.includes(id)));
         check(!Core.chooseBox(rb, 0).ok, 'full slots: must drop one');

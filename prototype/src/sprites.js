@@ -154,6 +154,11 @@ function iconHtml(name, size, cls) {
     spring: mkSprite(["..........", "....b.....", "...bwb....", "...bwb....", "..bwwwb...", "..bwbwb...", "..bwwwb...", "...bbb....", "oooooooooo", "..........".replace(/\./g, '.')], { b: '#4f7590', w: '#c8e6f0', o: '#2f4a60' }),
     merchant: mkSprite(["....oo....", "...o..o...", "..oooooo..", ".offfffo..", ".ofyyyfo..", ".ofyhyfo..", ".ofyyyfo..", ".offfffo..", "..oooooo..", ".........."], { o: '#6b5a3f', f: '#c9a35a', y: '#ffd25a', h: '#fff4c2' })
   };
+  // 소모품 넷(reviews/24): 성냥 한 개비, 감은 붕대, 접시에 선 몽당초, 찢긴 지도
+  SPR.icons.cMatch = mkSprite(["......rr..", ".....rRRr.", ".....rRRr.", "......rw..", ".....ww...", "....ww....", "...ww.....", "..ww......", ".ww.......", "ww........"], { r: '#7a2f28', R: '#e0603a', w: '#c9894a' });
+  SPR.icons.cBandage = mkSprite(["..oooooo..", ".owwwwwwo.", "owwllllwwo", "owlkkkklwo", "owlk..klwo", "owlkkkklwo", "owwllllwwo", ".owwwwwwww", "..oooooowW", "........WW"], { o: '#6c6476', w: '#efe7d6', l: '#c9c0ad', k: '#8a8296', W: '#d9ccb2' });
+  SPR.icons.cStub = mkSprite(["....y.....", "...yhy....", "...yhy....", "....k.....", "...LLL....", "...LlL....", "..lllll...", "oooooooo..", ".oggggoooo", "..oooo...."], { y: '#ffd25a', h: '#fff4c2', k: '#1a120b', L: '#fbf4e4', l: '#d9ccb2', o: '#5a4a3a', g: '#b0703a' });
+  SPR.icons.cMap = mkSprite(["pppppp.pp.", "pkpppppppp", "pppkpppppp", "pppppppppp", "ppppkppppp", "pppppkpppp", "pppppprprp", "ppppppprpp", "pppppprprp", ".pp.ppp.p."], { p: '#e9dfc8', k: '#8a5a3a', r: '#c4432b' });
   // 재미 보고서 도구 셋(늙은 광부 모자, 곽 씨 부적, 청진 망치)
   SPR.icons.crown = mkSprite(["..........", "...yyyy...", "..yhhhhy..", ".yhkllkhy.", ".yhkllkhy.", "oooooooooo", ".o......o.", "..........", "..........", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', k: '#3a3542', l: '#fff4c2' });
   SPR.icons.amulet = mkSprite(["....oo....", "...o..o...", "..o....o..", ".wwwwwwww.", ".wrrrrrrw.", ".wwwrrwww.", ".wwrwwrww.", ".wwwrrwww.", ".wwwwwwww.", ".........."], { o: '#9a6532', w: '#efe7d6', r: '#c4432b' });

@@ -65,13 +65,15 @@ var CONFIG = {
   // 재미 보고서 2~4주차: 시스템 스위치. 여기 적힌 값은 v2.1이고, 파일 끝의 v22 프리셋이 덮어써요(applyPreset)
   features: { gang: true, orders: true, mutations: true, awake: true, forkBonus: true, rooms: true, embers: true, lowLight: true,
               sellBack: true, probeBase: true, gravel: 'cell', startGift: true, stampReward: false, chord: false, chunkShown: false,
-              relicBox: false, toolSell: false, fusion: false, loan: false, fadedChalk: false, keepsake: false },
+              relicBox: false, toolSell: false, fusion: false, loan: false, fadedChalk: false, keepsake: false, consumables: false },
   // 도구 경험(reviews/14 15장): 판 위 옛 연장함, 팔기, 합친 도구, 심 씨 돈 외상. v22 프리셋에서 켜요
   relic: { chance: 0.25, fuseNight: 'stamp', fuseFrom: 'box', fuseMax: 0, bigStreak: true, minDepth: 2, minDay: 2, pityDay: 7, n: 2, rarity: { '일반': 30, '고급': 45, '희귀': 25 }, junk: 40,
            sellSite: 0.25, sellShop: 0.5, sellBonus: 0.5, beltSlots: 2, loanMul: 1.5 },
   chainGravel: { min: 8, per: 1 },
   fadedChalk: { o: [0, 0, 1], x: [0, 1, 2] },
   keepsake: { share: 0.25 },
+  // 소모품(reviews/24): 몽당초 촛불, 붕대 체력. 옛 연장함은 boxChance로 고를 거리 하나를 소모품 묶음으로 바꿔요(w: 가중치)
+  consumables: { stub: 3, bandage: 1, boxChance: 0.35, box: [{ id: 'bandage', n: 2, w: 45 }, { id: 'stub', n: 2, w: 45 }, { id: 'mapscrap', n: 1, w: 10 }] },
   endless: { every: 3, mul: 1.5, round: 100, minesPerStamp: 1, minesMax: 8 },   // 끝없는 갱: 마지막 도장 뒤 3일마다, 직전 도장의 1.5배. 끝없는 도장마다 층 지뢰 +1(최대 8)
   genVersion: '2.2.2',                           // 시드 판본: 같은 시드라도 판본이 다르면 광산이 다를 수 있어요                  // 옛 연장함 가운데 이만큼은 도구 둘 대신 유물 하나   // 바랜 분필 자국: 층마다 제비에서 하나씩 뽑아요(O는 0·0·1, X는 0·1·2). 늘 맞아요
   ruleTune: {},
@@ -491,6 +493,23 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
 };
 
 
+// 소모품(reviews/24, R128): 상점에서 팔지 않고 도구·옛 연장함에서 얻어요. 도구 칸 하나에 같은 것이 개수 제한 없이 쌓이고, 칸을 눌러서 써요.
+// 팔 수 없고 버릴 수 있어요(0). id는 도구·유물 id와 겹치지 않게 지어요(v2.1 도구 '성냥 묶음'이 match라서 성냥은 matchstick)
+var CONSUMABLES = [
+  { id: 'matchstick', name: '성냥', icon: 'cMatch', target: 'x', desc: '누른 뒤 X 칸을 누르면 촛불 없이 발파합니다' },
+  { id: 'bandage', name: '붕대', icon: 'cBandage', desc: '누르면 체력 1을 되찾습니다(최대 체력까지)' },
+  { id: 'stub', name: '몽당초', icon: 'cStub', desc: '누르면 촛불이 3 늘어납니다' },
+  { id: 'mapscrap', name: '지도 조각', icon: 'cMap', desc: '누르면 이 층에서 아직 숫자로 알 수 없는 지뢰 하나에 바랜 X가 그어집니다' }
+];
+TEXT.cons = {
+  kind: '소모품', got: '{name} {n}개를 챙겼습니다', noRoom: '도구 칸이 가득이라 {name} 챙기지 못했습니다', dropped: '{name} 버렸습니다',
+  armed: '성냥을 켰습니다. 촛불 없이 발파할 X 칸을 누르십시오', cancel: '오른쪽 클릭이나 성냥을 다시 누르면 그만둡니다', xHint: '누르면 촛불 없이 터뜨립니다', have: '지금 {n}개',
+  hpFull: '체력이 가득합니다. 붕대는 그대로 둡니다', mapNone: '이 층에는 숫자로 모르는 지뢰가 남아 있지 않습니다. 지도 조각은 그대로 둡니다',
+  bandage: '붕대를 감았습니다. 체력이 {n} 늘었습니다', stub: '몽당초를 켰습니다. 촛불이 {n} 늘었습니다', mapscrap: '지도 조각을 펼쳤습니다. 지뢰 하나에 바랜 X가 그어졌습니다',
+  noSell: '팔 수 없습니다. 버리면 돈을 받지 않습니다', dropAsk: '{name} {n}개를 버리시겠습니까? 돈은 받지 않습니다', drop: '버리기', boxNote: '소모품 · 같은 것끼리 한 칸에 쌓입니다'
+};
+TEXT.guide.meet.cons = ['소모품', '도구 칸에 들어가는 한 번 쓰는 물건입니다. 같은 것은 한 칸에 쌓이고, 칸을 눌러서 씁니다. 다 쓰면 칸이 빕니다. 팔 수 없고, 버릴 수는 있습니다.'];
+
 // 첫 판 고정 층(01 16.2). 기호: . 빈칸  m 지뢰  g 금 알갱이  G 청록 보석  s 계단  X 분필 X가 그어진 지뢰  O 분필 O가 그어진 금 알갱이
 // 자갈은 고정 시드로 뿌린다. 낙서 문구와 번호는 02 6.9, 놓는 자리와 보이는 조건은 01 16.3.
 // Day 2·3의 정해진 층은 고정 시드에서 '가르칠 요소'가 확실히 나오는 첫 배치를 찾아 쓴다(k = 미리 찾아 둔 시드 번호. 맞지 않으면 다시 찾는다)
@@ -566,7 +585,7 @@ PRESETS.v22 = {
     stairShown: true, countsShown: true,
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
                 sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true,
-                relicBox: true, toolSell: true, fusion: true, loan: true, fadedChalk: true, keepsake: true },
+                relicBox: true, toolSell: true, fusion: true, loan: true, fadedChalk: true, keepsake: true, consumables: true },
     shop: { tools: 3, cons: 0, reroll: 40, rerollUp: 40, sellBack: 0.5, passiveSlots: 8, consSlots: 0, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
             rarityWeight: { '일반': 50, '고급': 35, '희귀': 15 } },   // 도구 칸 8(도구 경험 정리)
     toolSet: '22',
@@ -694,7 +713,9 @@ var Core = (function () {
       cell: function (x, y) { return cellAt(run.d.floor, x, y); },
       floor: function () { return run.d.floor; },
       treasureNear: function (c) { return treasureNear(run.d.floor, c); },
-      owns: function (id) { return owns(run, id); }
+      owns: function (id) { return owns(run, id); },
+      addConsumable: function (id, n, label) { var g = addConsumable(run, id, n, 'tool:' + tool.id); if (g) fx(run, { t: 'proc', id: tool.id, icon: tool.icon, label: (label ? label + ' · ' : '') + CONS_BY_ID[id].name + ' +' + g }); return g; },   // 소모품을 만드는 도구용
+      consumableCount: function (id) { return consumableCount(run, id); }
     };
   }
   function emit(run, name, ev) {
@@ -1152,7 +1173,7 @@ var Core = (function () {
     var run = {
       seed: seed, day: 1, cash: 0, paid: 0, stamps: 0, tutorial: !!opts.tutorial, record: !!opts.record, char: opts.tutorial ? 'miner' : (CHAR_IDS_OK(opts.char) || 'miner'),
       grade: Math.max(1, Math.min(3, opts.grade || 1)), daily: opts.daily || null, preset: CONFIG.preset,
-      owned: [], paidFor: {}, cons: [], toolState: {}, phase: opts.tutorial ? 'deed' : 'deed', d: null, room: null,
+      owned: [], paidFor: {}, cons: [], consumables: [], toolState: {}, phase: opts.tutorial ? 'deed' : 'deed', d: null, room: null,
       shop: null, settle: null, payment: null, final: null, gang: null, orders: [], order: null,
       log: [], logSeq: 0, fx: [], history: [], eventCounts: {},
       stats: { deepest: 0, treasures: 0, collapses: 0, mines: 0, chainMax: 0, earned: 0, blasts: 0, chords: 0, boxes: 0, sold: 0, fused: 0 },
@@ -1270,7 +1291,7 @@ var Core = (function () {
     if (i === -1 && run.giftCash) { cashTaken = run.giftCash; run.cash += cashTaken; }
     else {
       id = run.giftOpts[i]; if (!id) return { ok: false };
-      if (run.owned.length >= slotsOf(run)) return { ok: false, full: true };
+      if (slotsUsed(run) >= slotsOf(run)) return { ok: false, full: true };
       addTool(run, id, 0);
     }
     run.giftDone = true;
@@ -1876,10 +1897,11 @@ var Core = (function () {
     var f = d.floor, c = cellAt(f, x, y);
     if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, TEXT.ops.noPath); return { ok: false }; }
     if (c.mark !== 1) { log(run, TEXT.ops.needX); return { ok: false, noX: true }; }
-    var cost = free ? 0 : igniteCost(run);
+    var cost = free || d.freeX ? 0 : igniteCost(run);   // d.freeX: 성냥(소모품)을 켜 둔 X 칸 동작은 촛불이 안 들어요
     if (d.candle < cost) { log(run, '촛불이 모자랍니다. 발파는 촛불 ' + cost); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
     d.face = { dx: sgn(x - d.px), dy: sgn(y - d.py) };
     if (run.record) { if (classify(run, c) === 'knownM') d.rec.blastSure++; else d.rec.blastBet++; }
+    d.freeX = null;   // 성냥은 이 한 번에 다 탔어요(useConsumable이 비었는지 보고 성냥을 줄여요)
     beginAct(run, x, y);
     spendCandle(run, cost);
     d.stats.blasts++; run.stats.blasts++;
@@ -2334,7 +2356,7 @@ var Core = (function () {
     if (run.cash < price) return { ok: false, poor: true };
     if (t.kind === 'passive') {
       if (owns(run, id)) return { ok: false };
-      if (run.owned.length >= slotsOf(run)) { log(run, feat('sellBack') || feat('toolSell') ? '도구 칸이 가득입니다. 하나 팔아서 비우십시오.' : '도구 칸이 가득입니다.'); return { ok: false, full: true }; }
+      if (slotsUsed(run) >= slotsOf(run)) { log(run, feat('sellBack') || feat('toolSell') ? '도구 칸이 가득입니다. 하나 팔아서 비우십시오.' : '도구 칸이 가득입니다.'); return { ok: false, full: true }; }
     } else if (consSlotFor(run, id) < 0) { log(run, '한 번 쓰는 물건을 더 넣을 칸이 없습니다.'); return { ok: false, full: true }; }
     run.cash -= price;
     S.sold[slot] = true;
@@ -2370,7 +2392,7 @@ var Core = (function () {
   function canRemove(run, id, adding) {   // 넓은 연장 띠를 빼면 칸이 줄어요. 남은 도구가 칸에 들어가야 해요
     if (run.owned.indexOf(id) < 0) return false;
     if (id !== 'belt') return true;
-    return run.owned.length - 1 + (adding ? 1 : 0) <= CONFIG.shop.passiveSlots;
+    return slotsUsed(run) - 1 + (adding ? 1 : 0) <= CONFIG.shop.passiveSlots;   // 소모품 칸도 함께 세요
   }
   // ---------- 판 위 옛 연장함 ----------
   function placeBox(run, f, depth) {
@@ -2417,7 +2439,9 @@ var Core = (function () {
       if (run.act) run.act.stop = Math.max(run.act.stop, CONFIG.fx.boxStop);
       return;
     }
-    run.boxOffer = { opts: boxOpts(run, o.scorch ? 1 : CONFIG.relic.n + keepSum(run, 'boxPlus'), rng), scorch: !!o.scorch, quote: o.scorch ? TEXT.box.kwakScorch : pick(TEXT.box.kwak, rng) };
+    var nOpt = o.scorch ? 1 : CONFIG.relic.n + keepSum(run, 'boxPlus'), bc = boxCons(run, f, nOpt);   // 소모품 묶음이 나오면 도구 하나 자리를 차지해요
+    run.boxOffer = { opts: boxOpts(run, nOpt - (bc ? 1 : 0), rng), scorch: !!o.scorch, quote: o.scorch ? TEXT.box.kwakScorch : pick(TEXT.box.kwak, rng) };
+    if (bc) run.boxOffer.cons = bc;
     fx(run, { t: 'box', x: c.x, y: c.y, scorch: !!o.scorch });
     log(run, o.scorch ? TEXT.box.scorched : TEXT.box.dug, 'good');
     if (run.act) run.act.stop = Math.max(run.act.stop, CONFIG.fx.boxStop);
@@ -2437,12 +2461,23 @@ var Core = (function () {
     var money = 0, id = null;
     if (B.keep) { if (i === -1) log(run, TEXT.keep.left); else { id = B.keep; addKeep(run, id); } run.boxOffer = null; return { ok: true, id: id, keep: true, money: 0 }; }
     if (i === -1) { money = boxPassValue(run); addMoney(run, money); log(run, TEXT.box.passed.replace('{n}', fmt(money)), 'good'); }
+    else if (B.cons && i === B.opts.length) {   // 소모품 묶음: 같은 것이 있으면 쌓이고, 없고 칸이 가득이면 하나를 내려놓아요
+      if (!consumableFits(run, B.cons.id)) {
+        if (!dropId) return { ok: false, full: true };
+        if (CONS_BY_ID[dropId]) { if (!discardConsumable(run, dropId).ok) return { ok: false, full: true }; }
+        else { if (!canRemove(run, dropId, true)) return { ok: false, full: true }; money = toolValue(run, dropId, 'site'); removeTool(run, dropId); addMoney(run, money); run.stats.sold++; log(run, TEXT.box.dropped.replace('{name}', josa(TOOL_BY_ID[dropId].name, '을', '를')).replace('{n}', fmt(money))); }
+        if (!consumableFits(run, B.cons.id)) return { ok: false, full: true };
+      }
+      addConsumable(run, B.cons.id, B.cons.n, 'box'); id = B.cons.id;
+      log(run, TEXT.cons.got.replace('{name}', CONS_BY_ID[id].name).replace('{n}', B.cons.n), 'good');
+    }
     else {
       id = B.opts[i]; if (!id) return { ok: false };
-      if (run.owned.length >= slotsOf(run)) {
-        if (!dropId || !canRemove(run, dropId, true)) return { ok: false, full: true };
-        money = toolValue(run, dropId, 'site'); removeTool(run, dropId); addMoney(run, money); run.stats.sold++;
-        log(run, TEXT.box.dropped.replace('{name}', josa(TOOL_BY_ID[dropId].name, '을', '를')).replace('{n}', fmt(money)));
+      if (slotsUsed(run) >= slotsOf(run)) {
+        if (dropId && CONS_BY_ID[dropId]) { if (!discardConsumable(run, dropId).ok) return { ok: false, full: true }; }   // 소모품을 내려놓으면 돈은 없어요
+        else if (!dropId || !canRemove(run, dropId, true)) return { ok: false, full: true };
+        else { money = toolValue(run, dropId, 'site'); removeTool(run, dropId); addMoney(run, money); run.stats.sold++;
+        log(run, TEXT.box.dropped.replace('{name}', josa(TOOL_BY_ID[dropId].name, '을', '를')).replace('{n}', fmt(money))); }
       }
       addTool(run, id, 0); (run.boxed = run.boxed || {})[id] = true;   // 연장함에서 나온 옛 연장: 합치기 재료가 돼요
       log(run, TEXT.box.took.replace('{name}', josa(TOOL_BY_ID[id].name, '을', '를')), 'good');
@@ -2457,6 +2492,103 @@ var Core = (function () {
     if (d && k.hp) { d.hpMax = Math.max(1, d.hpMax + k.hp); d.hp = Math.max(1, Math.min(d.hpMax, d.hp + k.hp)); }
     if (d && k.candle) { d.candleMax += k.candle; d.candle = Math.max(1, d.candle + k.candle); }
     log(run, TEXT.keep.took.replace('{name}', josa(k.name, '을', '를')), 'good');
+  }
+  // ---------- 소모품(reviews/24, R128) ----------
+  // run.consumables = [{ id, n }]: 한 가지가 도구 칸 하나를 차지하고 개수 제한 없이 쌓여요. 다 쓰면 칸이 비어요.
+  // 칸 셈은 slotsUsed 한 곳에서 해요. 소모품 가지 수에서 consSlotFree(도구·유물에 적는 수, keepSum이 셈)만큼 빼요: '소모품 한 가지는 칸을 차지하지 않는' 도구는 consSlotFree: 1
+  // 도구 신호: on_consumable_gain {id, n, source}, on_consumable_check {id, refuse}(refuse를 비우면 쓰게 해요), on_consumable_use {id, n, candle, hp, x, y}(효과 전에 고칠 수 있어요),
+  //            on_consumable_used {id, n, result}(효과 뒤). n은 한 번에 줄어드는 개수
+  var CONS_BY_ID = {}; CONSUMABLES.forEach(function (k) { CONS_BY_ID[k.id] = k; });
+  function consList(run) { return run.consumables || (run.consumables = []); }   // 옛 저장에는 칸이 없어요
+  function consEntry(run, id) { var L = consList(run); for (var i = 0; i < L.length; i++) if (L[i].id === id) return L[i]; return null; }
+  function consumableCount(run, id) { var e = consEntry(run, id); return e ? e.n : 0; }
+  function consumableTotal(run) { return consList(run).reduce(function (a, e) { return a + e.n; }, 0); }
+  function consSlotsFor(run, kinds) { return Math.max(0, kinds - keepSum(run, 'consSlotFree')); }
+  function consSlotsUsed(run) { return consSlotsFor(run, consList(run).length); }
+  function slotsUsed(run) { return run.owned.length + consSlotsUsed(run); }   // 도구 칸에 든 것: 도구 + 소모품
+  function consumableFits(run, id) { return !!consEntry(run, id) || run.owned.length + consSlotsFor(run, consList(run).length + 1) <= slotsOf(run); }
+  // 넣기: 넣은 개수를 돌려줘요. 같은 것이 있으면 쌓이고, 없는데 칸이 가득이면 생기지 않아요(저절로 버리지 않아요)
+  function addConsumable(run, id, n, source) {
+    var k = CONS_BY_ID[id]; n = Math.floor(n || 0);
+    if (!k || n <= 0) return 0;
+    if (!consumableFits(run, id)) { log(run, TEXT.cons.noRoom.replace('{name}', josa(k.name, '을', '를'))); return 0; }
+    var e = consEntry(run, id); if (!e) { e = { id: id, n: 0 }; consList(run).push(e); }
+    e.n += n; run.stats.consGot = (run.stats.consGot || 0) + n;
+    fx(run, { t: 'consGain', id: id, n: n });
+    emit(run, 'on_consumable_gain', { id: id, n: n, source: source || '' });
+    return n;
+  }
+  function takeConsumable(run, id, n) {
+    var e = consEntry(run, id); if (!e) return 0;
+    var k = Math.min(e.n, Math.max(0, n)); e.n -= k;
+    if (e.n <= 0) consList(run).splice(consList(run).indexOf(e), 1);
+    return k;
+  }
+  function discardConsumable(run, id) {   // 버리기: 그 칸을 통째로 비워요. 돈은 없어요
+    var e = consEntry(run, id); if (!e) return { ok: false };
+    var n = takeConsumable(run, id, e.n);
+    log(run, TEXT.cons.dropped.replace('{name}', josa(CONS_BY_ID[id].name, '을', '를')));
+    return { ok: true, n: n };
+  }
+  // 지도 조각이 그을 자리: 이 층의 지뢰 가운데 지금 보이는 정보로 지뢰라고 알 수 없는 것. 내가 X를 그어 둔 칸은 뒤로 미뤄요
+  function mapTargets(run) {
+    var f = run.d && run.d.floor; if (!f) return [];
+    var D = deduce(f, { blur: mut(run, 'blur') });
+    var T = f.cells.filter(function (c) { var i = idx(c); return c.haz === 'mine' && !c.removed && covered(c) && !c.faded && !(D.st[i] === 2 && !D.canT[i]); });
+    var fresh = T.filter(function (c) { return c.mark !== 1; });
+    return fresh.length ? fresh : T;
+  }
+  // 쓰기: 성냥은 target {x, y}(X 칸)가 있어야 해요. 멀면 옆까지 걸어가요. { ok, refused?, ... }
+  function useConsumable(run, id, target) {
+    var d = run.d, k = CONS_BY_ID[id];
+    if (!k || !consEntry(run, id) || !d || !canAct(run) || d.embersOn) return { ok: false };
+    var ev = { id: id, n: 1, refuse: '' }, spots = null, c = null;
+    if (k.target === 'x') {
+      if (!target) return { ok: false, needTarget: true };
+      c = cellAt(d.floor, target.x, target.y);
+      if (!c || !covered(c) || c.mark !== 1) { log(run, TEXT.ops.needX); return { ok: false, noX: true }; }
+      ev.x = c.x; ev.y = c.y;
+    } else if (id === 'bandage') { ev.hp = CONFIG.consumables.bandage; if (d.hp >= d.hpMax) ev.refuse = TEXT.cons.hpFull; }
+    else if (id === 'stub') ev.candle = CONFIG.consumables.stub;
+    else if (id === 'mapscrap') { spots = mapTargets(run); if (!spots.length) ev.refuse = TEXT.cons.mapNone; }
+    emit(run, 'on_consumable_check', ev);
+    if (ev.refuse) { log(run, ev.refuse); return { ok: false, refused: true }; }
+    if (c && !approach(run, c.x, c.y).ok) { log(run, TEXT.ops.noPath); return { ok: false }; }
+    emit(run, 'on_consumable_use', ev);
+    var res = { ok: true, id: id };
+    if (id === 'matchstick') {   // X 칸 동작(캐릭터 스킬)을 촛불 없이: d.freeX를 켜 두면 X 동작이 촛불 0으로 하고 끄고 가요
+      d.freeX = { id: id };
+      var r = ignite(run, c.x, c.y), lit = !d.freeX;
+      d.freeX = null;
+      if (!r.ok || !lit) return { ok: false };
+      res.mines = r.mines || 0;
+    } else if (id === 'bandage') {
+      var h0 = d.hp; d.hp = Math.min(d.hpMax, d.hp + Math.max(0, ev.hp || 0)); res.hp = d.hp - h0;
+      log(run, TEXT.cons.bandage.replace('{n}', res.hp), 'good');
+    } else if (id === 'stub') {
+      res.candle = addCandle(run, Math.max(0, ev.candle || 0));
+      log(run, TEXT.cons.stub.replace('{n}', res.candle), 'good');
+    } else if (id === 'mapscrap') {
+      var rng = rngFrom(hashSeed(run.seed, run.day, d.floor.depth, 0x4d415053, run.stats.consUsed || 0));
+      c = spots[Math.floor(rng() * spots.length)];
+      c.mark = 1; c.faded = 1; c.givenX = true; res.x = c.x; res.y = c.y;
+      fx(run, { t: 'mapX', x: c.x, y: c.y });
+      log(run, TEXT.cons.mapscrap, 'good');
+    }
+    res.n = takeConsumable(run, id, Math.max(1, ev.n || 1));
+    run.stats.consUsed = (run.stats.consUsed || 0) + 1;
+    fx(run, { t: 'consUse', id: id });
+    emit(run, 'on_consumable_used', { id: id, n: res.n, result: res });
+    return res;
+  }
+  // 옛 연장함 소모품 묶음: 고를 거리가 둘 이상인 연장함에서 boxChance로 하나가 붕대 2·몽당초 2, 드물게 지도 조각 1로 바뀌어요
+  function boxCons(run, f, nOpt) {
+    var C = CONFIG.consumables;
+    if (!feat('consumables') || nOpt < 2) return null;
+    var rng = rngFrom(hashSeed(run.seed, run.day, f.depth, 0x434f4e53));   // 도구 뽑기와 따로 굴려서 도구 후보는 그대로예요
+    if (rng() >= C.boxChance) return null;
+    var b = C.box[weightedIdx(rng, C.box.map(function (x) { return x.w; }))];
+    return { id: b.id, n: b.n };
   }
   // ---------- 합친 도구 ----------
   function fusionsReady(run) {
@@ -2514,7 +2646,8 @@ var Core = (function () {
     dailySeed: function (dateStr) { var p = String(dateStr).split('-').map(Number); return hashSeed(p[0] || 0, p[1] || 0, p[2] || 0, 0xDA11) % SEED_MAX; }, probe: probe, ignite: ignite, useCons: useCons, travelTo: travelTo, approach: approach,
     onStair: onStair, descend: descend, travelCost: travelCost, springChoose: springChoose, merchantService: merchantService, leaveRoom: leaveRoom,
     returnUp: returnUp, afterSettle: afterSettle, afterPayment: afterPayment, buy: buy, sellBack: sellBack, sellPrice: sellPrice, reroll: reroll,
-    slotsOf: slotsOf, toolValue: toolValue, canRemove: canRemove, chooseBox: chooseBox, boxPassValue: boxPassValue, fuse: fuse, fusionsReady: fusionsReady,
+    slotsOf: slotsOf, slotsUsed: slotsUsed, CONS_BY_ID: CONS_BY_ID, CONSUMABLES: CONSUMABLES, addConsumable: addConsumable, consumableCount: consumableCount, consumableTotal: consumableTotal,
+    consumableFits: consumableFits, useConsumable: useConsumable, discardConsumable: discardConsumable, mapTargets: mapTargets, toolValue: toolValue, canRemove: canRemove, chooseBox: chooseBox, boxPassValue: boxPassValue, fuse: fuse, fusionsReady: fusionsReady,
     loanInfo: loanInfo, takeLoan: takeLoan, payNow: payNow,
     nextDay: nextDay, priceOf: priceOf, rerollPrice: rerollPrice, servicePrice: servicePrice, stage: stage, orderPocket: orderPocket, goalInfo: goalInfo, nextPayment: nextPayment, paymentFor: paymentFor,
     deduce: deduce, numAt: numAt, cellAt: cellAt, neighbors: neighbors, orthN: orthN, cheb: cheb, liveHaz: liveHaz, idx: idx,
@@ -2526,4 +2659,4 @@ var Core = (function () {
   };
 })();
 
-export { PRESETS, Core, CONFIG, TOOLS, CHARACTERS, RULES, RULE_IDS, CHUNK_RULES, GANG, ORDERS, MUTATIONS, MUTATION_IDS, TUTORIAL_MUT8, TEXT, TUTORIAL, TREASURE_NAMES };
+export { PRESETS, Core, CONFIG, TOOLS, CONSUMABLES, CHARACTERS, RULES, RULE_IDS, CHUNK_RULES, GANG, ORDERS, MUTATIONS, MUTATION_IDS, TUTORIAL_MUT8, TEXT, TUTORIAL, TREASURE_NAMES };
