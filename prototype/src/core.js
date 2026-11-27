@@ -203,6 +203,7 @@ var TUTORIAL_MUT8 = 'blur';                                // R29 첫 판 Day 8 
 // 도구: 데이터 + 이벤트 훅. 05 문서 v0.3 4장 32종 가운데 프로토타입에 넣은 12종 + 소모품 2종(효과·가격은 05 4장과 같다)
 // 훅 이름: on_day_start, on_floor_enter, on_floor_leave, on_treasure(ev.base/ev.bonus 수정), on_streak_break(ev.to),
 //          on_mine(ev.damage), on_blast(ev: mines, scorch), on_blast_mine(ev.n: 이번 점화에서 터진 지뢰 수), on_chain_open(ev.count), on_break, on_mark_hit
+//          on_ignite_cost(ev.cost, ev.faded: X 칸 동작의 촛불 값), on_night(상점이 열리는 밤), on_floor_enter의 ev.newDeep(그 판에서 가장 깊은 층에 처음)
 // ctx.proc(라벨)은 계산 연출에 아이콘을 띄운다. 값 변화는 ctx.gain / ctx.addCandle / ctx.streakUp으로만.
 // sets: 이 도구가 나오는 묶음('21' v2.1 12종, '22' 재미 보고서 12종). CONFIG.toolSet이 고른다
 var TOOLS = [
@@ -298,6 +299,78 @@ var TOOLS = [
   // ==== 도구 목록 깊이·하루·금고·칸 (reviews/23 3.7~3.8) ====
   // ==== /깊이·하루·금고·칸 ====
   // ==== 도구 목록 소모품 도구 (reviews/23 3.10) ====
+  // 소모품을 만들거나(약초 주머니 …), 그 수를 세거나(보따리, 잡동사니 상자), 쓰는 순간에 반응해요(부지런한 손 …). 칸을 덜 쓰는 것은 consSlotFree(허리 주머니)
+  { id: 'herbbag', axis: '소모품', rarity: '일반', name: '약초 주머니', short: '약초 주머니', price: 120, kind: 'passive', icon: 'csHerb', sets: ['22'],
+    desc: '지뢰를 한 번도 치지 않고 하루를 마치면 붕대가 하나 생깁니다',
+    hooks: { on_day_end: function (ctx) { var d = ctx.run.d; if (d && !d.stats.mines) ctx.addConsumable('bandage', 1, '지뢰 없는 하루'); } } },
+  { id: 'wickshears', axis: '소모품', rarity: '고급', name: '심지 가위', short: '심지 가위', price: 180, kind: 'passive', icon: 'csShears', sets: ['22'],
+    desc: '올라가기로 하루를 끝내면 남은 촛불 5마다 몽당초가 하나 생깁니다',
+    hooks: { on_day_end: function (ctx, ev) { var d = ctx.run.d, n = d ? Math.floor(d.candle / 5) : 0; if (ev.reason === 'return' && n > 0) ctx.addConsumable('stub', n, '남은 촛불 ' + d.candle); } } },
+  { id: 'atlas', axis: '소모품', rarity: '희귀', name: '옛 갱도 지도첩', short: '지도첩', price: 280, kind: 'passive', icon: 'csAtlas', sets: ['22'],
+    desc: '그날 지뢰를 한 번도 치지 않고 지하 5층부터 그 판에서 가장 깊은 층에 처음 내려가면 지도 조각이 하나 생깁니다',
+    hooks: { on_floor_enter: function (ctx, ev) { var d = ctx.run.d; if (ev.newDeep && ev.depth >= 5 && d && !d.stats.mines) ctx.addConsumable('mapscrap', 1, '지하 ' + ev.depth + '층 처음'); } } },
+  { id: 'matchbundle', axis: '소모품', rarity: '희귀', name: '성냥 다발', short: '성냥 다발', price: 260, kind: 'passive', icon: 'csBundle', sets: ['22'],
+    desc: '성냥이 셋 이상이면 성냥을 쓸 때 셋을 한꺼번에 써서, 터진 지뢰마다 둘레 5×5가 열립니다',
+    hooks: { on_consumable_use: function (ctx, ev) {
+      if (ev.id !== 'matchstick' || ctx.consumableCount('matchstick') < 3) return;
+      var ch = CHARACTERS.filter(function (c) { return c.id === (ctx.run.char || 'miner'); })[0];
+      if (ch && ch.xSkill) return;   // 지뢰를 터뜨리지 않는 X 칸 동작(목수, 화약 장수)에는 넓힐 둘레가 없어요
+      ev.n = 3; ev.radius = 2; ctx.proc('성냥 셋 · 둘레 5×5');
+    } } },
+  { id: 'bundle', axis: '소모품', rarity: '고급', name: '보따리', short: '보따리', price: 200, kind: 'passive', icon: 'csSack', sets: ['22'],
+    desc: '가진 소모품 하나마다 보물 값이 2% 높습니다',   // 상한 없음(reviews/24 4장): 봇으로 판 끝 소모품 수를 같이 봐요
+    hooks: { on_treasure: function (ctx, ev) { var n = (ctx.run.consumables || []).reduce(function (a, e) { return a + e.n; }, 0); if (n > 0) ev.bonus += 0.02 * n; } } },
+  { id: 'busyhand', axis: '소모품', rarity: '고급', name: '부지런한 손', short: '부지런한 손', price: 190, kind: 'passive', icon: 'csHand', sets: ['22'],
+    desc: '소모품을 쓸 때마다 콤보가 1개 단계 오릅니다',
+    hooks: { on_consumable_used: function (ctx) { ctx.streakUpBy(1, '소모품 · 콤보 +1'); } } },
+  { id: 'firstknot', axis: '소모품', rarity: '일반', name: '응급 매듭', short: '응급 매듭', price: 120, kind: 'passive', icon: 'csKnot', sets: ['22'],
+    desc: '체력이 가득할 때 붕대를 쓰면 콤보가 2개 단계 오릅니다',
+    hooks: {
+      on_consumable_check: function (ctx, ev) { var d = ctx.run.d; if (ev.id === 'bandage' && d && d.hp >= d.hpMax) ev.refuse = ''; },   // 체력이 가득해도 붕대를 쓸 수 있어요
+      on_consumable_used: function (ctx, ev) { if (ev.id === 'bandage' && ev.result && ev.result.hp === 0) ctx.streakUpBy(2, '응급 매듭 · 콤보 +2'); }
+    } },
+  { id: 'tornsleeve', axis: '소모품', rarity: '일반', name: '찢은 소매', short: '찢은 소매', price: 120, kind: 'passive', icon: 'csSleeve', sets: ['22'],
+    desc: '하루 한 번, 곡괭이로 지뢰를 쳐서 체력이 1 남으면 붕대가 하나 생깁니다',
+    hooks: {
+      on_mine: function (ctx) { ctx.state.hp0 = ctx.run.d ? ctx.run.d.hp : null; },   // 피해 전 체력. 피해 뒤(on_break)에 1이 됐는지 봐요
+      on_break: function (ctx, ev) {
+        if (ev.content !== 'mine' || ctx.state.hp0 == null) return;
+        var h0 = ctx.state.hp0; ctx.state.hp0 = null;
+        if (!ctx.state.done && h0 > 1 && ctx.run.d.hp === 1) { ctx.state.done = true; ctx.addConsumable('bandage', 1, '체력 1'); }
+      }
+    } },
+  { id: 'stubjar', axis: '소모품', rarity: '일반', name: '초 동강 통', short: '초 동강 통', price: 120, kind: 'passive', icon: 'csJar', sets: ['22'],
+    desc: '층의 보물을 모두 캐고 떠나면 몽당초가 하나 생깁니다',
+    hooks: { on_floor_leave: function (ctx) {   // 녹거나 묻힌 보물이 있으면 '모두 캔' 것이 아니에요. 옛 연장함·큰 덩이도 보물로 쳐요
+      var f = ctx.run.d && ctx.run.d.floor; if (!f) return;
+      var T = f.cells.filter(function (c) { return c.haz === 'treasure' || c.haz === 'chunk'; });
+      if (T.length && T.every(function (c) { return c.removed && !c.melted; })) ctx.addConsumable('stub', 1, '보물을 모두 캠');
+    } } },
+  { id: 'goblinbag', axis: '소모품', rarity: '희귀', name: '도깨비 주머니', short: '도깨비 주머니', price: 300, kind: 'passive', icon: 'csGoblin', sets: ['22'],
+    desc: '밤마다 가장 많이 가진 소모품이 하나 더 생깁니다(지도 조각은 빼고)',
+    hooks: { on_night: function (ctx) {   // 수가 같으면 칸에서 앞에 있는 것
+      var L = (ctx.run.consumables || []).filter(function (e) { return e.id !== 'mapscrap' && e.n > 0; }); if (!L.length) return;
+      var best = L[0]; L.forEach(function (e) { if (e.n > best.n) best = e; });
+      ctx.addConsumable(best.id, 1, '밤');
+    } } },
+  { id: 'junkbox', axis: '소모품', rarity: '고급', name: '잡동사니 상자', short: '잡동사니 상자', price: 210, kind: 'passive', icon: 'csJunk', sets: ['22'],
+    desc: '서로 다른 소모품을 세 가지 이상 가지고 있으면 보물 값이 20% 높습니다',
+    hooks: { on_treasure: function (ctx, ev) { if ((ctx.run.consumables || []).filter(function (e) { return e.n > 0; }).length >= 3) ev.bonus += 0.2; } } },
+  { id: 'windguard', axis: '소모품', rarity: '일반', name: '바람막이', short: '바람막이', price: 110, kind: 'passive', icon: 'csLantern', sets: ['22'],
+    desc: '촛불이 5 이하일 때 몽당초를 켜면 촛불이 3이 아니라 6 늘어납니다',
+    hooks: { on_consumable_use: function (ctx, ev) { var d = ctx.run.d; if (ev.id === 'stub' && d && d.candle <= 5) { ev.candle = (ev.candle || 0) * 2; ctx.proc('바람막이 · 촛불 두 배'); } } } },
+  { id: 'kwakbox', axis: '소모품', rarity: '고급', name: '곽 씨 성냥갑', short: '성냥갑', price: 200, kind: 'passive', icon: 'csMatchbox', sets: ['22'],
+    desc: '층마다 한 번, 성냥으로 지뢰를 2개 이상 터뜨리면 성냥이 하나 돌아옵니다',
+    hooks: { on_consumable_used: function (ctx, ev) {
+      var d = ctx.run.d; if (ev.id !== 'matchstick' || !d || !ev.result || !(ev.result.mines >= 2) || ctx.state.floor === d.floorIdx) return;
+      ctx.state.floor = d.floorIdx;   // 이 층에서는 한 번 돌려받았어요
+      ctx.addConsumable('matchstick', 1, '성냥이 돌아옴');
+    } } },
+  { id: 'fadedfuse', axis: '소모품', rarity: '일반', name: '바랜 도화선', short: '바랜 도화선', price: 130, kind: 'passive', icon: 'csFadedFuse', sets: ['22'],
+    desc: '바랜 X 칸을 발파하면 촛불이 들지 않습니다',   // 층마다 있는 바랜 X와 지도 조각이 그은 바랜 X 둘 다. 캐릭터의 X 칸 동작도 발파로 쳐요
+    hooks: { on_ignite_cost: function (ctx, ev) { if (ev.faded && ev.cost > 0) { ev.cost = 0; ctx.proc('바랜 X · 촛불 0'); } } } },
+  { id: 'waistpouch', axis: '소모품', rarity: '고급', name: '허리 주머니', short: '허리 주머니', price: 180, kind: 'passive', icon: 'csWaist', sets: ['22'], consSlotFree: 1,
+    desc: '가장 많이 가진 소모품 한 가지는 도구 칸을 차지하지 않습니다' },
   // ==== /소모품 도구 ====
   // 합친 도구: 재료 둘을 가진 밤에 곽 씨가 합쳐 줘요. 상점·선물·연장함에는 나오지 않아요. 재료의 효과를 다 가지고 하나가 더 세져요
   { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['refiner', 'sieve'],   // R135: 긴 도화선이 폭파공만의 것이 되어 재료를 바꿈
@@ -532,7 +605,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
       endless: ['끝없는 갱', '마지막 도장 뒤에도 사흘마다 1.5배 도장을 찍으며 버틸 수 있습니다. 버틴 날이 기록이 됩니다.']
     }
   },
-  axisName: { '콤보': '콤보 도구', '발파': '발파 도구', '와르르': '와르르 도구', '분필': '분필 도구', '보물': '보물 도구', '': '두루 쓰는 도구' }
+  axisName: { '콤보': '콤보 도구', '발파': '발파 도구', '와르르': '와르르 도구', '분필': '분필 도구', '보물': '보물 도구', '소모품': '소모품 도구', '': '두루 쓰는 도구' }
 };
 
 
@@ -771,7 +844,8 @@ var Core = (function () {
       treasureNear: function (c) { return treasureNear(run.d.floor, c); },
       owns: function (id) { return owns(run, id); },
       addConsumable: function (id, n, label) { var g = addConsumable(run, id, n, 'tool:' + tool.id); if (g) fx(run, { t: 'proc', id: tool.id, icon: tool.icon, label: (label ? label + ' · ' : '') + CONS_BY_ID[id].name + ' +' + g }); return g; },   // 소모품을 만드는 도구용
-      consumableCount: function (id) { return consumableCount(run, id); }
+      consumableCount: function (id) { return consumableCount(run, id); },
+      streakUpBy: function (n, label) { if (!run.d || n <= 0) return; streakUp(run, n); fx(run, { t: 'proc', id: tool.id, icon: tool.icon, label: label || ('콤보 +' + n) }); }   // 보물을 캐지 않고 콤보를 올리는 도구용(소모품 도구)
     };
   }
   function emit(run, name, ev) {
@@ -1589,9 +1663,10 @@ var Core = (function () {
     d.stats.floorT = 0;
     placeBox(run, f, depth);
     placeFaded(run, f);
+    var newDeep = depth > run.stats.deepest;   // 그 판에서 가장 깊은 층에 처음 왔어요(옛 갱도 지도첩)
     if (depth > run.stats.deepest) run.stats.deepest = depth;
     if (depth > d.stats.depth) d.stats.depth = depth;
-    emit(run, 'on_floor_enter', { depth: depth, rule: rule });
+    emit(run, 'on_floor_enter', { depth: depth, rule: rule, newDeep: newDeep });
     orderEvent(run, 'depth', { depth: depth });
     if (!f.graffiti.length && !f.tutorial && !run.tutorial && (gr = rngFrom(hashSeed(run.seed, run.day, depth, 0x47524146)))() < 0.35) placeGraffiti(f, pick(TEXT.graffiti, gr));   // 일반 낙서는 둘째 판부터
     // 시작 칸은 열린 채 시작하고 와르르(R17)
@@ -2145,6 +2220,8 @@ var Core = (function () {
     if (c.mark !== 1) { log(run, TEXT.ops.needX); return { ok: false, noX: true }; }
     var xsk = !free && charOf(run).xSkill;   // 목수 버팀목, 화약 장수 화약 캐기(01 15.6). 화약 소모품은 그대로 발파
     var cost = free || d.freeX ? 0 : igniteCost(run);   // d.freeX: 성냥(소모품)을 켜 둔 X 칸 동작은 촛불이 안 들어요
+    if (cost > 0) cost = Math.max(0, emit(run, 'on_ignite_cost', { x: x, y: y, faded: c.faded === 1, cost: cost }).cost);   // 도구가 X 칸 동작 값을 바꿔요(바랜 도화선)
+    var blastR = (d.freeX && d.freeX.radius) || 1;   // 터진 지뢰마다 열리는 둘레(1이면 3×3, 2면 5×5: 성냥 다발)
     if (d.candle < cost) { log(run, '촛불이 모자랍니다. ' + (xsk ? josa(charOf(run).x.name, '은', '는') : '발파는') + ' 촛불 ' + cost); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
     d.face = { dx: sgn(x - d.px), dy: sgn(y - d.py) };
     if (xsk) { d.freeX = null; return xSkill(run, c, cost, xsk); }   // 성냥은 캐릭터의 X 칸 동작에도 한 번 타요
@@ -2205,7 +2282,7 @@ var Core = (function () {
     boom.forEach(function (e) {
       var m = e.c; judgeX(run, m); m.removed = true; m.scorch = true; m.mark = 0; openRaw(run, m, e.k);
       fx(run, { t: 'boom', x: m.x, y: m.y, delay: 120 * e.k, blast: true });
-      neighbors(f, m.x, m.y).forEach(function (n) { if (!range[idx(n)] && covered(n) && !bseen[idx(n)]) { range[idx(n)] = 1; inRange.push({ c: n, k: e.k }); } });
+      (blastR > 1 ? f.cells.filter(function (n) { return n !== m && cheb(n.x, n.y, m.x, m.y) <= blastR; }) : neighbors(f, m.x, m.y)).forEach(function (n) { if (!range[idx(n)] && covered(n) && !bseen[idx(n)]) { range[idx(n)] = 1; inRange.push({ c: n, k: e.k }); } });
     });
     var scorched = 0;
     inRange.forEach(function (e) {
@@ -2637,6 +2714,7 @@ var Core = (function () {
   }
   function openShop(run) {
     var stock;
+    emit(run, 'on_night', { day: run.day });   // 밤(상점이 열릴 때) 한 번
     if (run.tutorial && run.day === 1) stock = CONFIG.tutorialShopDay1.slice();   // R50
     else stock = pickStock(run, CONFIG.shop.tools, CONFIG.shop.cons, false, rngFrom(hashSeed(run.seed, run.day, 0x53484f50, 0)));
     run.shop = { stock: stock, sold: {}, rerolls: 0, fuse: fusionsReady(run) };
@@ -2862,14 +2940,14 @@ var Core = (function () {
     emit(run, 'on_consumable_use', ev);
     var res = { ok: true, id: id };
     if (id === 'matchstick') {   // X 칸 동작(캐릭터 스킬)을 촛불 없이: d.freeX를 켜 두면 X 동작이 촛불 0으로 하고 끄고 가요
-      d.freeX = { id: id };
+      d.freeX = { id: id, radius: ev.radius || 1 };   // ev.radius: 도구가 넓힌 둘레(성냥 다발)
       var r = ignite(run, c.x, c.y), lit = !d.freeX;
       d.freeX = null;
       if (!r.ok || !lit) return { ok: false };
       res.mines = r.mines || 0;
     } else if (id === 'bandage') {
       var h0 = d.hp; d.hp = Math.min(d.hpMax, d.hp + Math.max(0, ev.hp || 0)); res.hp = d.hp - h0;
-      log(run, TEXT.cons.bandage.replace('{n}', res.hp), 'good');
+      if (res.hp) log(run, TEXT.cons.bandage.replace('{n}', res.hp), 'good');   // 체력이 가득할 때 쓴 붕대(응급 매듭)는 도구가 알려요
     } else if (id === 'stub') {
       res.candle = addCandle(run, Math.max(0, ev.candle || 0));
       log(run, TEXT.cons.stub.replace('{n}', res.candle), 'good');

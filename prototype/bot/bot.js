@@ -481,10 +481,10 @@ class Bot {
     if (B.keep) { Core.chooseBox(run, this.o.noKeep ? -1 : 0); this.m.keeps = (this.m.keeps || 0) + (this.o.noKeep ? 0 : 1); return; }   // 유품은 늘 챙겨요
     let bi = -1, br = 1e9; B.opts.forEach((id, i) => { const r = this.rank(id); if (r < br) { br = r; bi = i; } });
     if (bi < 0) { Core.chooseBox(run, -1); return; }
-    if (run.owned.length < Core.slotsOf(run)) { Core.chooseBox(run, bi); this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); return; }
+    if (Core.slotsUsed(run) < Core.slotsOf(run) && Core.chooseBox(run, bi).ok) { this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); return; }   // 소모품도 칸을 차지해요
     const worst = this.worstOwned(run, true);
-    if (worst && this.rank(worst) > br) { Core.chooseBox(run, bi, worst); this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); }
-    else Core.chooseBox(run, -1);
+    if (worst && this.rank(worst) > br && Core.chooseBox(run, bi, worst).ok) { this.buys.push({ day: run.day, id: B.opts[bi], where: 'box' }); }
+    if (run.boxOffer) Core.chooseBox(run, -1);   // 못 챙겼으면 곽 씨에게 넘겨요
   }
   worstOwned(run, adding) {
     let w = null, wr = -1;
@@ -524,7 +524,7 @@ class Bot {
         continue;
       }
       if (!this.wants(run, x.id)) continue;
-      if (run.owned.length >= Core.slotsOf(run)) break;
+      if (Core.slotsUsed(run) >= Core.slotsOf(run)) break;
       if (this.canSpend(run, Core.priceOf(run, x.id, false))) { const r = Core.buy(run, x.i); if (r.ok) this.buys.push({ day: run.day, id: x.id }); }
     }
   }
@@ -557,7 +557,7 @@ function playRun(env, seed, opts) {
     }
     if (run.phase === 'gift') {   // 도장 선물: 다음 도장까지 여유가 있으면 도구, 모자라면 금고 돈
       let gi = -1;
-      if (run.owned.length < Core.slotsOf(run) && run.giftOpts.length && (bot.o.buy === 'naive' || bot.canSpend(run, 0))) {
+      if (Core.slotsUsed(run) < Core.slotsOf(run) && run.giftOpts.length && (bot.o.buy === 'naive' || bot.canSpend(run, 0))) {
         if (bot.o.buy === 'naive') gi = Math.floor(bot.rng() * run.giftOpts.length);
         else { let gr = 1e9; run.giftOpts.forEach((id, i) => { const r = bot.rank(id); if (r < gr) { gr = r; gi = i; } }); }
       }

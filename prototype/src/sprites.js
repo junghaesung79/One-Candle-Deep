@@ -192,6 +192,22 @@ function iconHtml(name, size, cls) {
   SPR.icons.nuggetbag = mkSprite(["...o..o...", "....oo....", "...bbbb...", "..bbbbbb..", ".bbbyybbb.", ".bbyhyybb.", ".bbbyybbb.", "..bbbbbb..", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#f2c14e', h: '#fff1b8' });
   SPR.icons.dripdish = mkSprite(["....y.....", "...yhy....", "....k.....", "...www....", "...www....", "..wwwww...", "bbwbbbwbbb", ".bbbbbbbb.", "..........", ".........."], { y: '#ffd25a', h: '#fff4c2', k: '#3a3542', w: '#efe7d6', b: '#b8862e' });
   SPR.icons.deadcrown = mkSprite(["y..y..y...", "yy.yy.yy..", "yhyyhyyhy.", "yyyyyyyyy.", "oooooooooo", ".orrrrrro.", ".orwrrwro.", ".orrrrrro.", "..oooooo..", ".........."], { o: '#6b4a2a', y: '#b8862e', h: '#ffd25a', r: '#c4432b', w: '#efe7d6' });
+  // 소모품 도구 그림(reviews/23 3.10)
+  SPR.icons.csHerb = mkSprite(["...o..o...", "....oo....", "...bbbb...", "..bbbbbb..", ".bbbyybbb.", ".bbyhyybb.", ".bbbyybbb.", "..bbbbbb..", "..........", ".........."], {b: '#7a6a3a', h: '#a8e07a', o: '#3d2a1c', y: '#5fa04a'});
+  SPR.icons.csAtlas = mkSprite(["..........", ".wwwwwwww.", ".wkkwwwww.", ".wkkkwwrw.", ".wwkwwrwr.", ".wwwwwwrw.", ".wwkkwwww.", ".wwwkkkww.", ".wwwwwwww.", ".........."], {k: '#3a3542', r: '#c4432b', w: '#c9b49c'});
+  SPR.icons.csSack = mkSprite(["..o..o....", "...oo.....", "..bbbb....", ".bbbbbb...", ".bbbbbb...", ".bbBbbb...", ".bbbbbb...", ".bbbbbby..", "..bbbbyyy.", "......y.y."], {B: '#80583a', b: '#5a3d28', o: '#3d2a1c', y: '#f2c14e'});
+  SPR.icons.csHand = mkSprite(["..........", "...c.c.c..", "...c.c.c..", "...c.c.c.c", "...ccccccc", ".c.ccccccc", ".ccccccccc", "..cccccc..", "...ccccc..", ".........."], {c: '#d9a070'});
+  SPR.icons.csKnot = mkSprite(["..........", ".oooooo...", "..rrrr....", "..rRrr....", "..rrRr....", "..rrrr....", ".oooooo...", ".....r....", "......r..y", ".......ryy"], {R: '#e06a52', o: '#6b4a30', r: '#c4432b', y: '#f2c14e'});
+  SPR.icons.csJar = mkSprite(["...oooo...", "..wwwwww..", ".w......w.", ".w.y..t.w.", ".w..p...w.", ".w.t..y.w.", ".w..y.p.w.", ".wwwwwwww.", "..........", ".........."], {o: '#6b4a30', p: '#efe7d6', t: '#efe7d6', w: '#a8c4d0', y: '#ffd25a'});
+  SPR.icons.csJunk = mkSprite(["g.......g.", "gg.....gg.", ".gg...gg..", "..gg.gg...", "...ggg....", "...ggg....", "..bb.bb...", ".bb...bb..", "bb.....bb.", "b.......b."], {b: '#9a6532', g: '#9aa0b0'});
+  SPR.icons.csLantern = mkSprite(["...oooo...", "...o..o...", "..oooooo..", "..oyyyyo..", "..oyhhyo..", "..oyhhyo..", "..oyyyyo..", "..oooooo..", "...oooo...", ".........."], {h: '#fff4c2', o: '#454956', y: '#ffd25a'});
+  SPR.icons.csMatchbox = mkSprite(["..y..y....", "..r..r....", "..w..w....", "..w..w....", ".bbbbbbbb.", ".bkkkkkkb.", ".bkrrrrkb.", ".bkkkkkkb.", ".bbbbbbbb.", ".........."], {b: '#9a6532', k: '#6b4a30', r: '#c4432b', w: '#efe7d6', y: '#f2c14e'});
+  SPR.icons.csFadedFuse = mkSprite(["........y.", ".......yhy", "..ccccccy.", ".cddddc...", "cdccccdc..", "cdcddcdc..", "cdcddcdc..", "cdccccdc..", ".cddddc...", "..cccc...."], {c: '#bdb5a6', d: '#7a7468', h: '#fff4c2', y: '#ffd25a'});
+  SPR.icons.csShears = mkSprite(["g.......g.", ".g.....g..", "..g...g...", "...g.g....", "....G.....", "...g.g....", ".rr...rr..", "r..r.r..r.", "r..r.r..r.", ".rr...rr.."], {G: '#c3c7d2', g: '#9aa0b0', r: '#c4432b'});
+  SPR.icons.csBundle = mkSprite([".rr.rr.rr.", ".RR.RR.RR.", "..w..w..w.", "..w..w..w.", ".bbbbbbbb.", "..w..w..w.", "..w..w..w.", "..w..w..w.", "..w..w..w.", ".........."], {R: '#e0603a', b: '#c4432b', r: '#7a2f28', w: '#c9894a'});
+  SPR.icons.csSleeve = mkSprite(["..........", ".cccccc...", ".cCcccCc..", ".cccccccc.", ".cCcccccCc", "..cccccccc", "...cc.cc.c", "....c..c..", "..........", ".........."], {C: '#8fa8c8', c: '#5f7fa8'});
+  SPR.icons.csGoblin = mkSprite(["...o..o...", "....oo....", "...pppp...", "..pppppp..", ".ppyppypp.", ".pppppppp.", ".pppkkppp.", "..pppppp..", "...pppp...", ".........."], {k: '#3a2a4a', o: '#3d2a1c', p: '#7a4fa8', y: '#ffd25a'});
+  SPR.icons.csWaist = mkSprite(["..........", "kkkkkkkkkk", "bbobbbbbbb", "bboybbbbbb", "kkkkkkkkkk", ".....cccc.", ".....cCCc.", ".....cccc.", ".....cccc.", ".........."], {C: '#e0b070', b: '#5a3d28', c: '#c9894a', k: '#3d2a1c', o: '#454956', y: '#f2c14e'});
 })();
 
 // 오른쪽 패널 단추 그림(12×12): 달력, 설정. 화면 위 표시(10×10): 남은 보물, 콤보
