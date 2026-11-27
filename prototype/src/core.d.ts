@@ -82,7 +82,7 @@ export interface DayHistory {
 export interface CoreApi {
   W: number;
   H: number;
-  newRun(seed: number, opts?: { tutorial?: boolean; record?: boolean; grade?: number; daily?: string | null }): Run;
+  newRun(seed: number, opts?: { tutorial?: boolean; record?: boolean; grade?: number; daily?: string | null; char?: string }): Run;
   startDay(run: Run): void;
   genFloor(spec: { depth: number; rule: RuleId | string; sx: number; sy: number; seed: number; twin?: boolean; chunk?: unknown }): Floor;
   cellAt(f: Floor, x: number, y: number): Cell;
