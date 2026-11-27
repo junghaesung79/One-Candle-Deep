@@ -70,6 +70,8 @@ export interface Run {
   order: { id: string; prog: number; done: boolean; failed: boolean; [k: string]: any } | null;
   history: DayHistory[];
   record?: boolean;
+  /** 판 내내 남는 도구 상태(ctx.keep). run.toolState는 날마다 비워져요 */
+  toolRun?: Record<string, Record<string, any>>;
   [k: string]: any;
 }
 
@@ -145,6 +147,16 @@ export interface CoreApi {
   discardConsumable(run: Run, id: ConsumableId | string): { ok: boolean; n?: number };
   /** 지도 조각이 바랜 X를 그을 수 있는 지뢰 칸 */
   mapTargets(run: Run): Cell[];
+  /** 이번에 계단으로 depth층에 내려가면 드는 촛불(계단 표처럼 도구가 바꾼 값, 상태는 그대로) */
+  descendCost(run: Run, depth: number): number;
+  /** 도구 자리 바꾸기(run.owned 순서). to가 도구 수 이상이면 맨 뒤로 */
+  moveTool(run: Run, from: number, to: number): ActResult;
+  /** 본뜬 연장이 베끼는 도구(바로 오른쪽 칸), 없으면 null */
+  mimicTarget(run: Run): string | null;
+  /** 빈 도구 칸 수(빈 칸 부적은 제 자리도 셈). 소모품은 칸을 차지해요 */
+  emptySlots(run: Run): number;
+  /** 오늘 밤 상점 도구 진열 수(진열대 +1) */
+  shopToolCount(run: Run): number;
   [k: string]: any;
 }
 
