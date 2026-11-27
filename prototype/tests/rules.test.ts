@@ -271,6 +271,16 @@ describe('규칙 단위 검사', () => {
     { const cs = Object.values(Core.CHAR_BY_ID) as any[];
       check(cs.every(c => !c.candleDelta && !c.capPlus && !c.valueMul && !c.digMineExtra && !c.perk && !c.weak), 'characters have no extra stats');
       check(cs.every(c => c.x.name === '발파' || c.o.name === '캐기'), 'each character changes at most one of X or O'); }
+    // 해체공은 틀린 X에서 촛불을 돌려받지 않고, 폭파공은 틀린 X가 섞이면 체력 1(R139)
+    for (const ch of ['defuser', 'blaster', 'miner']) {
+      const r = Core.newRun(6120, { char: ch }); Core.startDay(r); const f = r.d.floor;
+      const c = f.cells.find((q: any) => q.cover !== 'open' && !q.haz && !q.stair && Core.neighbors(f, q.x, q.y).some((n: any) => n.cover === 'open'));
+      const nb = Core.neighbors(f, c.x, c.y).find((n: any) => n.cover === 'open'); r.d.px = nb.x; r.d.py = nb.y; c.mark = 1;
+      const c0 = r.d.candle, h0 = r.d.hp; Core.ignite(r, c.x, c.y);
+      if (ch === 'defuser') check(r.d.candle === c0 - 5 && r.d.hp === h0, 'defuser pays 5 on a wrong X, no refund');
+      if (ch === 'blaster') check(r.d.candle === c0 - 4 && r.d.hp === h0 - 1, 'blaster loses 1 hp on a wrong X');
+      if (ch === 'miner') check(r.d.candle === c0 - 4 && r.d.hp === h0, 'miner: wrong X costs candles only');
+    }
     // 질긴 부적: 배짱 장갑과 곽 씨 부적이 하루 두 번
     { const r = Core.newRun(6111); r.owned.push('toughcharm'); Core.startDay(r);
       check(Core.owns(r, 'gloves') && Core.owns(r, 'amulet') && r.toolState.gloves.left === 2 && r.toolState.amulet.left === 2, 'tough charm doubles gloves and amulet'); }

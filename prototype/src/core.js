@@ -93,7 +93,7 @@ var CHARACTERS = [
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' },
   { id: 'defuser', name: '해체공', line: '곽 씨 밑에서 설익이 다루는 법을 배웠습니다', color: '#4f8a4a', innate: ['tongs'], igniteDelta: 1,
-    x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼내며 촛불을 1만 남기고 돌려받습니다. 보물은 그을린 채(반값) 나옵니다' },
+    x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼냅니다. 촛불은 돌려받지 않고, 보물은 그을린 채(반값) 나옵니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' },
   { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'],
@@ -105,7 +105,7 @@ var CHARACTERS = [
     o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
     weak: '' },
   { id: 'blaster', name: '폭파공', line: '화약 냄새가 몸에 밴 사람입니다', color: '#e0782b', innate: ['fuse'],
-    x: { name: '큰 발파', desc: 'X 칸을 누르면 두 걸음 안의 X 칸까지 한꺼번에 터뜨립니다. 촛불 4' },
+    x: { name: '큰 발파', desc: 'X 칸을 누르면 두 걸음 안의 X 칸까지 한꺼번에 터뜨립니다. 촛불 4. 터뜨린 X 가운데 지뢰가 아닌 칸이 있으면 체력 1을 잃습니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' }
 ];
@@ -421,6 +421,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
           took: '{name} 챙겼습니다. 이 판 끝까지 남습니다', left: '유물을 두고 왔습니다', note: '유물은 도구 칸을 쓰지 않고, 팔 수 없고, 이 판 끝까지 남습니다', row: '유물' },
   faded: { first: '벽에 바랜 분필 자국이 남아 있습니다. 앞서 다녀간 광부가 그은 거라 늘 맞습니다', locked: '오래된 자국이라 지워지지 않습니다' },
   unknownTool: '이름 모를 연장', unknownKeep: '이름 모를 유물', revealed: '이름이 열렸습니다',
+  blasterHurt: '지뢰가 아닌 X가 섞여 있었습니다. 체력 -{n}.',
   fuse: { talk: '옛 연장이 섞였으니 이 둘은 합칠 수 있겠네. 공짜로 해 주지.', hint: '곽 씨: "이건 옛 연장과 만나면 무언가와 합쳐질 것 같네."', boxHint: '곽 씨: "옛 연장이군. 무언가와 합쳐질 것 같네."', recipe: '합치기: {mate} 합치면 {name} · 둘 중 하나는 연장함에서 나온 것', old: '연장함에서 나온 옛 연장', button: '합치기', done: '곽 씨가 {a} {b} 합쳐 {name} 만들었습니다' },
   chunkShownFloor: '큰 덩이 층 · 금빛 테두리가 덩이 자리입니다. 숫자는 덩이를 칸마다 따로 셉니다',
   stageChange: { mul: '내일부터 캔 값 ×{mul}', deep: '내일부터 갱이 한 층 깊어집니다(지뢰와 보물이 늘어납니다)', same: '캔 값은 그대로입니다' },
@@ -1916,9 +1917,14 @@ var Core = (function () {
       });
     }
     if (tongs && fizz.length) {   // 해체 집게: 불발 칸을 그냥 깬다(촛불 1, 점화 촛불은 돌려받음)
-      if (cost) addCandle(run, moon && !boom.length ? cost : Math.max(0, cost - fizz.length));   // 달빛 집게: 다 불발이면 촛불이 안 들어요
+      if (cost && charOf(run).id !== 'defuser') addCandle(run, moon && !boom.length ? cost : Math.max(0, cost - fizz.length));   // 달빛 집게: 다 불발이면 촛불이 안 들어요. 해체공은 돌려받지 않아요(R139)
       fx(run, { t: 'proc', id: moon ? 'moontongs' : 'tongs', icon: moon ? 'moontongs' : 'tongs', label: moon ? '제값으로 꺼냄' : '불발 칸 깨기' });
       fizz.forEach(function (s) { d.stats.breaks++; if (moon) s.fizzle = false; resolveBreak(run, s, { direct: true, mark: 0 }); s.fizzle = false; });
+    }
+    if (fizz.length && charOf(run).id === 'blaster') {   // 폭파공: 터뜨린 X에 지뢰가 아닌 칸이 섞이면 체력 1(R139)
+      d.hp = Math.max(0, d.hp - CONFIG.mineDmg);
+      fx(run, { t: 'mine', x: fizz[0].x, y: fizz[0].y, dmg: CONFIG.mineDmg });
+      log(run, TEXT.blasterHurt.replace('{n}', CONFIG.mineDmg), 'bad');
     }
     if (!boom.length) {
       if (!tongs && !fizz.some(function (s) { return s.melted; })) log(run, fizz.some(function (s) { return s.haz === 'chunk'; }) ? TEXT.chunk.fizzle : '지뢰가 아니었습니다(불발). 촛불 ' + cost + '만 탔습니다. 칸에 "지뢰 아님"이 남습니다.', 'bad');
