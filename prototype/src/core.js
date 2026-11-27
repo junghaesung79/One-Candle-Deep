@@ -16,7 +16,7 @@ var CONFIG = {
   embers: 5,                                 // R4 불씨 다섯 번
   hpMax: 3, mineDmg: 1, collapseLoss: 0.5,   // R5 쓰러지면 주머니 절반
   // 콤보(R8)
-  streakLadder: [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6], streakCapIdx: 4, streakCapIdxLastCard: 8, streakCapIdxDeadCrown: 10,   // 막장 왕관: 체력 1이면 ×6
+  streakLadder: [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6], streakCapIdx: 4, streakCapPlusLastCard: 4,   // 체력 1일 때 마지막 패가 상한에 더하는 단계 수. 막장 왕관은 모자 +2와 마지막 패 +4를 함께 가져 체력 1이면 사다리 끝(×6)
   // 판
   numberCap: 5, startChainMin: 12, genRetries: 60,
   density: [ // 깊이 1~9: 지뢰 m, 보물 t, 보물 등급 가중치(금 알갱이/청록 보석/금잔), 자갈 출현율 res, 자갈 값 rv
@@ -64,7 +64,7 @@ var CONFIG = {
   countsShown: true,                         // 층에 남은 보물·지뢰 수를 화면에 정확히 보여 줘요
   // 재미 보고서 2~4주차: 시스템 스위치. 여기 적힌 값은 v2.1이고, 파일 끝의 v22 프리셋이 덮어써요(applyPreset)
   features: { gang: true, orders: true, mutations: true, awake: true, forkBonus: true, rooms: true, embers: true, lowLight: true,
-              sellBack: true, probeBase: true, gravel: 'cell', startGift: true, stampReward: false, chord: false, chunkShown: false, perfect: false,
+              sellBack: true, probeBase: true, gravel: 'cell', startGift: true, stampReward: false, chord: false, chunkShown: false,
               relicBox: false, toolSell: false, fusion: false, loan: false, fadedChalk: false, keepsake: false },
   // 도구 경험(reviews/14 15장): 판 위 옛 연장함, 팔기, 합친 도구, 심 씨 돈 외상. v22 프리셋에서 켜요
   relic: { chance: 0.25, fuseNight: 'stamp', fuseFrom: 'box', fuseMax: 0, bigStreak: true, minDepth: 2, minDay: 2, pityDay: 7, n: 2, rarity: { '일반': 30, '고급': 45, '희귀': 25 }, junk: 40,
@@ -98,7 +98,7 @@ var CHARACTERS = [
   { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'], capPlus: 1,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '걸기', desc: 'O 칸이 보물이면 콤보가 2개 단계 오릅니다. 지뢰면 피해가 1 더 큽니다' },
-    weak: '', perk: '콤보가 5단계까지 오릅니다' },
+    weak: '', perk: '콤보가 1개 단계 더 높이까지 오릅니다' },
   { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2, valueMul: 0.85,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
@@ -194,9 +194,9 @@ var TOOLS = [
       }
     } },
   { id: 'lastcard', axis: '콤보', rarity: '희귀', name: '마지막 패', short: '패', price: 250, kind: 'passive', icon: 'card', sets: ['21', '22'],
-    desc: '체력이 1 남으면 콤보가 8단계까지 오릅니다' },
+    desc: '체력이 1 남으면 콤보가 4개 단계 더 높이까지 오릅니다' },
   { id: 'crown', axis: '콤보', rarity: '고급', name: '늙은 광부 모자', short: '모자', price: 240, kind: 'passive', icon: 'crown', sets: ['22'],
-    desc: '콤보가 4단계가 아니라 6단계까지 오릅니다' },
+    desc: '콤보가 2개 단계 더 높이까지 오릅니다' },
   { id: 'amulet', axis: '콤보', rarity: '고급', name: '곽 씨 부적', short: '부적', price: 200, kind: 'passive', icon: 'amulet', sets: ['22'],
     desc: '하루 한 번, 콤보가 2단계 이상일 때 지뢰를 쳐도 체력이 줄지 않습니다. 콤보는 끊깁니다',
     hooks: {
@@ -265,7 +265,7 @@ var TOOLS = [
   { id: 'moontongs', axis: '발파', rarity: '합침', name: '달빛 집게', short: '달빛 집게', price: 550, kind: 'passive', icon: 'moontongs', sets: ['22'], fusion: ['tongs', 'sieve'],
     desc: '발파한 X 칸이 지뢰가 아니면 제값으로 꺼냅니다. X 칸이 모두 지뢰가 아니었으면 촛불도 들지 않습니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
   { id: 'deadcrown', axis: '콤보', rarity: '합침', name: '막장 왕관', short: '막장 왕관', price: 490, kind: 'passive', icon: 'deadcrown', sets: ['22'], fusion: ['lastcard', 'crown'],
-    desc: '콤보가 6단계까지 오르고, 체력이 1 남으면 10단계까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
+    desc: '콤보가 2개 단계 더 높이까지 오르고, 체력이 1 남으면 6개 단계 더 높이까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
     hooks: { on_treasure: function (ctx, ev) { if (ctx.run.d && ctx.run.d.hp === 1 && !ev.scorch) ctx.addCandle(1, '막장 왕관'); } } },
   // v2.1에만 있는 도구(수치만 올리는 도구라 재미 보고서에서 뺐어요)
   { id: 'ledger', axis: '와르르', rarity: '고급', name: '연쇄 장부', short: '장부', price: 230, kind: 'passive', icon: 'ledger', sets: ['21'],
@@ -401,7 +401,6 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
          noPath: '가는 길이 없습니다', returnAsk: '버리는 촛불 {c} · 금고로 가는 주머니 {p}' },
   stairShown: '계단 자리는 처음부터 보입니다. 가는 길을 숫자로 찾습니다',
   candleOut: '촛불이 다 탔습니다. 오늘은 여기까지입니다',
-  perfect: '완벽한 층입니다. 보물을 다 캐고 지뢰를 한 번도 치지 않았습니다',
   chord: { need: '주변에 그은 X·O 수가 숫자와 같을 때 한꺼번에 열 수 있습니다', none: '주변에 열 칸이 없습니다', hint: '한 번 더 누르면 주변 칸을 한꺼번에 엽니다 · 촛불 −{n}' },
   reward: { title: '도장 선물', enter: '도장 기념입니다. 셋 중 하나 가져가세요.', cashEnter: '도구가 싫으시면 금고에 {cash} 넣어 드리겠습니다.', button: '이걸로 받기', cash: '금고에 {cash} 받기', full: '도구 칸이 가득이라 금고로 받습니다' },
   // 판 위 옛 연장함(곽 씨 대사는 하게체)
@@ -477,7 +476,6 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
       reroll: ['다른 물건', '상점 진열을 새 물건으로 바꿉니다. 한 밤에 누를 때마다 값이 40씩 오르고(40, 80, 120 …), 다음 밤에 40으로 돌아갑니다.'],
       chunk: ['큰 덩이', '도장 찍는 날마다 큰 보물이 묻힙니다. 금빛 테두리 안 칸을 다 캐야 값을 받고, 숫자는 덩이를 칸마다 따로 셉니다.'],
       faded: ['바랜 분필 자국', '앞서 다녀간 광부가 그은 X와 O입니다. 늘 맞고, 오른쪽 클릭으로도 바뀌지 않습니다.'],
-      perfect: ['완벽한 층', '한 층의 보물을 다 캐고 지뢰를 한 번도 치지 않으면 완벽한 층입니다.'],
       loan: ['심 씨 외상', '도장 값이 모자라는 밤, 한 판에 한 번 심 씨에게 모자란 만큼 빌릴 수 있습니다. 다음 도장 날 더 얹어 갚습니다.'],
       endless: ['끝없는 갱', '마지막 도장 뒤에도 사흘마다 1.5배 도장을 찍으며 버틸 수 있습니다. 버틴 날이 기록이 됩니다.']
     }
@@ -557,7 +555,7 @@ PRESETS.v22 = {
     ruleTune: { pair: { t: -2 }, border: { t: 2 }, lonely: { t: 4 } },   // 광맥별 Day 9~14 수입을 평균 ±10% 안으로(봇 60판씩)
     stairShown: true, countsShown: true,
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
-                sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true, perfect: true,
+                sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true,
                 relicBox: true, toolSell: true, fusion: true, loan: true, fadedChalk: true, keepsake: true },
     shop: { tools: 3, cons: 0, reroll: 40, rerollUp: 40, sellBack: 0.5, passiveSlots: 8, consSlots: 0, stack: 3, merchantDiscount: 0, merchantService: { price: 50, candle: 10 },
             rarityWeight: { '일반': 50, '고급': 35, '희귀': 15 } },   // 도구 칸 8(도구 경험 정리)
@@ -708,7 +706,11 @@ var Core = (function () {
   function spendCandle(run, n) { var d = run.d; var s = Math.min(d.candle, n); d.candle -= s; if (s) fx(run, { t: 'candle', delta: -s }); return s; }
 
   // ---------- 콤보 ----------
-  function streakCapIdx(run) { if (run.d && run.d.hp === 1 && owns(run, 'deadcrown')) return CONFIG.streakCapIdxDeadCrown; return (owns(run, 'lastcard') && run.d && run.d.hp === 1) ? CONFIG.streakCapIdxLastCard : CONFIG.streakCapIdx + (owns(run, 'crown') ? 2 : 0) + (charOf(run).capPlus || 0) + keepSum(run, 'capPlus'); }   // 늙은 광부 모자: ×3 → ×4
+  function streakCapIdx(run) {   // 상한 = 기본 4단계 + 더하는 단계 수. 도구 문장은 늘 'n개 단계 더 높이까지'로 적는다(0단계부터 세므로 자리 숫자는 헷갈림)
+    var d = run.d, cap = CONFIG.streakCapIdx + (owns(run, 'crown') ? 2 : 0) + (charOf(run).capPlus || 0) + keepSum(run, 'capPlus');
+    if (d && d.hp === 1 && owns(run, 'lastcard')) cap += CONFIG.streakCapPlusLastCard;   // 합친 도구는 재료도 가진 것으로 쳐요
+    return Math.min(cap, CONFIG.streakLadder.length - 1);
+  }
   function streakMult(run) { var d = run.d; if (!d) return 1; return CONFIG.streakLadder[Math.min(d.streak, streakCapIdx(run))]; }
   function streakUp(run, steps) {
     var d = run.d, cap = streakCapIdx(run), before = d.streak;
@@ -1139,7 +1141,7 @@ var Core = (function () {
       owned: [], paidFor: {}, cons: [], toolState: {}, phase: opts.tutorial ? 'deed' : 'deed', d: null, room: null,
       shop: null, settle: null, payment: null, final: null, gang: null, orders: [], order: null,
       log: [], logSeq: 0, fx: [], history: [], eventCounts: {},
-      stats: { deepest: 0, treasures: 0, collapses: 0, mines: 0, chainMax: 0, earned: 0, blasts: 0, perfect: 0, chords: 0, boxes: 0, sold: 0, fused: 0 },
+      stats: { deepest: 0, treasures: 0, collapses: 0, mines: 0, chainMax: 0, earned: 0, blasts: 0, chords: 0, boxes: 0, sold: 0, fused: 0 },
       boxOffer: null, boxed: {}, keeps: [], loanUsed: false, loan: null,
       mutationPlan: {}
     };
@@ -1708,7 +1710,6 @@ var Core = (function () {
     if (opt.floorStart && act.opened.length) log(run, '입구 주변이 무너져 ' + act.opened.length + '칸이 열렸습니다.' + (gvLog ? ' 자갈 +' + gvLog : ''));
     run.act = null;
     if (feat('lowLight') && !d.lowWarned && d.candle <= CONFIG.lowLight && d.candle > 0) { d.lowWarned = true; log(run, TEXT.lowLight); }
-    checkPerfect(run);
     if (d.hp <= 0) return endDay(run, 'collapse');
     if (!feat('embers') && d.candle <= 0 && run.phase === 'mine') {   // v22: 촛불이 다 타면 그 자리에서 하루 끝(불씨 없음)
       var co0 = emit(run, 'on_candle_out', { relight: 0 });
@@ -1726,15 +1727,6 @@ var Core = (function () {
       log(run, TEXT.ember.start.replace('{n}', d.embers === 5 ? '다섯' : d.embers === 7 ? '일곱' : d.embers), 'bad');
       fx(run, { t: 'embers', resume: d.embers < emberTotal(run) });
     }
-  }
-
-  // 완벽한 층(재미 보고서 5.1): 이 층 보물을 녹이지 않고 다 캐고, 치기로 지뢰를 한 번도 안 터뜨린 층. 이룬 순간 한 번 알린다
-  function checkPerfect(run) {
-    var d = run.d, f = d && d.floor; if (!feat('perfect') || !f || f.perfect || f.mineHits) return;
-    var T = f.cells.filter(function (c) { return c.haz === 'treasure'; });
-    if (!T.length || !T.every(function (c) { return c.removed && !c.melted; })) return;
-    f.perfect = true; run.stats.perfect++; d.stats.perfect = (d.stats.perfect || 0) + 1; curFloorRec(run).perfect = true;
-    log(run, TEXT.perfect, 'good'); fx(run, { t: 'perfect' });
   }
 
   // ---------- 행동 ----------
@@ -2424,7 +2416,7 @@ var Core = (function () {
   function chooseBox(run, i, dropId) {
     var B = run.boxOffer; if (!B) return { ok: false };
     var money = 0, id = null;
-    if (B.keep) { if (i === -1) log(run, TEXT.keep.left); else { id = B.keep; addKeep(run, id); } run.boxOffer = null; if (run.d && run.phase === 'mine') checkPerfect(run); return { ok: true, id: id, keep: true, money: 0 }; }
+    if (B.keep) { if (i === -1) log(run, TEXT.keep.left); else { id = B.keep; addKeep(run, id); } run.boxOffer = null; return { ok: true, id: id, keep: true, money: 0 }; }
     if (i === -1) { money = boxPassValue(run); addMoney(run, money); log(run, TEXT.box.passed.replace('{n}', fmt(money)), 'good'); }
     else {
       id = B.opts[i]; if (!id) return { ok: false };
@@ -2437,7 +2429,6 @@ var Core = (function () {
       log(run, TEXT.box.took.replace('{name}', josa(TOOL_BY_ID[id].name, '을', '를')), 'good');
     }
     run.boxOffer = null;
-    if (run.d && run.phase === 'mine') checkPerfect(run);
     return { ok: true, id: id, money: money, drop: dropId || null };
   }
   // 유물 챙기기: 체력과 촛불은 바로 바뀌어요

@@ -411,11 +411,13 @@ describe('규칙 단위 검사', () => {
       check(r3.settle.lines.drip === 10 * CONFIG.dripPer, 'drip dish: 4 per candle left');
       const r4 = Core.newRun(6113); r4.owned.push('dripdish'); Core.startDay(r4); r4.d.candle = 70; Core.returnUp(r4);
       check(r4.settle.lines.drip === CONFIG.dripMax, 'drip dish: capped'); }
-    // 완벽한 층
-    { const r = Core.newRun(6110); Core.startDay(r); const f = r.d.floor;
-      const T = f.cells.filter(c => c.haz === 'treasure'); T.slice(1).forEach(c => { c.cover = 'open'; c.removed = true; });
-      const last = T[0]; const nb = Core.neighbors(f, last.x, last.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y; Core.hit(r, last.x, last.y);
-      check(f.perfect && r.stats.perfect === 1, 'perfect floor'); }
+    // 콤보 상한: 도구는 'n개 단계 더 높이까지'를 더한다
+    { const r = Core.newRun(6120); Core.startDay(r); const base = CONFIG.streakCapIdx;
+      check(Core.streakCapIdx(r) === base, 'base cap');
+      r.owned.push('crown'); check(Core.streakCapIdx(r) === base + 2, 'hat +2 steps');
+      r.owned.push('lastcard'); r.d.hp = 1; check(Core.streakCapIdx(r) === base + 6, 'hat + last card at 1 hp: +6');
+      r.owned = ['deadcrown']; r.d.hp = 2; check(Core.streakCapIdx(r) === base + 2, 'dead crown +2');
+      r.d.hp = 1; check(Core.streakCapIdx(r) === CONFIG.streakLadder.length - 1, 'dead crown at 1 hp reaches the top'); }
     // 4주차: 등급과 오늘의 광산
     { const r2 = Core.newRun(6111, { grade: 2 }), r3 = Core.newRun(6111, { grade: 3 });
       check(r2.payments[4].amount === Math.round(CONFIG.payments[4].amount * CONFIG.gradeMul[1] / 10) * 10, 'grade 2 payments scaled');

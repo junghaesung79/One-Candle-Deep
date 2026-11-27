@@ -327,7 +327,6 @@ function drainFx() {
         break;
       case 'proc': procs.push(e); break;
       case 'order': blinkEl('orderLine', 'acc', 1200); break;
-      case 'perfect': after(2400, function () { bubble('perfect', TEXT.guide.meet.perfect[1], { el: 'hdr', below: true }); }); addFly({ x: 380, y: 250, showAt: 500, flyAt: null, fadeAt: 2200, size: 26, rise: 16, color: '#ffd25a', steps: [{ t: 500, h: '완벽한 층' }] }); break;
     }
   });
   // 계산 연출: 도구 아이콘이 순서대로 튄다(6.7). 원인 연출 포함 1.2초 안
@@ -359,7 +358,7 @@ function candleFloat(delta) {
 
 // ---------- 강조 말풍선(6개, 첫 판) ----------
 // 처음 만남 풀이(R124): 한 번 만난 것은 안내서에 남고 다시 띄우지 않아요(19 기준 3)
-var TIP_OF_BUBBLE = { gold: 'chunk', faded: 'faded', boxHere: 'box', perfect: 'perfect' };
+var TIP_OF_BUBBLE = { gold: 'chunk', faded: 'faded', boxHere: 'box' };
 function tipSeen(k) { return !!((settings.tips || {})[k] || (settings.bubblesOnce || {})[k] || (k === 'chunk' && (settings.bubblesOnce || {}).gold) || (k === 'box' && (settings.bubblesOnce || {}).boxHere)); }
 function markTip(k) { if (!settings.tips) settings.tips = {}; if (settings.tips[k]) return; settings.tips[k] = true; saveSettings(); }
 // 장면 안 '처음' 한 줄: 처음 만난 장면에서만 보이고, 그 장면에 머무는 동안은 그대로 남아요
@@ -372,7 +371,7 @@ function tipNote(k) {
 }
 function bubble(key, text, anchor) {
   if (ui.bubblesSeen[key]) return;
-  var anyRun = ['ember', 'gold', 'faded', 'boxHere', 'perfect', 'probe'].indexOf(key) >= 0;
+  var anyRun = ['ember', 'gold', 'faded', 'boxHere', 'probe'].indexOf(key) >= 0;
   if (TIP_OF_BUBBLE[key]) markTip(TIP_OF_BUBBLE[key]);   // 첫 판 밖에서도 나오는 말풍선은 브라우저에 한 번만(R87)
   if (!anyRun && !(run && run.tutorial)) return;
   if (anyRun && !run.tutorial) { if (!settings.bubblesOnce) settings.bubblesOnce = {}; if (settings.bubblesOnce[key]) return; settings.bubblesOnce[key] = true; saveSettings(); }
@@ -502,7 +501,7 @@ function drawBoard(now) {
     g.font = numFont(txt.length > 1 ? 20 : 24); g.textAlign = 'center'; g.textBaseline = 'middle';
     if (inside) { g.fillStyle = '#1a120b'; g.fillText(txt, X + 27, Y + 28 + dy); g.fillStyle = NUMC[Math.min(n, 8)]; g.fillText(txt, X + 24, Y + 25 + dy); }
     if (stairHinted(f, x, y) && (inside || c.seen)) drawStairHint(g, X, Y);
-    if (f.chunk && !f.chunk.done && (inside || c.seen) && Core.neighbors(f, x, y).some(function (q) { return q.haz === 'chunk' && !q.removed; })) {   // R44 큰 덩이에 닿은 숫자 옆 금빛 점
+    if (!CONFIG.features.chunkShown && f.chunk && !f.chunk.done && (inside || c.seen) && Core.neighbors(f, x, y).some(function (q) { return q.haz === 'chunk' && !q.removed; })) {   // 큰 덩이에 닿은 숫자 옆 금빛 점(v2.1만. v2.2는 덩이 자리가 테두리로 보여 뺌)
       g.fillStyle = '#1a120b'; g.fillRect(X + 4, Y + 4, 9, 9); g.fillStyle = '#ffd25a'; g.fillRect(X + 5, Y + 5, 7, 7); goldSeen = true;
     }
     if (c.lens && Core.neighbors(f, x, y).some(function (q) { return Core.liveHaz(q) && q.haz === 'treasure'; })) { g.fillStyle = '#0f4a52'; g.fillRect(X + 35, Y + 5, 9, 9); g.fillStyle = '#5fe0e8'; g.fillRect(X + 37, Y + 7, 5, 5); }
@@ -864,7 +863,7 @@ function updateHUD() {
     if (fxs && fxs.kind === 'break' && now < fxs.t0 + 480 && now >= fxs.t0) { $('streakVal').textContent = multTxt(CONFIG.streakLadder[fxs.from]) + ' → ' + multTxt(mul); $('streakBox').classList.add('broke'); }
     else { $('streakVal').textContent = multTxt(mul); $('streakBox').classList.remove('broke'); }
     $('streakBox').classList.toggle('max', d.streak >= cap && cap > 0);
-    var st = '', n = cap + 1; for (var j = 0; j < n; j++) st += '<i class="' + (j <= d.streak && d.streak > 0 ? 'on' : '') + '" style="width:' + Math.floor(110 / n) + 'px"></i>';
+    var st = '', n = Math.max(cap, 1); for (var j = 0; j < n; j++) st += '<i class="' + (j < d.streak ? 'on' : '') + '" style="width:' + Math.floor(110 / n) + 'px"></i>';   // 켜진 칸 수 = 단계(0단계면 다 꺼짐), 칸 수 = 상한
     $('streakSteps').innerHTML = st;
     if (!$('comboIc')._s) { $('comboIc').innerHTML = iconHtml('ui.combo', 20); $('comboIc')._s = 1; }   // 촛불처럼 보이던 불꽃 대신 사슬 그림
     var hs = ''; for (var k = 0; k < d.hpMax; k++) hs += iconHtml(k < d.hp ? 'heart' : 'heartE', 28);
@@ -1230,7 +1229,7 @@ function settleHtml() {
   var delay = 250;
   S.floors.forEach(function (fl, i) {
     if (i >= 6) return;
-    h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>지하 ' + fl.depth + '층 (' + RULES[fl.rule].name + ')' + (fl.perfect ? ' <span class="badge gold">완벽한 층</span>' : '') + '</span><span>' + fmt(fl.value) + '</span></div>'; delay += 120;
+    h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>지하 ' + fl.depth + '층 (' + RULES[fl.rule].name + ')'+'</span><span>' + fmt(fl.value) + '</span></div>'; delay += 120;
   });
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
@@ -1318,7 +1317,7 @@ function finalHtml() {
   var chart = '<div class="chart">';
   for (var i = 0; i < Math.max(CONFIG.days, hist.length); i++) { var hi = hist[i], pay = !!Core.paymentFor(i + 1); chart += hi ? '<i class="' + (hi.collapsed ? 'col ' : '') + (pay ? 'pay' : '') + '" title="' + hi.day + '일째: ' + hi.income + '" style="height:' + Math.max(4, hi.income / mx * 86) + 'px"></i>' : '<i style="background:transparent' + (pay ? ';outline:1px dashed #5d5868' : '') + '"></i>'; }
   chart += '</div><div class="note">날마다 수입 (테두리 = 도장 찍는 날, 빗금 = 쓰러진 날)</div>';
-  var st = '가장 깊이 간 층 지하 ' + run.stats.deepest + ' · 보물 ' + run.stats.treasures + ' · 발파 ' + run.stats.blasts + ' · 쓰러진 날 ' + run.stats.collapses + (CONFIG.features.perfect ? ' · 완벽한 층 ' + (run.stats.perfect || 0) : '');
+  var st = '가장 깊이 간 층 지하 ' + run.stats.deepest + ' · 보물 ' + run.stats.treasures + ' · 발파 ' + run.stats.blasts + ' · 쓰러진 날 ' + run.stats.collapses;
   if (F.success) {
     if (!settings.bestBy) settings.bestBy = {};
     var bk = F.endless ? 'endless:' + (run.grade || 1) : bestKey(), fv = F.endless ? F.endless.day : F.score;   // 끝없는 갱은 버틴 날로 따로 겨뤄요
