@@ -265,6 +265,14 @@ var TOOLS = [
     hooks: {
       on_day_end: function (ctx, ev) { var d = ctx.run.d; if (ev.reason !== 'return' || !d || d.candle <= 0) return; var n = Math.min(CONFIG.dripMax, d.candle * CONFIG.dripPer); d.pocket += n; d.pocketLines.drip = (d.pocketLines.drip || 0) + n; }
     } },
+  // ==== 도구 목록 콤보·발파·열림 (reviews/23 3.1~3.3) ====
+  // ==== /콤보·발파·열림 ====
+  // ==== 도구 목록 분필·정보·보물·광맥 (reviews/23 3.4~3.6) ====
+  // ==== /분필·정보·보물·광맥 ====
+  // ==== 도구 목록 깊이·하루·금고·칸 (reviews/23 3.7~3.8) ====
+  // ==== /깊이·하루·금고·칸 ====
+  // ==== 도구 목록 소모품 도구 (reviews/23 3.10) ====
+  // ==== /소모품 도구 ====
   // 합친 도구: 재료 둘을 가진 밤에 곽 씨가 합쳐 줘요. 상점·선물·연장함에는 나오지 않아요. 재료의 효과를 다 가지고 하나가 더 세져요
   { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['refiner', 'sieve'],   // R135: 긴 도화선이 폭파공만의 것이 되어 재료를 바꿈
     desc: '발파로 터진 지뢰 자리마다 금 알갱이가 남고, 이 금 알갱이로도 콤보가 오릅니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
