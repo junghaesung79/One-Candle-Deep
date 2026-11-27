@@ -266,7 +266,7 @@ describe('규칙 단위 검사', () => {
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
       check(CONFIG.rulePool.join() === 'pair,border,lonely,tally,minepair,cols,diag,trio,band' && r.plan.firstRule.slice(1).every((x: string) => CONFIG.rulePool.includes(x)), 'every vein, any grade (plain only day 1)');
-      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 30 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown', 'toughcharm', 'betchalk', 'fuse', 'tongs'].includes(t.id)), '30 tools in v22 set, no fused or character-only tools in the pool'); }
+      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 52 && !Core.toolPool().some((t: any) => ['sheet', 'match', 'bigblast', 'moontongs', 'deadcrown', 'toughcharm', 'betchalk', 'fuse', 'tongs'].includes(t.id)), '52 tools in v22 set, no fused or character-only tools in the pool'); }
     // 캐릭터는 X·O 칸 행동 하나만 바꿔요(R135): 따로 붙는 능력치가 없어요
     { const cs = Object.values(Core.CHAR_BY_ID) as any[];
       check(cs.every(c => !c.candleDelta && !c.capPlus && !c.valueMul && !c.digMineExtra && !c.perk && !c.weak), 'characters have no extra stats');

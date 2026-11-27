@@ -126,7 +126,10 @@ export interface CoreApi {
   hit(run: Run, x: number, y: number): ActResult;
   mark(run: Run, x: number, y: number, to?: number): { ok: boolean; mark?: number; faded?: boolean };
   probe(run: Run, x: number, y: number): unknown;
-  ignite(run: Run, x: number, y: number, free?: boolean): ActResult;
+  /** byTool: 도구가 예약한 발파(화약 장갑). 옆 칸이 아니어도, 촛불이 0이어도 터져요 */
+  ignite(run: Run, x: number, y: number, free?: boolean, byTool?: boolean): ActResult;
+  /** 도구 그림 오른쪽 아래 숫자(쌓기 도구). 없으면 '' */
+  toolBadge(run: Run, id: string): string;
   /** 도구 칸 수(넓은 연장 띠 포함) */
   slotsOf(run: Run): number;
   /** 도구 칸에 든 것: 도구 + 소모품 칸(소모품 칸 셈은 여기 한 곳) */

@@ -913,7 +913,7 @@ function updateHUD() {
   for (var s = 0; s < nSl; s++) {
     var id = run.owned[s], ce = s >= run.owned.length ? cl[s - run.owned.length] : null;
     if (ce) { var ck = Core.CONS_BY_ID[ce.id], cpop = ui.slotPop['c:' + ce.id] && performance.now() - ui.slotPop['c:' + ce.id] < 150; os += '<div class="slot cons' + (mdc.kind === 'cuse' && mdc.id === ce.id ? ' on' : '') + (cpop ? ' pop' : '') + '" data-cons="' + ce.id + '"' + slSt + '>' + iconHtml('icons.' + ck.icon, Math.min(30, slW - 12)) + '<span class="cnt px">' + ce.n + '</span></div>'; }   // 소모품: 점선 테두리, 오른쪽 아래 개수, 누르면 씀
-    else if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + rarAttr(id) + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + '</div>'; }
+    else if (id) { var t = Core.TOOL_BY_ID[id]; var popd = ui.slotPop[id] && performance.now() - ui.slotPop[id] < 150, rv = ui.revealAt[id] && performance.now() - ui.revealAt[id] < 1200; os += '<div class="slot' + (popd ? ' pop' : '') + (rv ? ' reveal' : '') + '" data-tool="' + id + '"' + rarAttr(id) + slSt + '>' + iconHtml('icons.' + t.icon, Math.min(30, slW - 12)) + (function (b) { return b ? '<span class="cnt px">' + esc(b) + '</span>' : ''; })(Core.toolBadge(run, id)) + '</div>'; }   // 쌓기 도구: 오른쪽 아래에 지금 셈
     else os += '<div class="slot empty"' + slSt + '></div>';
   }
   if ($('ownSlots')._h !== os) { $('ownSlots').innerHTML = os; $('ownSlots')._h = os; $('ownSlots').style.gap = '4px'; bindSlotEvents(); }
