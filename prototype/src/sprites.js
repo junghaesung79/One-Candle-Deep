@@ -49,8 +49,6 @@ function iconHtml(name, size, cls) {
   var MINER = ["......oooo......", "....ooyllyoo....", "...oyyyllyyyo...", "...oyyyyyyyyo...", "..oYYYYYYYYYYo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"];
   var MIP = { o: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', f: '#f0c39a', F: '#c9936a', e: '#1a1420', r: '#c4432b', d: '#3e5f8a' };
   SPR.miner = mkSprite(MINER, MIP);
-  SPR.icons.lonechest = mkSprite(["..........", ".oooooooo.", ".obbbbbbo.", ".oooyyooo.", ".obbyybbo.", ".obbbbbbo.", ".obbbbbbo.", ".oooooooo.", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#5fe0e8' });   // 외톨이 보물함(R141)
-  SPR.icons.colsledger = mkSprite(["..........", "oooooooooo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "oooooooooo", ".........."], { o: '#6b4a30', w: '#efe7d6', y: '#f2c14e' });   // 세로줄 장부(R141)
   SPR.pillar = mkSprite(["................", "...oooooooooo...", "...obbBbbbBbo...", "...oooooooooo...", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", ".....obBbbo.....", ".....obbBbo.....", "...oooooooooo...", "...obbBbbbBbo...", "...oooooooooo...", "................"], { o: '#3d2a1c', b: '#9a6532', B: '#c9894a' });   // 목수가 세운 기둥(R141)
   // 캐릭터마다 모습이 달라요: 광부 헬멧과 곡괭이, 해체공 고글과 집게, 노름꾼 헌팅캡과 카드, 측량사 넓은 모자와 줄자 막대, 폭파공 머리띠와 화약
   var MINER_BY = {
@@ -187,6 +185,8 @@ function iconHtml(name, size, cls) {
   SPR.icons.belt = mkSprite(["..........", "..........", "kkkkkkkkkk", "bbbobbobbb", "bbobyobbbb", "bbbobbobbb", "kkkkkkkkkk", "..o..o..o.", "..o..o..o.", ".........."], { k: '#3d2a1c', b: '#9a6532', o: '#454956', y: '#f2c14e' });
   SPR.icons.regular = mkSprite([".ooooooo..", ".oBbbbbo..", ".oBwwwbo..", ".oBbbbbo..", ".oBbbbbo..", ".oBbbbbcc.", ".oBbbbcyhc", ".oBbbbcyyc", ".oooooocc.", ".........."], { o: '#2a1c12', B: '#2f5a36', b: '#4f8a4a', w: '#efe7d6', c: '#7a5212', y: '#f2c14e', h: '#fff1b8' });
   SPR.icons.toughcharm = mkSprite(["...oooo...", "..o....o..", ".o.oooo.o.", "yyyyyyyyyy", "ywrrrrrrwy", "ywwrrrrwwy", "ywrwrrwrwy", "ywwrrrrwwy", "ywwwwwwwwy", "yyyyyyyyyy"], { o: '#9a6532', w: '#efe7d6', r: '#c4432b', y: '#9b6fd6' });   // 질긴 부적(R135)
+  SPR.icons.lonechest = mkSprite(["..........", ".oooooooo.", ".obbbbbbo.", ".oooyyooo.", ".obbyybbo.", ".obbbbbbo.", ".obbbbbbo.", ".oooooooo.", "..........", ".........."], { o: '#3d2a1c', b: '#9a6532', y: '#5fe0e8' });   // 외톨이 보물함(R141)
+  SPR.icons.colsledger = mkSprite(["..........", "oooooooooo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "owywwwywwo", "oooooooooo", ".........."], { o: '#6b4a30', w: '#efe7d6', y: '#f2c14e' });   // 세로줄 장부(R141)
   SPR.icons.bigblast = mkSprite(["y...y...y.", ".k..k..k..", "..k.k.k...", "...kkk....", "rrrrrrrrr.", "rRRRRRRRr.", "rRyyRRRRr.", "rRRRRyyRr.", "rrrrrrrrr.", ".........."], { r: '#7a2f28', R: '#c4432b', k: '#3a3542', y: '#ffd25a' });
   SPR.icons.moontongs = mkSprite(["....yy....", "..wyhhyw..", "..wwyyww..", "...wwww...", "....kk....", "...wkkw...", "..ww..ww..", "..mm..mm..", ".mm....mm.", "mm......mm"], { w: '#c9c3d6', k: '#6f6880', y: '#5fe0e8', h: '#e8f4ff', m: '#8e7fb0' });
   // 처음 풀에 새로 넣은 넷(reviews/23)
