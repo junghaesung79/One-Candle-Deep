@@ -211,7 +211,7 @@ function updateFlys(now) {
     f.el.style.transform = 'translate(-50%,-50%) scale(' + sc + ')';
   });
 }
-function multTxt(m) { return '×' + (Math.round(m * 10) / 10); }
+function multTxt(m) { return '×' + (Math.round(m * 100) / 100); }   // 콤보 한 단계 +0.25(R132)라 소수 둘째 자리까지
 function blinkEl(id, cls, ms) { var e = $(id); if (!e) return; e.classList.add(cls); clearTimeout(e['_t' + cls]); e['_t' + cls] = setTimeout(function () { e.classList.remove(cls); }, ms); }
 
 // ---------- 연출 큐 ----------
@@ -571,7 +571,7 @@ function drawBoard(now) {
   // 광부 + 곡괭이 불꽃(콤보 단계)
   var hurt = anim.hurtT && now > anim.hurtT && now - anim.hurtT < 600;
   if (!(hurt && Math.floor(now / 80) % 2)) g.drawImage(SPR.minerBy[run.char] || SPR.miner, d.px * T, d.py * T, T, T);
-  drawPickFlame(g, d.px * T + 34, d.py * T + 2, d.streak, now);
+  drawPickFlame(g, d.px * T + 34, d.py * T + 2, Math.round((Core.streakMult(run) - 1) * 2), now);   // 불꽃 크기는 배수로(×1.5마다 한 칸)
   keyLabels.forEach(function (k) { drawCellLabel(g, f, k[0], k[1], k[2]); });
   // 튀어 오르는 것들
   anim.pops = anim.pops.filter(function (p) { return now - p.t0 < 1000; });   // 옛 연장함 빛기둥(950 ms)도 이 안에 끝나요
@@ -1010,6 +1010,12 @@ function gradeRulesLine(g) {
   var base = (CONFIG.rulePool || []).filter(function (r) { return r !== 'plain'; }), extra = (CONFIG.preset === 'v22' && CONFIG.gradeRules[g]) || [];
   return base.concat(extra).map(function (r) { return RULES[r].name.replace(' 광맥', ''); }).join(' · ');
 }
+function gradePenLine(g) {   // 등급이 오를수록 붙는 불리함(R132)
+  var P = (CONFIG.preset === 'v22' && CONFIG.gradePenalty && CONFIG.gradePenalty[g]) || {}, out = [];
+  if (P.candle) out.push('하루 촛불 ' + (CONFIG.candleMax + P.candle));
+  if (P.capMinus) out.push('콤보가 ' + P.capMinus + '개 단계 덜 오름');
+  return out.join(' · ');
+}
 function setupGradeShown() { return run.daily ? 1 : ui.peekGrade || run.grade || 1; }
 function setupCan() { return !ui.peekChar && setupGradeShown() <= (settings.gradeOpen || 1); }
 function setupGrade(dir) {
@@ -1035,7 +1041,7 @@ function setupHtml() {
   h += '<div class="suRight"><div class="suH">어느 광산을 살까요?</div><div class="deedCard suDeed' + (gLock ? ' locked' : '') + '"><div class="suGrade">' +
     (daily ? '' : '<button class="suArrow" id="suPrev"' + (g <= 1 ? ' disabled' : '') + '>◀</button>') + '<div class="ttl">' + (daily ? esc(TEXT.daily) + ' · ' + run.daily : gradeName(g) + ' 권리증') + '</div>' +
     (daily ? '' : '<button class="suArrow" id="suNext"' + (g >= CONFIG.gradeNames.length ? ' disabled' : '') + '>▶</button>') + '</div>';
-  h += gLock ? '<div class="suLock">' + gradeName(g - 1) + '을 완납하면 열립니다</div>' : '<div class="suMeta">광맥 ' + esc(gradeRulesLine(g)) + (gradeMulOf(g) !== 1 ? ' · 도장 값 ×' + gradeMulOf(g) : '') + '</div>';
+  h += gLock ? '<div class="suLock">' + gradeName(g - 1) + '을 완납하면 열립니다</div>' : '<div class="suMeta">광맥 ' + esc(gradeRulesLine(g)) + (gradePenLine(g) ? ' · ' + esc(gradePenLine(g)) : '') + (gradeMulOf(g) !== 1 ? ' · 도장 값 ×' + gradeMulOf(g) : '') + '</div>';
   gradePays(g).forEach(function (p, i) { h += '<div class="suPay"><span>' + names[i] + '</span><span class="px">' + fmt(p.amount) + '</span><span class="d">' + p.day + '일째</span></div>'; });
   h += '</div>';
   if (daily) h += '<div class="note" style="margin-top:10px">모두 같은 판을 받습니다 · 이 브라우저 최고 점수 ' + fmt(best) + '</div>';
@@ -1331,7 +1337,7 @@ function finalHtml() {
     h = '<div class="dim" style="background:#14121a"></div><div class="dlg" style="width:800px"><h2>' + (EN ? esc(TEXT.endless.title.replace('{day}', EN.day)) : CONFIG.days + '일째 · 마지막 도장을 찍었습니다. ' + gradeName(run.grade) + '은 이제 내 것입니다') + '</h2>' + (EN ? '<div class="sub">' + esc(TEXT.endless.sub.replace('{n}', EN.stamps)) + '</div>' : '') +
       (EN ? '<div style="font-size:20px;margin:14px 0">버틴 날 <b class="px acc" style="font-size:26px">' + EN.day + '</b>일째 <span class="sub" style="font-size:14px">남긴 돈 ' + fmt(F.score) + '</span></div>' : '<div style="font-size:20px;margin:14px 0">남긴 돈 (이번 판 점수) <b class="px acc" style="font-size:26px">' + fmt(F.score) + '</b></div>') +
       '<div class="sub">' + (run.daily ? TEXT.daily + ' ' + run.daily + ' · ' : '') + (best ? (EN ? '이 광산 끝없는 갱 최고 ' + best + '일째' : '이 광산 최고 점수 ' + fmt(best)) + (isNew ? ' → <span class="acc">새 기록</span>' : '') : '이 광산 첫 기록') + '</div>' +
-      (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸습니다. 새 광맥 하나가 더 나오고 값이 오릅니다. 판 준비에서 고릅니다</div>' : '') +
+      (unlocked ? '<div class="panel" style="padding:6px 12px;margin-top:8px;border-color:#a8781c"><b class="acc">' + gradeName((run.grade || 1) + 1) + '</b>이 열렸습니다. 불리한 조건이 하나 더 붙습니다. 판 준비에서 고릅니다</div>' : '') +
       unlockBlock() + recordFold(chart, st, '<div class="note" style="margin-top:8px">권리증 뒷면, 작은 글씨</div><div>' + esc(TEXT.deedBack) + '</div><div class="sub" style="margin-top:4px">중개인 구 실장: "' + esc(TEXT.deedNext) + '"</div>') +
       (!EN && !run.tutorial ? '<div class="quote" style="margin-top:10px">중개인 구 실장: "' + esc(TEXT.endless.ask) + '"</div>' : '') +
       (!EN && !run.tutorial ? tipNote('endless') : '') + '<div style="margin-top:14px;display:flex;justify-content:flex-end;gap:10px">' + (!EN && !run.tutorial ? '<button id="oEndless">' + esc(TEXT.endless.button) + '</button>' : '') + '<button class="primary" id="oAgain">같은 광산 다시</button></div></div>';

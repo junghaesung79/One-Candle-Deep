@@ -16,7 +16,7 @@ var CONFIG = {
   embers: 5,                                 // R4 불씨 다섯 번
   hpMax: 3, mineDmg: 1, collapseLoss: 0.5,   // R5 쓰러지면 주머니 절반
   // 콤보(R8)
-  streakLadder: [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6], streakCapIdx: 4, streakCapPlusLastCard: 4,   // 체력 1일 때 마지막 패가 상한에 더하는 단계 수. 막장 왕관은 모자 +2와 마지막 패 +4를 함께 가져 체력 1이면 사다리 끝(×6)
+  streakLadder: [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6], streakCapIdx: 4, streakCapPlusHat: 2, streakCapPlusLastCard: 4,   // v2.1 사다리(한 단계 +0.5). v2.2는 프리셋에서 한 단계 +0.25(R132). 상한에 더하는 단계: 늙은 광부 모자, 마지막 패(체력 1). 막장 왕관은 둘을 함께 가져 체력 1이면 ×6
   // 판
   numberCap: 5, startChainMin: 12, genRetries: 60,
   density: [ // 깊이 1~9: 지뢰 m, 보물 t, 보물 등급 가중치(금 알갱이/청록 보석/금잔), 자갈 출현율 res, 자갈 값 rv
@@ -78,7 +78,8 @@ var CONFIG = {
   firstRunDiscount: 1,                       // 첫 판(안내 판) 납부액 배수. 1이면 할인 없음. 의뢰인 결정 대기(처음 하는 사람 보정)                              // 광맥별 보물·지뢰 수 더하기 { pair: { t: -2, m: 0 } }. 광맥끼리 수입을 맞추는 손잡이(v22)           // gravel 'chain': 층 도착 때가 아닌 와르르로 min칸 이상 열리면 칸마다 per(시세 붙음)
   stampReward: { n: 3, cash: [60, 150, 300, 500], rarity: [[60, 35, 5], [45, 40, 15], [30, 45, 25], [20, 45, 35]] },   // 도장 선물: 도장 k개째 [일반, 고급, 희귀] 가중치, 대신 받는 금고 돈
   toolSet: '21',                             // 상점·선물에 나오는 도구 묶음('21' 12종 / '22' 12종)
-  gradeRules: { 2: ['tally'], 3: ['tally', 'minepair'] },   // 등급별로 더 나오는 광맥(v22)
+  gradeRules: {},   // 등급별로 더 나오는 광맥. R132부터 광맥은 등급과 상관없이 모두 나와 비워 둠
+  gradePenalty: { 2: { candle: -10 }, 3: { candle: -10, capMinus: 4 } },   // 등급이 오를수록 붙는 불리함(R132, 쌓임). v22만. 등급 3은 콤보 상한 ×2
   gradeNames: ['달못 1호 갱', '달못 4호 갱', '달못 9호 갱'],
   nuggetBag: 3, dripPer: 4, dripMax: 120,     // 금 알갱이 주머니, 촛농 받이(reviews/23)
   lensMinMult: 1.5,                          // 감정 렌즈가 켜지는 콤보 배율                           // 성냥 묶음: 불씨일 때 켜면 촛불 +10
@@ -95,10 +96,10 @@ var CHARACTERS = [
     x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼내며 촛불을 1만 남기고 돌려받습니다. 보물은 그을린 채(반값) 나옵니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '촛불 75로 시작하고, 해체는 촛불 5입니다' },
-  { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'], capPlus: 1,
+  { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'], capPlus: 2,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '걸기', desc: 'O 칸이 보물이면 콤보가 2개 단계 오릅니다. 지뢰면 피해가 1 더 큽니다' },
-    weak: '', perk: '콤보가 1개 단계 더 높이까지 오릅니다' },
+    weak: '', perk: '콤보가 2개 단계 더 높이까지 오릅니다' },
   { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2, valueMul: 0.85,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
@@ -194,11 +195,11 @@ var TOOLS = [
       }
     } },
   { id: 'lastcard', axis: '콤보', rarity: '희귀', name: '마지막 패', short: '패', price: 250, kind: 'passive', icon: 'card', sets: ['21', '22'],
-    desc: '체력이 1 남으면 콤보가 4개 단계 더 높이까지 오릅니다' },
+    desc: '체력이 1 남으면 콤보가 8개 단계 더 높이까지 오릅니다' },
   { id: 'crown', axis: '콤보', rarity: '고급', name: '늙은 광부 모자', short: '모자', price: 240, kind: 'passive', icon: 'crown', sets: ['22'],
-    desc: '콤보가 2개 단계 더 높이까지 오릅니다' },
+    desc: '콤보가 4개 단계 더 높이까지 오릅니다' },
   { id: 'amulet', axis: '콤보', rarity: '고급', name: '곽 씨 부적', short: '부적', price: 200, kind: 'passive', icon: 'amulet', sets: ['22'],
-    desc: '하루 한 번, 콤보가 2단계 이상일 때 지뢰를 쳐도 체력이 줄지 않습니다. 콤보는 끊깁니다',
+    desc: '하루 한 번, 콤보가 4단계 이상일 때 지뢰를 쳐도 체력이 줄지 않습니다. 콤보는 끊깁니다',
     hooks: {
       on_day_start: function (ctx) { ctx.state.ready = true; },
       on_mine: function (ctx, ev) { if (ctx.state.ready !== false && ctx.mult() >= 2 && ev.damage > 0) { ev.damage = 0; ctx.state.ready = false; ctx.proc('체력 지킴'); } }
@@ -236,7 +237,7 @@ var TOOLS = [
   { id: 'shortwick', axis: '', rarity: '고급', name: '짧은 심지', short: '짧은 심지', price: 180, kind: 'passive', icon: 'kWick', sets: ['22'],
     desc: '하루 촛불이 15 줄어듭니다. 대신 보물 값이 25% 높습니다(큰 덩이는 빼고)', candle: -15, treasureBonus: 0.25 },
   { id: 'crackedhelm', axis: '콤보', rarity: '일반', name: '금 간 투구', short: '금 간 투구', price: 130, kind: 'passive', icon: 'kCrack', sets: ['22'],
-    desc: '체력이 1 줄어듭니다. 대신 콤보가 1개 단계 더 높이까지 오릅니다', hp: -1, capPlus: 1 },
+    desc: '체력이 1 줄어듭니다. 대신 콤보가 2개 단계 더 높이까지 오릅니다', hp: -1, capPlus: 2 },
   // 도구 80종의 처음 풀에서 새로 넣은 넷(reviews/23, R121)
   { id: 'firstdig', axis: '콤보', rarity: '고급', name: '첫 삽', short: '첫 삽', price: 180, kind: 'passive', icon: 'firstdig', sets: ['22'],
     desc: '층마다 처음 캔 보물은 콤보가 2개 단계 오릅니다',
@@ -265,7 +266,7 @@ var TOOLS = [
   { id: 'moontongs', axis: '발파', rarity: '합침', name: '달빛 집게', short: '달빛 집게', price: 550, kind: 'passive', icon: 'moontongs', sets: ['22'], fusion: ['tongs', 'sieve'],
     desc: '발파한 X 칸이 지뢰가 아니면 제값으로 꺼냅니다. X 칸이 모두 지뢰가 아니었으면 촛불도 들지 않습니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
   { id: 'deadcrown', axis: '콤보', rarity: '합침', name: '막장 왕관', short: '막장 왕관', price: 490, kind: 'passive', icon: 'deadcrown', sets: ['22'], fusion: ['lastcard', 'crown'],
-    desc: '콤보가 2개 단계 더 높이까지 오르고, 체력이 1 남으면 6개 단계 더 높이까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
+    desc: '콤보가 4개 단계 더 높이까지 오르고, 체력이 1 남으면 12개 단계 더 높이까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
     hooks: { on_treasure: function (ctx, ev) { if (ctx.run.d && ctx.run.d.hp === 1 && !ev.scorch) ctx.addCandle(1, '막장 왕관'); } } },
   // v2.1에만 있는 도구(수치만 올리는 도구라 재미 보고서에서 뺐어요)
   { id: 'ledger', axis: '와르르', rarity: '고급', name: '연쇄 장부', short: '장부', price: 230, kind: 'passive', icon: 'ledger', sets: ['21'],
@@ -313,7 +314,7 @@ var KEEPSAKES = [
   { id: 'pursestring', name: '질긴 주머니 끈', icon: 'kPurse', desc: '쓰러져도 오늘 주머니를 3분의 1만 잃습니다', collapseLoss: 1 / 3 },
   { id: 'koocard', name: '구 실장 명함', icon: 'kCard', desc: '도장 선물을 넷 중에서 고릅니다', giftPlus: 1 },
   { id: 'rustykey', name: '녹슨 열쇠', icon: 'kKey', desc: '옛 연장함에서 도구를 셋 중에서 고릅니다', boxPlus: 1 },
-  { id: 'prayer', name: '아침 기도문', icon: 'kPrayer', desc: '하루를 콤보 1단계에서 시작합니다', streakStart: 1 }
+  { id: 'prayer', name: '아침 기도문', icon: 'kPrayer', desc: '하루를 콤보 2단계에서 시작합니다', streakStart: 2 }
 ];
 
 var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기). 인물 대사(구 실장·곽 씨·심 씨)만 인물 말투
@@ -422,7 +423,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
   deeper: '깊을수록 보물이 많고 비싼 보물이 잘 나옵니다. 지뢰도 늘고, 내려가는 촛불도 늘어납니다',
   // 용어 설명(화면에서 마우스를 올리면 떠요). 07 용어집과 같은 뜻, 해요체 한두 줄
   terms: {
-    '콤보': '지뢰를 치지 않고 보물을 연달아 캐면 콤보가 1개 단계씩 오르고, 단계가 높을수록 보물 값이 커집니다(0단계 ×1 … 4단계 ×3). 지뢰를 치면 0단계로 돌아갑니다',
+    '콤보': '지뢰를 치지 않고 보물을 연달아 캐면 콤보가 1개 단계씩 오르고, 단계가 높을수록 보물 값이 커집니다(0단계 ×1 … 8단계 ×3). 지뢰를 치면 0단계로 돌아갑니다',
     '오늘 주머니': '오늘 캔 돈입니다. 올라가면 금고로 옮깁니다. 쓰러지면 절반을 잃습니다',
     '금고': '모아 둔 돈입니다. 도장 값을 내고 도구를 삽니다. 쓰러져도 줄지 않습니다',
     '도장': '광산 값을 나눠 낼 때마다 권리증에 도장을 찍습니다. 도장 찍는 날 밤에 금고가 모자라면 계약이 끝납니다',
@@ -461,7 +462,7 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
            ['도장 찍는 날', '사흘마다 밤에 금고에서 도장 값을 냅니다. 도장마다 선물을 하나 고르고, 그 뒤로 캔 값이 오르거나 갱이 깊어집니다.'],
            ['판 끝', '남은 금고가 점수입니다. 마지막 도장 뒤에는 끝없는 갱에서 더 버틸 수 있습니다.']],
     basic: [['숫자', '숫자는 둘레 8칸의 아직 안 깨진 지뢰와 보물을 합친 수입니다.'],
-            ['콤보', '지뢰를 치지 않고 보물을 연달아 캐면 콤보가 1개 단계씩 오르고, 단계가 높을수록 보물 값이 커집니다(0단계 ×1 … 4단계 ×3). 지뢰를 치면 0단계로 돌아갑니다.'],
+            ['콤보', '지뢰를 치지 않고 보물을 연달아 캐면 콤보가 1개 단계씩 오르고, 단계가 높을수록 보물 값이 커집니다(0단계 ×1 … 8단계 ×3). 지뢰를 치면 0단계로 돌아갑니다.'],
             ['체력', '지뢰를 치면 1 줄어듭니다. 0이 되면 쓰러져서 오늘 주머니의 절반을 잃습니다.'],
             ['광맥', '층마다 보물이 묻힌 규칙이 하나 있고, 머리의 표지판에 적힙니다. 숫자만으로 모르는 칸을 가릴 수 있습니다.'],
             ['분필', '오른쪽 클릭으로 X, O, 지움 순서로 긋습니다. 생각을 적어 두는 표시입니다.'],
@@ -536,13 +537,16 @@ var TREASURE_NAMES = { 1: '금 알갱이', 2: '청록 보석', 3: '금잔' };
 
 // ---------- 프리셋: v21(2차 기획 v2.1 그대로) / v22(재미 보고서 2~4주차, 기본) ----------
 // 봇이 두 방식을 같은 씨앗으로 비교할 수 있게 v2.1 값을 그대로 남겨 둬요. applyPreset('v21')이면 v2.1과 같은 판이 나와요
-var PRESET_KEYS = ['ruleTune', 'payments', 'stages', 'chunks', 'rulePool', 'stairShown', 'countsShown', 'features', 'toolSet', 'voidCompare', 'gift', 'tutorialShopDay1', 'gradeMul', 'shop'];
+var PRESET_KEYS = ['streakLadder', 'streakCapIdx', 'streakCapPlusHat', 'streakCapPlusLastCard', 'ruleTune', 'payments', 'stages', 'chunks', 'rulePool', 'stairShown', 'countsShown', 'features', 'toolSet', 'voidCompare', 'gift', 'tutorialShopDay1', 'gradeMul', 'shop'];
 function cloneJ(o) { return JSON.parse(JSON.stringify(o)); }
 var PRESETS = { v21: { config: {}, text: { opening1: TEXT.opening[1].cap, later22: TUTORIAL.later['2-2'].text, later33: TUTORIAL.later['3-3'].text, gravel: TEXT.bubbles.gravel } } };
 PRESET_KEYS.forEach(function (k) { PRESETS.v21.config[k] = cloneJ(CONFIG[k]); });
 PRESETS.v21.config.stairShown = false; PRESETS.v21.config.countsShown = false;   // v2.1은 계단을 숨겨요(1주차 이전)
 PRESETS.v22 = {
   config: {
+    // 콤보 8단계(R132): ×1에서 ×3까지 한 단계 +0.25로 잘게. 상한 도구가 올리는 배수는 그대로(모자 ×4, 마지막 패 ×5, 둘 다 ×6)
+    streakLadder: [1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75, 4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6],
+    streakCapIdx: 8, streakCapPlusHat: 4, streakCapPlusLastCard: 8,
     // 봇 측정으로 맞춘 금액. 도구 경험(칸 8, 연장함) 뒤 다시 올림: 마지막 도장 보통 76%, 신중 31%, 욕심 65%(05 8.15)
     payments: [{ day: 3, name: '계약금', amount: 300 }, { day: 6, name: '1차 중도금', amount: 1000 }, { day: 9, name: '2차 중도금', amount: 2400 },
                { day: 12, name: '3차 중도금', amount: 4800 }, { day: 15, name: '잔금', amount: 8000 }],
@@ -551,8 +555,8 @@ PRESETS.v22 = {
              { startDepth: 1, rowShift: 2, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }, { startDepth: 1, rowShift: 3, valueMul: 1.5 }],
     chunks: { 3: { depth: 3, w: 2, h: 2, value: 60 }, 6: { depth: 4, w: 2, h: 2, value: 100 }, 9: { depth: 5, w: 2, h: 2, value: 160 },
               12: { depth: 5, w: 3, h: 2, value: 220 }, 15: { depth: 5, w: 3, h: 2, value: 260 } },
-    rulePool: ['pair', 'border', 'lonely'],   // 맨땅은 첫날 첫 층만
-    ruleTune: { pair: { t: -2 }, border: { t: 2 }, lonely: { t: 4 } },   // 광맥별 Day 9~14 수입을 평균 ±10% 안으로(봇 60판씩)
+    rulePool: ['pair', 'border', 'lonely', 'tally', 'minepair'],   // 맨땅은 첫날 첫 층만. 광맥은 등급과 상관없이 모두(R132)
+    ruleTune: { pair: { t: -2 }, border: { t: 2 }, lonely: { t: 4 }, tally: { t: -7 }, minepair: { t: -6, up: 0 } },   // 광맥별 수입을 맞춤(봇 60~80판씩). 눈금·지뢰 짝은 R132에서 모든 등급에 나오며 줄임: 지뢰 짝은 보물 등급을 올리지 않음
     stairShown: true, countsShown: true,
     features: { gang: false, orders: false, mutations: false, awake: false, forkBonus: false, rooms: false, embers: false, lowLight: false,
                 sellBack: false, probeBase: false, gravel: 'chain', startGift: false, stampReward: true, chord: true, chunkShown: true,
@@ -563,7 +567,7 @@ PRESETS.v22 = {
     voidCompare: { 1: 1110, 2: 2420, 3: 3130, 4: 4350, 5: 5250 },   // 그 도장을 찍은 판의 그 구간 수입 평균(세 정책 400판, 05 8.12)
     gift: { n: 3, rarity: '일반', tutorial: ['betchalk', 'gloves', 'fuse'] },
     tutorialShopDay1: ['firstdig', 'amulet', 'nuggetbag'],   // 청진 망치·감정 렌즈를 뺀 뒤(R129)
-    gradeMul: [1, 1.3, 1.8, 2, 2.2, 2.4, 2.6]   // 등급 2·3 배수(v22 봇 측정, 05 8.12)
+    gradeMul: [1, 1, 1, 1, 1, 1, 1]   // R132: 등급 차이는 불리함(gradePenalty)만. 도장 값은 등급과 상관없이 같음(05 8.18)
   },
   text: { opening1: '15일 안에 다섯 번 나눠 내십시오. 사흘마다 도장을 찍어 드립니다. 도장 다섯 개면 광산은 손님 것입니다.',
           later22: '숫자로 못 가르는 두 칸입니다. 걸어 보든지, 다른 쪽부터 풀든지 고르십시오.',
@@ -575,6 +579,8 @@ function applyPreset(name) {
   Object.keys(P.config).forEach(function (k) { CONFIG[k] = cloneJ(P.config[k]); });
   TEXT.opening[1].cap = P.text.opening1; TUTORIAL.later['2-2'].text = P.text.later22; TUTORIAL.later['3-3'].text = P.text.later33; TEXT.bubbles.gravel = P.text.gravel;
   CONFIG.preset = name;
+  var mt = CONFIG.ruleTune && CONFIG.ruleTune.minepair;   // 지뢰 짝이 보물 등급을 올리지 않으면 표지판에서도 그 말을 뺌(R132)
+  RULES.minepair.sign = mt && mt.up === 0 ? '지뢰가 둘씩 붙어 있습니다' : '지뢰가 둘씩 붙어 있습니다. 보물 값은 한 등급 높습니다';
   return true;
 }
 applyPreset('v22');
@@ -660,6 +666,8 @@ var Core = (function () {
     return TOOLS.filter(function (t) { return (!t.sets || t.sets.indexOf(CONFIG.toolSet) >= 0) && !t.fusion; });   // 합친 도구는 진열·선물·연장함에 안 나와요
   }
   function gradeMulOf(run) { return CONFIG.gradeMul[Math.max(0, (run.grade || 1) - 1)] || 1; }
+  function minepairUp() { var t = CONFIG.ruleTune && CONFIG.ruleTune.minepair; return t && t.up != null ? t.up : 1; }   // 지뢰 짝 광맥이 보물 등급을 올리는 칸 수
+  function gradePen(run) { return (CONFIG.preset === 'v22' && CONFIG.gradePenalty && CONFIG.gradePenalty[run.grade || 1]) || {}; }
   function poolList(run) {   // 이 판에 나오는 광맥(등급별로 늘어요)
     if (!CONFIG.rulePool) return null;
     var extra = (CONFIG.preset === 'v22' && CONFIG.gradeRules[run.grade || 1]) || [];
@@ -706,8 +714,8 @@ var Core = (function () {
   function spendCandle(run, n) { var d = run.d; var s = Math.min(d.candle, n); d.candle -= s; if (s) fx(run, { t: 'candle', delta: -s }); return s; }
 
   // ---------- 콤보 ----------
-  function streakCapIdx(run) {   // 상한 = 기본 4단계 + 더하는 단계 수. 도구 문장은 늘 'n개 단계 더 높이까지'로 적는다(0단계부터 세므로 자리 숫자는 헷갈림)
-    var d = run.d, cap = CONFIG.streakCapIdx + (owns(run, 'crown') ? 2 : 0) + (charOf(run).capPlus || 0) + keepSum(run, 'capPlus');
+  function streakCapIdx(run) {   // 상한 = 기본 상한 + 더하는 단계 수. 도구 문장은 늘 'n개 단계 더 높이까지'로 적는다(0단계부터 세므로 자리 숫자는 헷갈림)
+    var d = run.d, cap = CONFIG.streakCapIdx + (owns(run, 'crown') ? CONFIG.streakCapPlusHat : 0) + (charOf(run).capPlus || 0) + keepSum(run, 'capPlus') - (gradePen(run).capMinus || 0);
     if (d && d.hp === 1 && owns(run, 'lastcard')) cap += CONFIG.streakCapPlusLastCard;   // 합친 도구는 재료도 가진 것으로 쳐요
     return Math.min(cap, CONFIG.streakLadder.length - 1);
   }
@@ -858,7 +866,7 @@ var Core = (function () {
     }
     if (tPlaced < t) return f;
     f.twin = !!spec.twin;
-    var tierUp = (rule === 'minepair' ? 1 : 0);
+    var tierUp = (rule === 'minepair' ? minepairUp() : 0);
     var tiers = row.tiers.slice();
     cells.forEach(function (c) { if (c.haz === 'treasure') c.tier = Math.min(3, 1 + weightedIdx(rng, tiers) + tierUp); });
     cells.forEach(function (c) { if (!c.haz && !c.stair && rng() < row.res) c.res = row.rv; });
@@ -1281,7 +1289,7 @@ var Core = (function () {
   function startDay(run) {
     if (run.phase !== 'board' && run.phase !== 'deed' && run.phase !== 'ready' && run.phase !== 'gift') return { ok: false };
     if (run.orders.length && !run.order) chooseOrder(run, 0);
-    var cm = CONFIG.candleMax + (gang(run, 'shallow') ? 10 : 0) - (gang(run, 'rough') ? 10 : 0) + (charOf(run).candleDelta || 0) + keepSum(run, 'candle');
+    var cm = CONFIG.candleMax + (gradePen(run).candle || 0) + (gang(run, 'shallow') ? 10 : 0) - (gang(run, 'rough') ? 10 : 0) + (charOf(run).candleDelta || 0) + keepSum(run, 'candle');
     var hm = Math.max(1, CONFIG.hpMax + keepSum(run, 'hp'));
     var pay = paymentFor(run.day, run);
     var chunkSrc = pay && (CONFIG.chunks[run.day] || (run.endless ? CONFIG.chunks[CONFIG.days] : null)), chunkSpec = chunkSrc ? Object.assign({}, chunkSrc) : null;   // 끝없는 도장 날은 마지막 도장 날 덩이
@@ -1342,7 +1350,7 @@ var Core = (function () {
     if (rule === 'rows') t = Math.max(6, t);
     var tw = row.tiers.slice(), tot = tw.reduce(function (a, b) { return a + b; }, 0) || 1;
     // 다 캐면 어림 값: 보물 수 × 등급 평균 값 × 시세 × 캐릭터 · 갈림길 덤. 콤보, 큰 덩이, 유물은 빼요
-    var up = rule === 'minepair' ? 1 : 0, avg = 0;
+    var up = rule === 'minepair' ? minepairUp() : 0, avg = 0;
     tw.forEach(function (w, i) { avg += (w / tot) * CONFIG.treasureValue[Math.min(3, i + 1 + up)]; });
     var vm = stage(run).valueMul * (charOf(run).valueMul || 1) * (bonus === 'value' ? CONFIG.forkBonus.valueMul : 1);
     return { t: t, m: m, tiers: tw.map(function (x) { return Math.round(100 * x / tot); }), tierUp: rule === 'minepair',   // 보물 등급 확률(금 알갱이, 청록 보석, 금잔)
@@ -2500,7 +2508,7 @@ var Core = (function () {
     nextDay: nextDay, priceOf: priceOf, rerollPrice: rerollPrice, servicePrice: servicePrice, stage: stage, orderPocket: orderPocket, goalInfo: goalInfo, nextPayment: nextPayment, paymentFor: paymentFor,
     deduce: deduce, numAt: numAt, cellAt: cellAt, neighbors: neighbors, orthN: orthN, cheb: cheb, liveHaz: liveHaz, idx: idx,
     genFloor: genFloor, usefulCount: usefulCount, checkRule: checkRule, checkFloor: checkFloor, isSolvable: isSolvable, startChainSize: startChainSize, tallyRow: tallyRow, remaining: remaining, shownStair: shownStair, forkOptions: forkOptions,
-    hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, igniteCost: igniteCost,
+    gradePen: gradePen, hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, igniteCost: igniteCost,
     isBorder: isBorder, owns: owns, mut: mut, gang: gang, canAct: canAct,
     propagated: propagated, toGift: toGift, chooseGift: chooseGift, floorEstimate: floorEstimate, placeGraffiti: placeGraffiti, floorFromMap: floorFromMap, tutorialFloor: tutorialFloor, walkable: walkable, TUT_TEST: TUT_TEST, planRun: planRun,
     TOOL_BY_ID: TOOL_BY_ID, KEEP_BY_ID: KEEP_BY_ID, seedCode: seedCode, parseSeed: parseSeed, randomSeed: randomSeed, continueEndless: continueEndless, endlessMines: endlessMines, KEEPSAKES: KEEPSAKES, keepSum: keepSum, ORDER_BY_ID: ORDER_BY_ID, CHAR_BY_ID: CHAR_BY_ID, charOf: charOf, innate: innate, debugFillCandle: debugFillCandle, debugEndDay: debugEndDay, debugSkipDay: debugSkipDay

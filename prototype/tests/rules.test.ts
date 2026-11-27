@@ -265,7 +265,7 @@ describe('규칙 단위 검사', () => {
       check(Object.keys(r.mutationPlan).length === 0 && r.giftOpts.length === 0, 'no mutations, no start gift');
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
-      check(CONFIG.rulePool.join() === 'pair,border,lonely' && r.plan.firstRule.slice(1).every((x: string) => ['pair', 'border', 'lonely'].includes(x)), 'three veins (plain only day 1)');
+      check(CONFIG.rulePool.join() === 'pair,border,lonely,tally,minepair' && r.plan.firstRule.slice(1).every((x: string) => CONFIG.rulePool.includes(x)), 'every vein, any grade (plain only day 1)');
       check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 18 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown'].includes(t.id)), '18 tools in v22 set, no fused tools in the pool'); }
     // 촛불이 다 타면 그 자리에서 하루 끝(불씨 없음)
     { const r = Core.newRun(6102); Core.startDay(r); const f = r.d.floor;
@@ -304,8 +304,8 @@ describe('규칙 단위 검사', () => {
         const bc = Core.cellAt(fb, fb.box.x, fb.box.y);
         check(bc.haz === 'treasure' && bc.box && bc.cover !== 'open', 'box sits in a covered treasure cell');
         const nb = Core.neighbors(fb, bc.x, bc.y)[0]; nb.cover = 'open'; nb.haz = null; rb.d.px = nb.x; rb.d.py = nb.y;
-        const p0 = rb.d.pocket, s0 = rb.d.streak; Core.hit(rb, bc.x, bc.y);
-        check(!!rb.boxOffer && rb.boxOffer.opts.length === 2 && rb.d.pocket === p0 && rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
+        const t0 = rb.stats.treasures, s0 = rb.d.streak; Core.hit(rb, bc.x, bc.y);
+        check(!!rb.boxOffer && rb.boxOffer.opts.length === 2 && rb.stats.treasures === t0 &&   /* 보물 값은 없어요(와르르 자갈은 들어올 수 있어요) */ rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
         rb.owned = ['gloves', 'lens', 'lastcard', 'crown', 'amulet', 'betchalk', 'fuse', 'wedge'].filter(id => !rb.boxOffer.opts.includes(id)).slice(0, 8);
         while (rb.owned.length < 8) rb.owned.push(['tapper', 'sieve', 'tongs', 'refiner'].find(id => !rb.owned.includes(id) && !rb.boxOffer.opts.includes(id)));
         check(!Core.chooseBox(rb, 0).ok, 'full slots: must drop one');
@@ -322,7 +322,7 @@ describe('규칙 단위 검사', () => {
       check(rf.phase === 'shop' && rf.shop.fuse.includes('bigblast'), 'fusion offered at the shop on a stamp night when one part came from a toolbox');
       check(Core.fuse(rf, 'bigblast').ok && rf.owned.join() === 'bigblast' && Core.owns(rf, 'fuse') && Core.owns(rf, 'refiner'), 'fused tool replaces both and keeps their effects');
       const rc = Core.newRun(6203); Core.startDay(rc); rc.owned = ['deadcrown']; rc.d.hp = 1;
-      check(Core.streakCapIdx(rc) === 10 && CONFIG.streakLadder[10] === 6, 'dead crown: x6 at 1 HP');
+      check(CONFIG.streakLadder[Core.streakCapIdx(rc)] === 6, 'dead crown: x6 at 1 HP');
       // 심 씨 외상: 모자라면 빌려서 도장을 찍고, 다음 도장에 1.5배가 붙어요. 한 판에 한 번
       const rl = Core.newRun(6204); Core.debugSkipDay(rl); Core.debugSkipDay(rl); Core.startDay(rl); rl.d.pocket = 200; Core.returnUp(rl); Core.afterSettle(rl);
       const L = Core.loanInfo(rl), next0 = Core.payments(rl)[1].amount;
@@ -343,11 +343,11 @@ describe('규칙 단위 검사', () => {
       check(Core.chooseBox(rk, -1).ok && !rk.keeps.includes('boots'), 'keepsake can be left behind');
       ['boots', 'thickcandle', 'prayer'].forEach(id => { rk.boxOffer = { keep: id, opts: [], scorch: false, quote: '' }; Core.chooseBox(rk, 0); });
       rk.owned.push('crackedhelm');   // 맞바꿈은 도구로 옮겼어요(R129)
-      check(Core.travelCost(rk, 3) === tc0 - 1 && Core.streakCapIdx(rk) === cap0 + 1, 'boots and cracked helm apply');
+      check(Core.travelCost(rk, 3) === tc0 - 1 && Core.streakCapIdx(rk) === cap0 + 2, 'boots and cracked helm apply');
       const rk3 = Core.newRun(7403); rk3.owned = ['crackedhelm', 'shortwick']; Core.startDay(rk3);
       check(rk3.d.hpMax === env.CONFIG.hpMax - 1 && rk3.d.candleMax === env.CONFIG.candleMax - 15, 'trade-off tools change hp and candle next day');
       const rk2 = Core.newRun(7402); rk2.keeps = ['thickcandle', 'prayer', 'ironhelm']; Core.startDay(rk2);
-      check(rk2.d.candleMax === env.CONFIG.candleMax + 10 && rk2.d.streak === 1 && rk2.d.hpMax === env.CONFIG.hpMax + 1, 'next day: candle +10, combo starts at x1.5, hp +1'); }
+      check(rk2.d.candleMax === env.CONFIG.candleMax + 10 && Core.streakMult(rk2) === 1.5 && rk2.d.hpMax === env.CONFIG.hpMax + 1, 'next day: candle +10, combo starts at x1.5, hp +1'); }
     // 바랜 분필 자국: 층마다 O 0~1개, X 0~2개. 늘 맞고, 오른쪽 클릭으로 안 바뀌어요
     { const cntO = [0, 0], cntX = [0, 0, 0]; let wrong = 0, extra = 0, locked = true;
       for (let s = 7000; s < 7300; s++) {
@@ -391,7 +391,7 @@ describe('규칙 단위 검사', () => {
     { const r = Core.newRun(6108); Core.startDay(r);
       check(Core.streakCapIdx(r) === CONFIG.streakCapIdx, 'base cap x3'); r.owned.push('crown');
       check(CONFIG.streakLadder[Core.streakCapIdx(r)] === 4, 'crown raises cap to x4');
-      r.owned.push('amulet'); Core.startDay; r.toolState = {}; r.d.streak = 3; const f = r.d.floor;
+      r.owned.push('amulet'); Core.startDay; r.toolState = {}; r.d.streak = 6; const f = r.d.floor;
       const m = f.cells.find(c => c.haz === 'mine' && c.cover !== 'open'); const nb = Core.neighbors(f, m.x, m.y)[0]; nb.cover = 'open'; r.d.px = nb.x; r.d.py = nb.y;
       const hp0 = r.d.hp; Core.hit(r, m.x, m.y);
       check(r.d.hp === hp0 && r.d.streak === 0, 'amulet keeps hp, streak breaks'); }
@@ -414,14 +414,16 @@ describe('규칙 단위 검사', () => {
     // 콤보 상한: 도구는 'n개 단계 더 높이까지'를 더한다
     { const r = Core.newRun(6120); Core.startDay(r); const base = CONFIG.streakCapIdx;
       check(Core.streakCapIdx(r) === base, 'base cap');
-      r.owned.push('crown'); check(Core.streakCapIdx(r) === base + 2, 'hat +2 steps');
-      r.owned.push('lastcard'); r.d.hp = 1; check(Core.streakCapIdx(r) === base + 6, 'hat + last card at 1 hp: +6');
-      r.owned = ['deadcrown']; r.d.hp = 2; check(Core.streakCapIdx(r) === base + 2, 'dead crown +2');
+      r.owned.push('crown'); const hat = CONFIG.streakCapPlusHat, lc = CONFIG.streakCapPlusLastCard; check(Core.streakCapIdx(r) === base + hat, 'hat adds steps');
+      r.owned.push('lastcard'); r.d.hp = 1; check(Core.streakCapIdx(r) === Math.min(base + hat + lc, CONFIG.streakLadder.length - 1), 'hat + last card at 1 hp stack');
+      r.owned = ['deadcrown']; r.d.hp = 2; check(Core.streakCapIdx(r) === base + hat, 'dead crown has the hat steps');
       r.d.hp = 1; check(Core.streakCapIdx(r) === CONFIG.streakLadder.length - 1, 'dead crown at 1 hp reaches the top'); }
     // 4주차: 등급과 오늘의 광산
     { const r2 = Core.newRun(6111, { grade: 2 }), r3 = Core.newRun(6111, { grade: 3 });
       check(r2.payments[4].amount === Math.round(CONFIG.payments[4].amount * CONFIG.gradeMul[1] / 10) * 10, 'grade 2 payments scaled');
-      check(Core.poolList(r2).includes('tally') && !Core.poolList(r2).includes('minepair') && Core.poolList(r3).includes('minepair'), 'grades open one vein each');
+      const r1 = Core.newRun(6111); check(Core.poolList(r1).includes('tally') && Core.poolList(r1).includes('minepair') && Core.poolList(r3).length === Core.poolList(r1).length, 'every grade has every vein');
+      Core.startDay(r1); Core.startDay(r2); Core.startDay(r3);
+      check(r2.d.candleMax === r1.d.candleMax - 10 && Core.streakCapIdx(r3) === Core.streakCapIdx(r1) - 4, 'grade penalties');
       check(Core.dailySeed('2026-11-23') === Core.dailySeed('2026-11-23') && Core.dailySeed('2026-11-23') !== Core.dailySeed('2026-11-24'), 'daily seed'); }
     // 프리셋: v21로 돌아가면 v2.1 값
     { Core.applyPreset('v21'); check(CONFIG.payments.length === 3 && CONFIG.features.embers && !CONFIG.features.chord && CONFIG.stairShown === false, 'v21 preset restores'); Core.applyPreset('v22'); }

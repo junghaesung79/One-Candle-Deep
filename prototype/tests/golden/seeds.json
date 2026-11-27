@@ -6,21 +6,21 @@
     "day": 1,
     "floors": [
      "13a93b51",
-     "40ad356c",
-     "23229cba",
-     "f4b70b01",
-     "adfd823d"
+     "efb1d4fd",
+     "4091c281",
+     "efa24571",
+     "33faabcb"
     ],
     "shop": "regular,betchalk,shortwick"
    },
    {
     "day": 2,
     "floors": [
-     "a1d90ec3",
-     "4b1cb812",
-     "81433620",
-     "f0dc38bf",
-     "3ef1ecf9"
+     "1dbf7a4a",
+     "31e6674a",
+     "c8015502",
+     "d72103de",
+     "1965fc59"
     ],
     "shop": "dripdish,amulet,tongs"
    },
@@ -31,18 +31,18 @@
      "2f2c683f",
      "5e0798ad",
      "56ae4f4d",
-     "954688b0"
+     "3fde0f84"
     ],
     "shop": "regular,nuggetbag,dripdish"
    },
    {
     "day": 4,
     "floors": [
-     "1b9aa166",
-     "e4caf354",
-     "1149abcd",
-     "1dba8e63",
-     "9601b366"
+     "08b2fda4",
+     "aee54ee7",
+     "36b3a3fd",
+     "44454fae",
+     "431f9367"
     ],
     "shop": "betchalk,fuse,belt"
    },
@@ -60,11 +60,11 @@
    {
     "day": 6,
     "floors": [
-     "ba48e448",
-     "58c9a8a7",
-     "88e67f31",
-     "93aec9b9",
-     "4aeeba2e"
+     "112ac52e",
+     "73a262dd",
+     "d5528e37",
+     "b146da4f",
+     "42a0ccaf"
     ],
     "shop": "regular,refiner,nuggetbag"
    },
@@ -73,9 +73,9 @@
     "floors": [
      "e9fb1784",
      "b022d295",
-     "16601127",
-     "d5aaaa75",
-     "acbf579e"
+     "b86728af",
+     "45e53ad2",
+     "9637a9cc"
     ],
     "shop": "gloves,fuse,amulet"
    },
@@ -86,7 +86,7 @@
      "314da6cf",
      "0a0e5327",
      "7902971f",
-     "2b3d1aa4"
+     "24f959ad"
     ],
     "shop": "crackedhelm,gloves,regular"
    },
@@ -94,32 +94,32 @@
     "day": 9,
     "floors": [
      "fe068d3d",
-     "13aa286b",
-     "e2e1d8fc",
-     "974c7945",
-     "c8b37d1b"
+     "16754c78",
+     "77d5785a",
+     "c70fe253",
+     "884bf692"
     ],
     "shop": "amulet,betchalk,shortwick"
    },
    {
     "day": 10,
     "floors": [
-     "7c418ded",
-     "fb15b173",
-     "3c0e2331",
-     "d8ef9c7f",
-     "9eeb13c9"
+     "bb2712e3",
+     "38458d32",
+     "4c4fe66d",
+     "2a737942",
+     "eaf86afd"
     ],
     "shop": "crown,fuse,amulet"
    },
    {
     "day": 11,
     "floors": [
-     "956d786f",
-     "71e0e60d",
-     "b5b88bfb",
-     "cfbac6a8",
-     "260c4952"
+     "ca74fc85",
+     "50a58de1",
+     "53a6a2d3",
+     "e40faa70",
+     "67ec64c5"
     ],
     "shop": "betchalk,firstdig,amulet"
    },
@@ -127,10 +127,10 @@
     "day": 12,
     "floors": [
      "e4b9c042",
-     "cf920ddd",
+     "a7e4809c",
      "9e55659f",
-     "0dccc4c9",
-     "ca584509"
+     "0ae3cd98",
+     "d15ef561"
     ],
     "shop": "gloves,dripdish,refiner"
    },
@@ -140,30 +140,30 @@
      "dd9fc45a",
      "190d4b0c",
      "1b588dc1",
-     "d7cf7ad6",
-     "985f8063"
+     "8b73483f",
+     "66d42d61"
     ],
     "shop": "fuse,gloves,crown"
    },
    {
     "day": 14,
     "floors": [
-     "9efbf577",
-     "fdd65a6e",
-     "1207def8",
-     "98df574d",
-     "fc022aa6"
+     "1f047eef",
+     "40e07ebe",
+     "4ced9d4f",
+     "c4fed520",
+     "e55ddd34"
     ],
     "shop": "firstdig,wedge,betchalk"
    },
    {
     "day": 15,
     "floors": [
-     "d10c6def",
-     "3ddd3212",
-     "0ecdb499",
-     "e22e3180",
-     "6623e29b"
+     "6dc10b4c",
+     "29b229d9",
+     "968eeddc",
+     "bb1ff194",
+     "aed19bd9"
     ],
     "shop": ""
    }
@@ -175,8 +175,8 @@
      "7e4ee3e4",
      "1b95d0fb",
      "9b8695c7",
-     "957caa39",
-     "00b93d6e"
+     "b6c6e1d5",
+     "db663f11"
     ],
     "shop": "betchalk,lonelamp,dripdish"
    },
@@ -184,10 +184,10 @@
     "day": 2,
     "floors": [
      "4d6ce13b",
-     "de533791",
-     "ea12b3fe",
-     "87c45b95",
-     "d3e7010d"
+     "17303e13",
+     "e743fc3e",
+     "e0d227da",
+     "3de6d936"
     ],
     "shop": "shortwick,sieve,dripdish"
    },
@@ -198,7 +198,7 @@
      "ebed4bbf",
      "ae24a0ef",
      "f90a45ac",
-     "67ee9f4c"
+     "3b97aefc"
     ],
     "shop": "refiner,firstdig,betchalk"
    },
@@ -206,10 +206,10 @@
     "day": 4,
     "floors": [
      "61a042ba",
-     "1c70868d",
-     "c4a99766",
-     "88690ac6",
-     "fe90739a"
+     "14b15894",
+     "d57e9698",
+     "21e76de6",
+     "8ba9e9da"
     ],
     "shop": "gloves,wedge,fuse"
    },
@@ -218,20 +218,20 @@
     "floors": [
      "fc6a6625",
      "7fde9cb0",
-     "ba3a70a9",
-     "4d37749d",
-     "5ef7a16d"
+     "bd657a21",
+     "00bdf911",
+     "7fe2df6f"
     ],
     "shop": "firstdig,shortwick,refiner"
    },
    {
     "day": 6,
     "floors": [
-     "dc663f08",
-     "4800a232",
-     "94509349",
-     "4b979995",
-     "1129668f"
+     "885c268c",
+     "bca0a854",
+     "bd34590b",
+     "aafd44e5",
+     "5763c992"
     ],
     "shop": "regular,nuggetbag,betchalk"
    },
@@ -241,7 +241,7 @@
      "ec45b65d",
      "bac5b5fb",
      "ad7a564e",
-     "30743fa5",
+     "9d544d44",
      "32621229"
     ],
     "shop": "gloves,regular,firstdig"
@@ -249,33 +249,33 @@
    {
     "day": 8,
     "floors": [
-     "dac0cfeb",
-     "48e28852",
-     "f2c7c73c",
-     "5c705f25",
-     "c937c229"
+     "6e3e7cf6",
+     "ef4d9651",
+     "d6ef9024",
+     "63936632",
+     "8e50fce2"
     ],
     "shop": "shortwick,tongs,sieve"
    },
    {
     "day": 9,
     "floors": [
-     "96a767df",
-     "06752a97",
-     "a8faf9d7",
-     "8fb30062",
-     "21149da9"
+     "6732f175",
+     "edfe7421",
+     "6fc45267",
+     "9a2c86d8",
+     "9f3cd613"
     ],
     "shop": "belt,crown,gloves"
    },
    {
     "day": 10,
     "floors": [
-     "7f2e8153",
-     "99f29933",
-     "376e4d5d",
-     "ec5b7aa8",
-     "f21749f6"
+     "e7ab11d8",
+     "8c71e583",
+     "88d82cf0",
+     "edb25af8",
+     "e2a910c6"
     ],
     "shop": "sieve,lonelamp,crown"
    },
@@ -284,20 +284,20 @@
     "floors": [
      "5ff34be7",
      "80a4d362",
-     "b8389eef",
-     "303388a2",
-     "62c3572a"
+     "cb49701c",
+     "1c2738ed",
+     "68715496"
     ],
     "shop": "amulet,lonelamp,wedge"
    },
    {
     "day": 12,
     "floors": [
-     "0390f33d",
-     "9bc989ee",
-     "5838fe2a",
-     "e54d604f",
-     "f69f38a0"
+     "46e76092",
+     "feb295e5",
+     "c0f3af3d",
+     "80ed30ea",
+     "6e506185"
     ],
     "shop": "wedge,betchalk,shortwick"
    },
@@ -307,8 +307,8 @@
      "7576ea4f",
      "3b4bdbec",
      "0607553f",
-     "8ff853f3",
-     "b0d968cd"
+     "89098224",
+     "b4a0e473"
     ],
     "shop": "belt,fuse,regular"
    },
@@ -319,7 +319,7 @@
      "8a86ba0b",
      "a8a08f3f",
      "2a36e914",
-     "78e31a76"
+     "e5a7401f"
     ],
     "shop": "betchalk,wedge,belt"
    },
@@ -327,10 +327,10 @@
     "day": 15,
     "floors": [
      "f732b737",
-     "e66471cb",
-     "9e82f724",
-     "bc33671a",
-     "ad5a044e"
+     "0e6ec435",
+     "77c9b282",
+     "a052fda0",
+     "56122bf1"
     ],
     "shop": ""
    }
@@ -341,20 +341,20 @@
     "floors": [
      "2ba09470",
      "38a693f1",
-     "36de0f45",
-     "592ee4f9",
-     "7e614aef"
+     "d8938ca6",
+     "6c3d6c6c",
+     "887188e2"
     ],
     "shop": "betchalk,tongs,wedge"
    },
    {
     "day": 2,
     "floors": [
-     "cc83a5dd",
-     "98253d6c",
-     "245f426b",
-     "982cf372",
-     "d3e88eb6"
+     "0cd65ee9",
+     "89bf243d",
+     "196e6aa4",
+     "01250077",
+     "177e0109"
     ],
     "shop": "betchalk,lonelamp,firstdig"
    },
@@ -364,8 +364,8 @@
      "018f93fc",
      "94d30c5d",
      "43e0ecb6",
-     "0843ceed",
-     "be3154c2"
+     "9f7917a9",
+     "9a4194b8"
     ],
     "shop": "fuse,betchalk,gloves"
    },
@@ -373,10 +373,10 @@
     "day": 4,
     "floors": [
      "3f6fc055",
-     "1c1faecb",
-     "355594ea",
-     "6fa1f3b6",
-     "977071e3"
+     "7c622bca",
+     "299db0c1",
+     "862f8c38",
+     "4e139aa4"
     ],
     "shop": "crackedhelm,sieve,amulet"
    },
@@ -384,43 +384,43 @@
     "day": 5,
     "floors": [
      "fc328359",
-     "ed2d4f0f",
-     "b703ed71",
-     "259974e2",
-     "587df4a2"
+     "99da8f29",
+     "e154966b",
+     "02f493ed",
+     "98e2afd7"
     ],
     "shop": "nuggetbag,crackedhelm,belt"
    },
    {
     "day": 6,
     "floors": [
-     "a1d6c9a7",
-     "fd64dd3a",
-     "cf4b46f6",
-     "d6f55b53",
-     "3f5fcfe5"
+     "535f6242",
+     "74b5dcc3",
+     "97898121",
+     "65410c6e",
+     "fb243402"
     ],
     "shop": "fuse,betchalk,lonelamp"
    },
    {
     "day": 7,
     "floors": [
-     "a671abdc",
-     "2ef2c40f",
-     "00b68ee7",
-     "471cbcef",
-     "39a42bad"
+     "9459216c",
+     "0e991947",
+     "43938abb",
+     "190d8b5f",
+     "e01b74f6"
     ],
     "shop": "amulet,belt,fuse"
    },
    {
     "day": 8,
     "floors": [
-     "452a77bd",
-     "99057ac2",
-     "bdd1556f",
-     "b563e2e7",
-     "65b3983d"
+     "11eccbb8",
+     "acd1e884",
+     "a305a663",
+     "0941dc93",
+     "5cf9e807"
     ],
     "shop": "lonelamp,crackedhelm,fuse"
    },
@@ -430,8 +430,8 @@
      "4ea6d27b",
      "40eda469",
      "4f9bd364",
-     "bb5dbbf6",
-     "c675f092"
+     "f87e8471",
+     "f224a55f"
     ],
     "shop": "belt,lonelamp,fuse"
    },
@@ -439,10 +439,10 @@
     "day": 10,
     "floors": [
      "6188c43a",
-     "87707757",
-     "0c8620c1",
-     "ffed750c",
-     "a29aff7e"
+     "1b664132",
+     "b58b26d8",
+     "f5480b56",
+     "aec3a90e"
     ],
     "shop": "wedge,betchalk,sieve"
    },
@@ -450,32 +450,32 @@
     "day": 11,
     "floors": [
      "64268ea8",
-     "057c1498",
-     "2f0961d3",
-     "099a811c",
-     "f0deb637"
+     "cdcee396",
+     "6f8a6a72",
+     "f867f1dc",
+     "cf09ceb1"
     ],
     "shop": "gloves,betchalk,lonelamp"
    },
    {
     "day": 12,
     "floors": [
-     "1145cf72",
-     "80651574",
-     "9e1c4e6e",
-     "aa261b74",
-     "7dd63027"
+     "fe4da44a",
+     "4b8d8bb7",
+     "e61dc22f",
+     "bdff8135",
+     "dec966b7"
     ],
     "shop": "betchalk,gloves,wedge"
    },
    {
     "day": 13,
     "floors": [
-     "7ea8909b",
-     "aadb8709",
-     "1d764ce3",
-     "5dcb682a",
-     "9e18a19c"
+     "a130fabf",
+     "df711f55",
+     "f009eed8",
+     "37297e9c",
+     "bcfe167b"
     ],
     "shop": "crackedhelm,betchalk,lonelamp"
    },
@@ -484,20 +484,20 @@
     "floors": [
      "ec5f5ad2",
      "ff4ee865",
-     "6acc00b0",
-     "f3e97488",
-     "0d62b9be"
+     "6e59132e",
+     "cf2db5ab",
+     "5bc39211"
     ],
     "shop": "nuggetbag,betchalk,wedge"
    },
    {
     "day": 15,
     "floors": [
-     "b4ce0fed",
-     "2872782e",
-     "fbb565c4",
-     "1ec71e91",
-     "e5a03bc4"
+     "dbf55f7b",
+     "7ca4e18a",
+     "45d5a8a7",
+     "dff0c6d2",
+     "508d8070"
     ],
     "shop": ""
    }
@@ -508,9 +508,9 @@
     "floors": [
      "98c540b6",
      "2302407c",
-     "defe67a1",
-     "0268713f",
-     "8322238e"
+     "51f72a04",
+     "a9de2af5",
+     "bf81fcb4"
     ],
     "shop": "lonelamp,lastcard,regular"
    },
@@ -518,32 +518,32 @@
     "day": 2,
     "floors": [
      "39e08aca",
-     "e410c4e2",
-     "99099e50",
-     "32cc409a",
-     "cae81c38"
+     "7c932c28",
+     "476f5c0c",
+     "4e5d7c37",
+     "b21ad705"
     ],
     "shop": "wedge,dripdish,firstdig"
    },
    {
     "day": 3,
     "floors": [
-     "57c27b29",
-     "bc2903ac",
+     "6196232d",
+     "ab453410",
      "757695e4",
-     "541d8d5b",
-     "76805f6d"
+     "d60c229b",
+     "69cb6a21"
     ],
     "shop": "dripdish,betchalk,fuse"
    },
    {
     "day": 4,
     "floors": [
-     "56bc2c8e",
-     "bf54d826",
-     "5014625a",
-     "e2994b17",
-     "433660f5"
+     "d9d40a2e",
+     "49ced6a2",
+     "677b3940",
+     "177ab79c",
+     "5a668d52"
     ],
     "shop": "refiner,dripdish,belt"
    },
@@ -554,40 +554,40 @@
      "595b33ac",
      "486cb5f5",
      "81832cf9",
-     "aa35c942"
+     "56ebdb47"
     ],
     "shop": "fuse,lonelamp,sieve"
    },
    {
     "day": 6,
     "floors": [
-     "0030c508",
-     "eadf4b0e",
-     "d7016587",
-     "8d2e0750",
-     "94144b05"
+     "16f65b53",
+     "ea498424",
+     "61d5734d",
+     "a4a555d7",
+     "c7b50134"
     ],
     "shop": "crown,crackedhelm,gloves"
    },
    {
     "day": 7,
     "floors": [
-     "bbf43cfe",
-     "cc6ad9d8",
-     "497b1f09",
-     "b9c87ff8",
-     "c6e136b8"
+     "549e9aaa",
+     "10c6ca31",
+     "cc4aa766",
+     "d0ee086e",
+     "073ce19d"
     ],
     "shop": "nuggetbag,gloves,regular"
    },
    {
     "day": 8,
     "floors": [
-     "f73fec4a",
-     "4777110b",
-     "a1f5e1ed",
-     "972843ff",
-     "2b32f9e0"
+     "7b004c3c",
+     "72ee8db4",
+     "b3ab23a3",
+     "245b7f37",
+     "e6bd0f06"
     ],
     "shop": "lonelamp,nuggetbag,gloves"
    },
@@ -595,10 +595,10 @@
     "day": 9,
     "floors": [
      "2a50d06e",
-     "357986cd",
-     "350a4068",
-     "2163e645",
-     "89bac259"
+     "2e428907",
+     "6b3f195e",
+     "d43d16c9",
+     "4a446aef"
     ],
     "shop": "dripdish,crackedhelm,gloves"
    },
@@ -609,18 +609,18 @@
      "492eddf3",
      "54c65b2d",
      "3deb7a57",
-     "14078ed9"
+     "05d118dc"
     ],
     "shop": "betchalk,gloves,dripdish"
    },
    {
     "day": 11,
     "floors": [
-     "c0f2e05c",
-     "ec873280",
-     "8c312fc2",
-     "baa51b94",
-     "46d0fdd6"
+     "46d67583",
+     "4a224306",
+     "eb8ed095",
+     "d07a9df8",
+     "33254ccb"
     ],
     "shop": "lastcard,amulet,tongs"
    },
@@ -628,21 +628,21 @@
     "day": 12,
     "floors": [
      "eac6602e",
-     "724c22ca",
-     "fa193e5c",
-     "5d05978f",
-     "8e35517d"
+     "cbbbf5f5",
+     "15f0666b",
+     "d6841d2c",
+     "105f1ae0"
     ],
     "shop": "crackedhelm,betchalk,regular"
    },
    {
     "day": 13,
     "floors": [
-     "7e2057d4",
-     "b3553682",
-     "d18628cb",
-     "17ea587d",
-     "0cc2669c"
+     "94c87461",
+     "a6b2c427",
+     "6047a5ca",
+     "b5375c9a",
+     "27330db8"
     ],
     "shop": "regular,crackedhelm,dripdish"
    },
@@ -674,32 +674,32 @@
     "day": 1,
     "floors": [
      "a7dbcf78",
-     "78c20e98",
-     "50e59a79",
-     "53e4164d",
-     "df17b9cc"
+     "f3481bb7",
+     "4705744e",
+     "caf4d97d",
+     "37ee5508"
     ],
     "shop": "crackedhelm,fuse,regular"
    },
    {
     "day": 2,
     "floors": [
-     "ed822313",
-     "f30d2906",
-     "eae66fbc",
-     "cd761bc7",
-     "d1771fdf"
+     "afe7947f",
+     "5b509f61",
+     "d05bf435",
+     "603e5833",
+     "b2ade366"
     ],
     "shop": "crackedhelm,amulet,belt"
    },
    {
     "day": 3,
     "floors": [
-     "17762f8e",
-     "089ad575",
-     "4246caaa",
-     "c0c5e412",
-     "0de4aa24"
+     "2ed84dff",
+     "a586154a",
+     "cada9cfc",
+     "b84ebba2",
+     "32528102"
     ],
     "shop": "regular,gloves,shortwick"
    },
@@ -717,11 +717,11 @@
    {
     "day": 5,
     "floors": [
-     "c9ce3808",
-     "7d7c0c03",
-     "d20de543",
-     "38f8496e",
-     "3ddb1b93"
+     "9def914d",
+     "abc70397",
+     "e2734504",
+     "6872b589",
+     "2c9bafac"
     ],
     "shop": "crackedhelm,regular,wedge"
    },
@@ -732,7 +732,7 @@
      "f62c6e80",
      "4fac1db9",
      "e63b07d0",
-     "384a3d75"
+     "cb2a8d73"
     ],
     "shop": "refiner,gloves,firstdig"
    },
@@ -740,43 +740,43 @@
     "day": 7,
     "floors": [
      "5dea11f0",
-     "fd29a332",
-     "eb45fba2",
-     "5b1b7eb7",
-     "c8978d7b"
+     "1afed623",
+     "a13cc0a9",
+     "dacad282",
+     "a8e93db2"
     ],
     "shop": "betchalk,regular,gloves"
    },
    {
     "day": 8,
     "floors": [
-     "65cb84e2",
-     "202d719a",
-     "b61bddb5",
-     "52f7c7f6",
-     "194ffdb2"
+     "14676946",
+     "97c8cd84",
+     "1c4d7574",
+     "09324942",
+     "14da21b3"
     ],
     "shop": "nuggetbag,gloves,fuse"
    },
    {
     "day": 9,
     "floors": [
-     "b56a2a63",
-     "058a1867",
-     "edebec50",
-     "d26db4fd",
-     "85e92db4"
+     "2a759c3b",
+     "51d231ac",
+     "9cba17a9",
+     "d7965b8d",
+     "849905f3"
     ],
     "shop": "betchalk,crackedhelm,firstdig"
    },
    {
     "day": 10,
     "floors": [
-     "ee89564a",
-     "3c296f12",
-     "375eb1ae",
-     "bffa227f",
-     "86ab08af"
+     "9f984506",
+     "5eb21704",
+     "76e2ec2c",
+     "75d5b9f6",
+     "96633593"
     ],
     "shop": "fuse,firstdig,regular"
    },
@@ -784,10 +784,10 @@
     "day": 11,
     "floors": [
      "75fe2197",
-     "b26d2230",
-     "3f503dfa",
-     "47747863",
-     "22cf179b"
+     "df566dcc",
+     "2cc2b5fe",
+     "293b5ed1",
+     "3c1c48cc"
     ],
     "shop": "dripdish,fuse,wedge"
    },
@@ -795,21 +795,21 @@
     "day": 12,
     "floors": [
      "8db63d39",
-     "2de48287",
-     "9ca81b7e",
-     "6b7b02db",
-     "c768812e"
+     "a0292c29",
+     "b6063965",
+     "b77394de",
+     "4cd88025"
     ],
     "shop": "shortwick,crackedhelm,fuse"
    },
    {
     "day": 13,
     "floors": [
-     "5f4a571b",
-     "f2cc1a96",
-     "d604cfd4",
-     "c2286fb2",
-     "00e25f56"
+     "13292c9d",
+     "dd137546",
+     "d929269d",
+     "ad91356c",
+     "2e1c0ccf"
     ],
     "shop": "crackedhelm,amulet,gloves"
    },
@@ -818,20 +818,20 @@
     "floors": [
      "eac84d21",
      "5c2038fe",
-     "045785ff",
-     "3efabe7e",
-     "bb430b3b"
+     "95a4572d",
+     "994a7374",
+     "67e6695e"
     ],
     "shop": "nuggetbag,wedge,belt"
    },
    {
     "day": 15,
     "floors": [
-     "44e96570",
-     "c2c3de9e",
-     "83f1a656",
-     "467a389c",
-     "2fca9a31"
+     "59b805de",
+     "233b8fdb",
+     "ddb3db52",
+     "54ae9527",
+     "9a0cb524"
     ],
     "shop": ""
    }

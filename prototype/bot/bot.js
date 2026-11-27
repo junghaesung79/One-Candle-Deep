@@ -118,9 +118,9 @@ class Bot {
   thr(run) {
     const d = run.d, T = this.o.thr, Core = this.Core;
     if (d.hp <= 1) return Core.owns(run, 'lastcard') ? (this.o.lastCardThr || T.hp1 - 0.15) : T.hp1;
-    let base = d.streak === 0 ? T.s0 : T.s;
+    let base = Core.streakMult(run) <= 1 ? T.s0 : T.s;
     // 배짱 장갑이 남아 있으면 콤보를 잃을 걱정이 줄어 문턱을 낮춘다
-    if (d.streak >= 2 && Core.owns(run, 'gloves') && run.toolState.gloves && run.toolState.gloves.ready !== false) base -= 0.05;
+    if (Core.streakMult(run) >= 2 && Core.owns(run, 'gloves') && run.toolState.gloves && run.toolState.gloves.ready !== false) base -= 0.05;
     return d.hp === 2 ? Math.max(base, T.hp2) : base;
   }
   step(run) {
@@ -191,7 +191,7 @@ class Bot {
     }
     // 2-2) 불로 걸기: 지뢰일 가능성이 높은 위험 칸에 X를 긋고 불을 붙인다(콤보가 높거나 체력이 깎였으면 문턱을 올린다)
     if (o.fireThr && !rush && unk.length && !chunkFloor && !o.lazy && d.candle >= Core.igniteCost(run) + cost + reserve) {
-      const ft = o.fireThr + ((d.streak >= 2 || d.hp <= 2) ? (o.fireUp || 0) : 0);
+      const ft = o.fireThr + ((Core.streakMult(run) >= 2 || d.hp <= 2) ? (o.fireUp || 0) : 0);
       let best = null, bp = 1, bv = 0;
       for (const c of unk) {
         const p = this.pTreasure(run, D, c); if (p > ft) continue;

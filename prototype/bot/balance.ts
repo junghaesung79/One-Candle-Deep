@@ -35,13 +35,21 @@ const VARIANTS: Record<string, () => void> = {
   curve2() { setPays([200, 600, 1600, 4000, 10000]); },
   mix() { VARIANTS.mul(); VARIANTS.info(); VARIANTS.curve(); },
   mix2() { VARIANTS.mul(); VARIANTS.info(); VARIANTS.curve2(); },
-  mulinfo() { VARIANTS.mul(); VARIANTS.info(); }
+  mulinfo() { VARIANTS.mul(); VARIANTS.info(); },
+  // R132 비교: 콤보 사다리만 옛것(한 단계 +0.5), 광맥 풀만 옛것(등급마다 하나씩, 불리함 없음), 둘 다 옛것
+  oldcombo() { CONFIG.streakLadder = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6]; CONFIG.streakCapIdx = 4; CONFIG.streakCapPlusHat = 2; CONFIG.streakCapPlusLastCard = 4; },
+  oldpool() { CONFIG.rulePool = ['pair', 'border', 'lonely']; CONFIG.gradeRules = { 2: ['tally'], 3: ['tally', 'minepair'] }; CONFIG.gradePenalty = {}; },
+  old() { VARIANTS.oldcombo(); VARIANTS.oldpool(); }
 };
 function setPays(a: number[]) { CONFIG.payments = CONFIG.payments.map((p: any, i: number) => Object.assign({}, p, { amount: a[i] })); }
 
 if (process.env.PAYS) VARIANTS[name] = () => setPays(process.env.PAYS!.split(',').map(Number));   // PAYS=300,1000,2400,4800,8000 처럼 곡선을 바로 줄 수 있어요
 if (!VARIANTS[name]) throw new Error('모르는 변형 ' + name);
 VARIANTS[name]();
+if (process.env.POOL) CONFIG.rulePool = process.env.POOL.split(',');   // 광맥 하나만 나오는 판(광맥별 수입 재기)
+if (process.env.TUNE) CONFIG.ruleTune = Object.assign({}, CONFIG.ruleTune, JSON.parse(process.env.TUNE));
+if (process.env.GPEN) CONFIG.gradePenalty = JSON.parse(process.env.GPEN);
+if (process.env.GMUL) CONFIG.gradeMul = process.env.GMUL.split(',').map(Number);
 // 청진 망치 횟수는 하루 시작에서 정해요. 변형에서 바꿨으면 하루를 열 때 고쳐 넣어요
 const startDay0 = Core.startDay;
 Core.startDay = function (run: any) { const r = startDay0.apply(this, arguments as any); const n = (globalThis as any).__tapperProbes; if (n && run.d && Core.owns(run, 'tapper') && !CONFIG.features.probeBase) { run.d.probes = n; run.d.probesMax = n; } return r; };
