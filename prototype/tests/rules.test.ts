@@ -305,7 +305,7 @@ describe('규칙 단위 검사', () => {
         check(bc.haz === 'treasure' && bc.box && bc.cover !== 'open', 'box sits in a covered treasure cell');
         const nb = Core.neighbors(fb, bc.x, bc.y)[0]; nb.cover = 'open'; nb.haz = null; rb.d.px = nb.x; rb.d.py = nb.y;
         const p0 = rb.d.pocket, s0 = rb.d.streak; Core.hit(rb, bc.x, bc.y);
-        check(!!rb.boxOffer && rb.boxOffer.opts.length === 2 && rb.d.pocket === p0 && rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
+        check(!!rb.boxOffer && rb.boxOffer.opts.length + (rb.boxOffer.cons ? 1 : 0) === 2 && rb.d.pocket === p0 && rb.d.streak === s0 + 1 && !Core.canAct(rb), 'digging a box: two picks, no money, combo +1, board waits');
         rb.owned = ['gloves', 'lens', 'lastcard', 'crown', 'amulet', 'betchalk', 'fuse', 'wedge'].filter(id => !rb.boxOffer.opts.includes(id)).slice(0, 8);
         while (rb.owned.length < 8) rb.owned.push(['tapper', 'sieve', 'tongs', 'refiner'].find(id => !rb.owned.includes(id) && !rb.boxOffer.opts.includes(id)));
         check(!Core.chooseBox(rb, 0).ok, 'full slots: must drop one');
