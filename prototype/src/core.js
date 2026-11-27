@@ -86,28 +86,28 @@ var CONFIG = {
   fx: { breakStop: 60, treasureStop: 110, boxStop: 120, mineStop: 140, ringMs: 35, ringMinMs: 12, chainMaxMs: 600, openAnimMs: 120, startChainMs: 600 }
 };
 
-// 캐릭터(시험). 스킬 설명은 화면 문구라 해요체예요
+// 캐릭터(시험). 캐릭터는 X 칸이나 O 칸을 누를 때 하는 일 하나만 바꿔요. 좋고 나쁜 점은 그 행동 안에 담고, 따로 붙는 약점·장점·능력치는 없어요(R135)
 var CHARACTERS = [
   { id: 'miner', name: '광부', line: '곡괭이 하나로 버텨 온 사람입니다', color: '#c4432b',
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4. 지뢰면 주변이 열리고, 보물이면 녹습니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' },
-  { id: 'defuser', name: '해체공', line: '곽 씨 밑에서 설익이 다루는 법을 배웠습니다', color: '#4f8a4a', innate: ['tongs'], igniteDelta: 1, candleDelta: -5,
+  { id: 'defuser', name: '해체공', line: '곽 씨 밑에서 설익이 다루는 법을 배웠습니다', color: '#4f8a4a', innate: ['tongs'], igniteDelta: 1,
     x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼내며 촛불을 1만 남기고 돌려받습니다. 보물은 그을린 채(반값) 나옵니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
-    weak: '촛불 75로 시작하고, 해체는 촛불 5입니다' },
-  { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'], capPlus: 2,
+    weak: '' },
+  { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'],
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '걸기', desc: 'O 칸이 보물이면 콤보가 2개 단계 오릅니다. 지뢰면 피해가 1 더 큽니다' },
-    weak: '', perk: '콤보가 2개 단계 더 높이까지 오릅니다' },
-  { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2, valueMul: 0.85,
+    weak: '' },
+  { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
-    weak: '보물 값이 15% 낮습니다' },
-  { id: 'blaster', name: '폭파공', line: '화약 냄새가 몸에 밴 사람입니다', color: '#e0782b', innate: ['fuse'], digMineExtra: 1,
+    weak: '' },
+  { id: 'blaster', name: '폭파공', line: '화약 냄새가 몸에 밴 사람입니다', color: '#e0782b', innate: ['fuse'],
     x: { name: '큰 발파', desc: 'X 칸을 누르면 두 걸음 안의 X 칸까지 한꺼번에 터뜨립니다. 촛불 4' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
-    weak: '곡괭이로 지뢰를 치면 피해가 1 더 큽니다' }
+    weak: '' }
 ];
 
 // 광맥 규칙(R9, 02 6.5 표지판 문구 그대로, R21 가로줄 광맥)
@@ -182,8 +182,8 @@ var TOOLS = [
   { id: 'gloves', axis: '콤보', rarity: '일반', name: '배짱 장갑', short: '장갑', price: 120, kind: 'passive', icon: 'gloves', sets: ['21', '22'],
     desc: '하루 한 번, 콤보가 끊길 때 0단계까지 떨어지지 않고 1개 단계만 내려갑니다',
     hooks: {
-      on_day_start: function (ctx) { ctx.state.ready = true; },
-      on_streak_break: function (ctx, ev) { if (ctx.state.ready !== false && ev.from > 0) { ev.to = ev.from - 1; ctx.state.ready = false; ctx.proc('콤보 한 단계만'); } }
+      on_day_start: function (ctx) { ctx.state.left = ctx.owns('toughcharm') ? 2 : 1; ctx.state.ready = true; },
+      on_streak_break: function (ctx, ev) { if ((ctx.state.left == null ? 1 : ctx.state.left) > 0 && ev.from > 0) { ev.to = ev.from - 1; ctx.state.left = (ctx.state.left == null ? 1 : ctx.state.left) - 1; ctx.state.ready = ctx.state.left > 0; ctx.proc('콤보 한 단계만'); } }
     } },
   { id: 'lens', axis: '콤보', rarity: '고급', name: '감정 렌즈', short: '렌즈', price: 180, kind: 'passive', icon: 'lens', sets: ['21'],
     desc: '콤보가 ×1.5 이상일 때 깬 칸 둘레에 보물이 있으면 숫자 옆에 보석 점이 찍힙니다',
@@ -201,10 +201,11 @@ var TOOLS = [
   { id: 'amulet', axis: '콤보', rarity: '고급', name: '곽 씨 부적', short: '부적', price: 200, kind: 'passive', icon: 'amulet', sets: ['22'],
     desc: '하루 한 번, 콤보가 4단계 이상일 때 지뢰를 쳐도 체력이 줄지 않습니다. 콤보는 끊깁니다',
     hooks: {
-      on_day_start: function (ctx) { ctx.state.ready = true; },
-      on_mine: function (ctx, ev) { if (ctx.state.ready !== false && ctx.mult() >= 2 && ev.damage > 0) { ev.damage = 0; ctx.state.ready = false; ctx.proc('체력 지킴'); } }
+      on_day_start: function (ctx) { ctx.state.left = ctx.owns('toughcharm') ? 2 : 1; },
+      on_mine: function (ctx, ev) { var l = ctx.state.left == null ? 1 : ctx.state.left; if (l > 0 && ctx.mult() >= 2 && ev.damage > 0) { ev.damage = 0; ctx.state.left = l - 1; ctx.proc('체력 지킴'); } }
     } },
-  { id: 'betchalk', axis: '콤보', rarity: '일반', name: '내기 분필', short: '내기 분필', price: 110, kind: 'passive', icon: 'betchalk', sets: ['21', '22'],
+  { id: 'betchalk', axis: '콤보', rarity: '일반', name: '내기 분필', short: '내기 분필', price: 110, kind: 'passive', icon: 'betchalk', sets: ['21'],   // v2.2는 노름꾼만(R135)
+   
     desc: 'O를 그은 칸이 보물이면 콤보가 2개 단계 오릅니다. 지뢰면 피해가 1 더 큽니다',
     hooks: {
       on_mark_hit: function (ctx, ev) {
@@ -214,7 +215,8 @@ var TOOLS = [
       }
     } },
   // 발파 축
-  { id: 'fuse', axis: '발파', rarity: '일반', name: '긴 도화선', short: '도화선', price: 130, kind: 'passive', icon: 'fuse', sets: ['21', '22'],
+  { id: 'fuse', axis: '발파', rarity: '일반', name: '긴 도화선', short: '도화선', price: 130, kind: 'passive', icon: 'fuse', sets: ['21'],   // v2.2는 폭파공만(R135)
+   
     desc: 'X 칸을 발파하면 두 걸음 안의 다른 X 칸도 함께 터집니다. 촛불은 한 번만 듭니다' },
   { id: 'refiner', axis: '발파', rarity: '희귀', name: '연금 솥', short: '연금 솥', price: 360, kind: 'passive', icon: 'refiner', sets: ['21', '22'],
     desc: '발파 한 번에 지뢰가 3개 이상 터지면 터진 자리마다 금 알갱이가 남습니다. 이 금 알갱이로는 콤보가 오르지 않습니다',
@@ -222,7 +224,8 @@ var TOOLS = [
   { id: 'sieve', axis: '발파', rarity: '고급', name: '그을음 체', short: '그을음 체', price: 240, kind: 'passive', icon: 'sieve', sets: ['21', '22'],
     desc: '발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않고 제값을 받습니다. 콤보도 오릅니다',
     hooks: { on_blast: function (ctx, ev) { if (ev.mines >= 2 && ev.scorch) { ev.scorch = false; ctx.proc('그을음 없음'); } } } },
-  { id: 'tongs', axis: '발파', rarity: '희귀', name: '해체 집게', short: '집게', price: 310, kind: 'passive', icon: 'tongs', sets: ['21', '22'],
+  { id: 'tongs', axis: '발파', rarity: '희귀', name: '해체 집게', short: '집게', price: 310, kind: 'passive', icon: 'tongs', sets: ['21'],   // v2.2는 해체공만(R135)
+   
     desc: '발파한 X 칸이 지뢰가 아니면 녹이지 않고 꺼냅니다. 촛불은 1만 들고, 보물은 그을려 반값입니다' },
   { id: 'wedge', axis: '발파', rarity: '고급', name: '울림 쐐기', short: '쐐기', price: 220, kind: 'passive', icon: 'wedge', sets: ['21', '22'],
     desc: '보물이나 지뢰를 없애 숫자가 0이 되면, 그 칸 주변 두 칸까지 안전한 칸이 열립니다' },
@@ -261,10 +264,12 @@ var TOOLS = [
       on_day_end: function (ctx, ev) { var d = ctx.run.d; if (ev.reason !== 'return' || !d || d.candle <= 0) return; var n = Math.min(CONFIG.dripMax, d.candle * CONFIG.dripPer); d.pocket += n; d.pocketLines.drip = (d.pocketLines.drip || 0) + n; }
     } },
   // 합친 도구: 재료 둘을 가진 밤에 곽 씨가 합쳐 줘요. 상점·선물·연장함에는 나오지 않아요. 재료의 효과를 다 가지고 하나가 더 세져요
-  { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['fuse', 'refiner'],
-    desc: 'X 칸을 발파하면 두 걸음 안의 X 칸이 모두 함께 터지고, 터진 지뢰 자리마다 금 알갱이가 남습니다. 이 금 알갱이로도 콤보가 오릅니다' },
-  { id: 'moontongs', axis: '발파', rarity: '합침', name: '달빛 집게', short: '달빛 집게', price: 550, kind: 'passive', icon: 'moontongs', sets: ['22'], fusion: ['tongs', 'sieve'],
+  { id: 'bigblast', axis: '발파', rarity: '합침', name: '곽 씨의 큰 발파', short: '큰 발파', price: 490, kind: 'passive', icon: 'bigblast', sets: ['22'], fusion: ['refiner', 'sieve'],   // R135: 긴 도화선이 폭파공만의 것이 되어 재료를 바꿈
+    desc: '발파로 터진 지뢰 자리마다 금 알갱이가 남고, 이 금 알갱이로도 콤보가 오릅니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
+  { id: 'moontongs', axis: '발파', rarity: '합침', name: '달빛 집게', short: '달빛 집게', price: 550, kind: 'passive', icon: 'moontongs', sets: [], fusion: ['tongs', 'sieve'],   // R135에서 뺌(해체는 해체공만)
     desc: '발파한 X 칸이 지뢰가 아니면 제값으로 꺼냅니다. X 칸이 모두 지뢰가 아니었으면 촛불도 들지 않습니다. 발파 한 번에 지뢰가 2개 이상 터지면 휩쓸린 보물이 그을리지 않습니다' },
+  { id: 'toughcharm', axis: '콤보', rarity: '합침', name: '질긴 부적', short: '질긴 부적', price: 400, kind: 'passive', icon: 'toughcharm', sets: ['22'], fusion: ['gloves', 'amulet'],   // R135
+    desc: '배짱 장갑과 곽 씨 부적이 하루에 두 번씩 듭니다' },
   { id: 'deadcrown', axis: '콤보', rarity: '합침', name: '막장 왕관', short: '막장 왕관', price: 490, kind: 'passive', icon: 'deadcrown', sets: ['22'], fusion: ['lastcard', 'crown'],
     desc: '콤보가 4개 단계 더 높이까지 오르고, 체력이 1 남으면 12개 단계 더 높이까지 오릅니다. 보물을 캘 때마다 촛불 1을 얻습니다',
     hooks: { on_treasure: function (ctx, ev) { if (ctx.run.d && ctx.run.d.hp === 1 && !ev.scorch) ctx.addCandle(1, '막장 왕관'); } } },
@@ -565,7 +570,7 @@ PRESETS.v22 = {
             rarityWeight: { '일반': 50, '고급': 35, '희귀': 15 } },   // 도구 칸 8(도구 경험 정리)
     toolSet: '22',
     voidCompare: { 1: 1110, 2: 2420, 3: 3130, 4: 4350, 5: 5250 },   // 그 도장을 찍은 판의 그 구간 수입 평균(세 정책 400판, 05 8.12)
-    gift: { n: 3, rarity: '일반', tutorial: ['betchalk', 'gloves', 'fuse'] },
+    gift: { n: 3, rarity: '일반', tutorial: ['gloves', 'lonelamp', 'dripdish'] },   // R135: 내기 분필·긴 도화선은 캐릭터만
     tutorialShopDay1: ['firstdig', 'amulet', 'nuggetbag'],   // 청진 망치·감정 렌즈를 뺀 뒤(R129)
     gradeMul: [1, 1, 1, 1, 1, 1, 1]   // R132: 등급 차이는 불리함(gradePenalty)만. 도장 값은 등급과 상관없이 같음(05 8.18)
   },

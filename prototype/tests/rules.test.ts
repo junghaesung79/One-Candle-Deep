@@ -266,7 +266,14 @@ describe('규칙 단위 검사', () => {
       Core.startDay(r);
       check(r.d.probes === 0 && Object.keys(r.d.roomForks).length === 0, 'no base probes, no rooms');
       check(CONFIG.rulePool.join() === 'pair,border,lonely,tally,minepair' && r.plan.firstRule.slice(1).every((x: string) => CONFIG.rulePool.includes(x)), 'every vein, any grade (plain only day 1)');
-      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 18 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown'].includes(t.id)), '18 tools in v22 set, no fused tools in the pool'); }
+      check(Core.toolPool().filter((t: any) => t.kind === 'passive').length === 15 && !Core.toolPool().some((t: any) => ['ledger', 'moonsieve', 'sheet', 'match', 'bigblast', 'moontongs', 'deadcrown', 'toughcharm', 'betchalk', 'fuse', 'tongs'].includes(t.id)), '15 tools in v22 set, no fused or character-only tools in the pool'); }
+    // 캐릭터는 X·O 칸 행동 하나만 바꿔요(R135): 따로 붙는 능력치가 없어요
+    { const cs = Object.values(Core.CHAR_BY_ID) as any[];
+      check(cs.every(c => !c.candleDelta && !c.capPlus && !c.valueMul && !c.digMineExtra && !c.perk && !c.weak), 'characters have no extra stats');
+      check(cs.every(c => c.x.name === '발파' || c.o.name === '캐기'), 'each character changes at most one of X or O'); }
+    // 질긴 부적: 배짱 장갑과 곽 씨 부적이 하루 두 번
+    { const r = Core.newRun(6111); r.owned.push('toughcharm'); Core.startDay(r);
+      check(Core.owns(r, 'gloves') && Core.owns(r, 'amulet') && r.toolState.gloves.left === 2 && r.toolState.amulet.left === 2, 'tough charm doubles gloves and amulet'); }
     // 촛불이 다 타면 그 자리에서 하루 끝(불씨 없음)
     { const r = Core.newRun(6102); Core.startDay(r); const f = r.d.floor;
       const c = f.cells.find(q => q.cover !== 'open' && !q.haz && !q.stair && Core.neighbors(f, q.x, q.y).some(n => n.cover === 'open'));
@@ -286,7 +293,7 @@ describe('규칙 단위 검사', () => {
       const c0 = r.cash, gc = r.giftCash; const g = Core.chooseGift(r, -1);
       check(g.ok && r.cash === c0 + gc && gc > 0 && r.phase === 'shop', 'take cash instead of a tool');
       const r2 = Core.newRun(6104); Core.debugSkipDay(r2); Core.debugSkipDay(r2); Core.startDay(r2); r2.d.pocket = 1000; Core.returnUp(r2); Core.afterSettle(r2); Core.afterPayment(r2);
-      const g2 = Core.chooseGift(r2, 0);
+      const g2 = Core.chooseGift(r2, Math.max(0, r2.giftOpts.findIndex((id: string) => id !== 'regular')));   // 단골 장부는 제값에 팔려서 빼요
       const sv = Core.sellPrice(r2, g2.id), cs = r2.cash;
       check(g2.ok && r2.owned.includes(g2.id) && r2.phase === 'shop' && sv === Math.floor(Core.TOOL_BY_ID[g2.id].price * 0.5 / 10) * 10 && Core.sellBack(r2, g2.id).ok && r2.cash === cs + sv && !r2.owned.includes(g2.id), 'take a tool; sell it for half the shop price');
       check(Core.rateText(r2).indexOf('도장 1개') === 0, 'rate text'); }
@@ -314,13 +321,13 @@ describe('규칙 단위 검사', () => {
         check(cb.ok && rb.owned.includes(pick0) && !rb.owned.includes(drop) && rb.d.pocket === pk + dv && dv === Math.floor(Core.TOOL_BY_ID[drop].price * 0.25 / 10) * 10 && !rb.boxOffer && rb.boxed[pick0], 'swap: dropped tool goes to Kwak at a quarter of the price, picked tool marked as from a toolbox');
       }
       // 합친 도구: 재료 둘을 가진 밤 상점에서 합쳐요. 재료 효과도 그대로
-      const rq = Core.newRun(6206); Core.debugSkipDay(rq); Core.startDay(rq); rq.owned = ['fuse', 'refiner']; rq.boxed = { fuse: true }; Core.debugEndDay(rq); Core.afterSettle(rq);
+      const rq = Core.newRun(6206); Core.debugSkipDay(rq); Core.startDay(rq); rq.owned = ['sieve', 'refiner']; rq.boxed = { sieve: true }; Core.debugEndDay(rq); Core.afterSettle(rq);
       check(rq.phase === 'shop' && rq.shop.fuse.length === 0, 'no fusion on a night without a stamp');
-      const shopParts = Core.newRun(6202); Core.debugSkipDay(shopParts); Core.debugSkipDay(shopParts); Core.startDay(shopParts); shopParts.owned = ['fuse', 'refiner']; shopParts.d.pocket = 1000; Core.returnUp(shopParts); Core.afterSettle(shopParts); Core.afterPayment(shopParts); Core.chooseGift(shopParts, -1);
+      const shopParts = Core.newRun(6202); Core.debugSkipDay(shopParts); Core.debugSkipDay(shopParts); Core.startDay(shopParts); shopParts.owned = ['sieve', 'refiner']; shopParts.d.pocket = 1000; Core.returnUp(shopParts); Core.afterSettle(shopParts); Core.afterPayment(shopParts); Core.chooseGift(shopParts, -1);
       check(shopParts.phase === 'shop' && shopParts.shop.fuse.length === 0, 'no fusion when neither part came from a toolbox');
-      const rf = Core.newRun(6202); Core.debugSkipDay(rf); Core.debugSkipDay(rf); Core.startDay(rf); rf.owned = ['fuse', 'refiner']; rf.boxed = { refiner: true }; rf.d.pocket = 1000; Core.returnUp(rf); Core.afterSettle(rf); Core.afterPayment(rf); Core.chooseGift(rf, -1);
+      const rf = Core.newRun(6202); Core.debugSkipDay(rf); Core.debugSkipDay(rf); Core.startDay(rf); rf.owned = ['sieve', 'refiner']; rf.boxed = { refiner: true }; rf.d.pocket = 1000; Core.returnUp(rf); Core.afterSettle(rf); Core.afterPayment(rf); Core.chooseGift(rf, -1);
       check(rf.phase === 'shop' && rf.shop.fuse.includes('bigblast'), 'fusion offered at the shop on a stamp night when one part came from a toolbox');
-      check(Core.fuse(rf, 'bigblast').ok && rf.owned.join() === 'bigblast' && Core.owns(rf, 'fuse') && Core.owns(rf, 'refiner'), 'fused tool replaces both and keeps their effects');
+      check(Core.fuse(rf, 'bigblast').ok && rf.owned.join() === 'bigblast' && Core.owns(rf, 'sieve') && Core.owns(rf, 'refiner'), 'fused tool replaces both and keeps their effects');
       const rc = Core.newRun(6203); Core.startDay(rc); rc.owned = ['deadcrown']; rc.d.hp = 1;
       check(CONFIG.streakLadder[Core.streakCapIdx(rc)] === 6, 'dead crown: x6 at 1 HP');
       // 심 씨 외상: 모자라면 빌려서 도장을 찍고, 다음 도장에 1.5배가 붙어요. 한 판에 한 번
