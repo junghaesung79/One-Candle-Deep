@@ -89,22 +89,42 @@ var CONFIG = {
 };
 
 // 캐릭터(시험). 캐릭터는 X 칸이나 O 칸을 누를 때 하는 일 하나만 바꿔요. 좋고 나쁜 점은 그 행동 안에 담고, 따로 붙는 약점·장점·능력치는 없어요(R135)
-var CHARACTERS = [
+var CHARACTERS = [   // 판 준비 화면의 순서 그대로예요
   { id: 'miner', name: '광부', line: '곡괭이 하나로 버텨 온 사람입니다', color: '#c4432b',
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4. 지뢰면 주변이 열리고, 보물이면 녹습니다' },
     o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' },
-  { id: 'defuser', name: '해체공', line: '곽 씨 밑에서 설익이 다루는 법을 배웠습니다', color: '#4f8a4a', innate: ['tongs'], igniteDelta: 1,
-    x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼냅니다. 촛불은 돌려받지 않고, 보물은 그을린 채(반값) 나옵니다' },
-    o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
+  { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2,
+    x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
+    o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
+    weak: '' },
+  { id: 'foreman', name: '갱 반장', line: '일꾼을 부려 갱을 파 온 사람입니다', color: '#3d6fb8', oSkill: 'crew', crewFee: 0.1,
+    x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
+    o: { name: '맡기기', desc: 'O 칸을 누르면 일꾼이 대신 캡니다. 촛불이 들지 않고, 보물이면 값을 받지만 콤보는 오르지 않습니다. 지뢰면 일꾼이 다쳐 오늘 주머니의 10%를 치료비로 냅니다(체력은 그대로입니다)' },
+    weak: '' },
+  { id: 'veiner', name: '광맥꾼', line: '광맥을 한 번 잡으면 놓지 않는 사람입니다', color: '#b84f7a', oSkill: 'vein', veinMineExtra: 1,
+    x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
+    o: { name: '이어 캐기', desc: '누른 O 칸과 붙어 있는 O 칸을 모두 잇달아 캡니다. 촛불은 첫 칸만 1이고 나머지는 들지 않습니다. 지뢰를 만나면 거기서 멈추고, 그 지뢰는 피해가 1 더 큽니다' },
     weak: '' },
   { id: 'gambler', name: '노름꾼', line: '숫자를 믿으면 크게 거는 사람입니다', color: '#8e4fa8', innate: ['betchalk'],
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
     o: { name: '걸기', desc: 'O 칸이 보물이면 콤보가 2개 단계 오릅니다. 지뢰면 피해가 1 더 큽니다' },
     weak: '' },
-  { id: 'surveyor', name: '측량사', line: '중개소에서 갱 도면을 그리던 사람입니다', color: '#3e8a8a', surveyPerDay: 2,
+  { id: 'defuser', name: '해체공', line: '곽 씨 밑에서 설익이 다루는 법을 배웠습니다', color: '#4f8a4a', innate: ['tongs'], igniteDelta: 1,
+    x: { name: '해체', desc: 'X 칸을 누르면 촛불 5. 지뢰면 터뜨리고, 지뢰가 아니면 녹이지 않고 꺼냅니다. 촛불은 돌려받지 않고, 보물은 그을린 채(반값) 나옵니다' },
+    o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
+    weak: '' },
+  { id: 'jeweler', name: '세공사', line: '보석에 흠 하나 내지 않고 캐내는 사람입니다', color: '#c9a227', oSkill: 'gentle', oExtra: 2, oBonus: 0.5,
     x: { name: '발파', desc: 'X 칸을 누르면 터뜨립니다. 촛불 4' },
-    o: { name: '청진', desc: 'O 칸을 누르면 먼저 두드려 봅니다(촛불 2). 지뢰면 터지지 않고 X로 바뀌고, 아니면 이어서 캡니다. 하루 2번' },
+    o: { name: '살살 캐기', desc: 'O 칸을 캐면 촛불이 2 더 듭니다. 보물이면 값이 50% 높습니다. 지뢰면 평소처럼 다칩니다' },
+    weak: '' },
+  { id: 'powderman', name: '화약 장수', line: '지뢰도 팔면 돈이라는 사람입니다', color: '#6a7080', xSkill: 'powder', xCost: 3, powderValue: 10,
+    x: { name: '화약 캐기', desc: 'X 칸을 누르면 지뢰를 터뜨리지 않고 캐냅니다(촛불 3). 지뢰면 화약으로 팔아 10을 받고, 콤보도 보물을 캔 것처럼 오릅니다. 둘레는 열리지 않습니다. 지뢰가 아니면 화약을 잘못 다뤄 다칩니다(체력 1, 그 칸의 보물은 녹습니다)' },
+    o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
+    weak: '' },
+  { id: 'carpenter', name: '목수', line: '갱도를 받치던 목수입니다', color: '#9a6532', xSkill: 'prop', xCost: 1,
+    x: { name: '버팀목', desc: 'X 칸을 막습니다(촛불 1). 지뢰면 숫자에서 빠지고 둘레는 열리지 않습니다. 지뢰가 아니면 그 칸의 보물은 묻혀 사라집니다' },
+    o: { name: '캐기', desc: 'O는 메모입니다. 누르면 그냥 캡니다' },
     weak: '' },
   { id: 'blaster', name: '폭파공', line: '화약 냄새가 몸에 밴 사람입니다', color: '#e0782b', innate: ['fuse'],
     x: { name: '큰 발파', desc: 'X 칸을 누르면 두 걸음 안의 X 칸까지 한꺼번에 터뜨립니다. 촛불 4. 터뜨린 X 가운데 지뢰가 아닌 칸이 있으면 체력 1을 잃습니다' },
@@ -343,7 +363,16 @@ var TEXT = {   // 화면 문구: 02 최신본(R55 해요체, R51 '도장' 표기
               unlocked: '이번 판에 열린 것', none: '이번 판에 새로 열린 건 없습니다', nextUnlock: '다음에 열릴 사람: {name} · {cond}', newChar: '새 사람',
               fadedBubble: '곽 씨: "바랜 분필 자국이네. 앞서 다녀간 이가 그은 거라 늘 맞네."', boxBubble: '곽 씨: "촛불이 흔들리는군. 이 층 어딘가에 옛 연장함이 묻혀 있네."',
               progress: '{name}까지 {amt} 중 {have}' },
-  charLock: { surveyor: '첫 판 안내를 마치면 열립니다', defuser: '처음 완납하면 열립니다', gambler: '한 판에 도장 셋을 찍으면 열립니다', blaster: '달못 4호 갱을 완납하면 열립니다' },
+  charLock: { surveyor: '첫 판 안내를 마치면 열립니다', defuser: '처음 완납하면 열립니다', gambler: '한 판에 도장 셋을 찍으면 열립니다', blaster: '달못 4호 갱을 완납하면 열립니다',
+              jeweler: '금잔을 처음 캐면 열립니다', veiner: '한 층에서 O를 다섯 번 맞히면 열립니다', foreman: '처음 쓰러지면 열립니다',
+              carpenter: '발파로 지뢰를 모두 합쳐 100개 터뜨리면 열립니다', powderman: '한 층에서 X를 열 번 그어 모두 맞히면 열립니다' },
+  // 새 캐릭터 다섯의 스킬 한 줄(판 위 기록)
+  skill: { gentleShort: '촛불이 모자랍니다. 살살 캐기는 촛불 {n}', gentle: '살살 캐기: 값 +50%',
+           vein: '이어 캐기: O 칸 {n}개를 잇달아 캤습니다', veinStop: '이어 캐기가 지뢰에서 멈췄습니다',
+           crewT: '일꾼이 캤습니다. 콤보는 그대로입니다', crewMine: '일꾼이 지뢰를 치우다 다쳤습니다. 치료비로 주머니 -{n}', crewMine0: '일꾼이 지뢰를 치웠습니다. 다친 데는 없습니다',
+           prop: '버팀목: 지뢰를 막았습니다. 숫자에서 빠집니다', propBury: '버팀목: 지뢰가 아니었습니다. {name}이(가) 묻혀 사라졌습니다', propEmpty: '버팀목: 지뢰가 아니었습니다',
+           powder: '화약 캐기: 지뢰에서 화약을 캐냈습니다', powderMiss: '화약 캐기: 지뢰가 아니었습니다. 화약을 잘못 다뤄 체력 -1', powderMelt: '{name}이(가) 녹아 버렸습니다',
+           propChunk: '버팀목: 큰 덩이 자리라 막을 것이 없습니다' },
   grace: { quote: '첫 도장은 기다려 드리죠. 모자란 {n}은 두 번째 도장에 얹겠습니다.', line: '두 번째 도장에 {n}이 얹혔습니다(첫 판만, 이자 없음)' },
   seed: { label: '시드', hint: '비우면 무작위', apply: '이 시드로', copy: '복사', copied: '복사했습니다', other: '다른 판본의 시드라 광산이 다를 수 있습니다', mark: '시드 판' },
   collapse: ['또 자네군. 주머니는 반만 받겠네.', '숨은 쉬네. 그럼 됐어.', '끌어낸 값으로 {n} 받았네. 나머지는 금고에 넣어 뒀어.', '내일 보세. 도장 찍는 날이 내일은 아니겠지.'],
@@ -1634,7 +1663,7 @@ var Core = (function () {
   function gainTreasure(run, x, y, base, o) {
     o = o || {};
     var d = run.d;
-    var ev = emit(run, 'on_treasure', { x: x, y: y, chunk: !!o.chunk, tool: !!o.tool, streakStep: 0, base: base, bonus: (gang(run, 'rough') && !o.chunk ? 0.2 : 0) + (!o.chunk && !o.tool ? keepSum(run, 'treasureBonus') : 0), scorch: !!o.scorch, tier: o.tier || 1 });   // 숨이 거침: 큰 덩이는 빼고
+    var ev = emit(run, 'on_treasure', { x: x, y: y, chunk: !!o.chunk, tool: !!o.tool, streakStep: 0, base: base, bonus: (gang(run, 'rough') && !o.chunk ? 0.2 : 0) + (!o.chunk && !o.tool ? keepSum(run, 'treasureBonus') : 0) + (o.bonus || 0), scorch: !!o.scorch, tier: o.powder ? 0 : o.tier || 1 });   // 숨이 거침: 큰 덩이는 빼고. o.bonus: 세공사 살살 캐기. 화약은 보물 등급이 없어요
     var mult = streakMult(run);
     var fv = (!o.chunk && run.d.floor && run.d.floor.valueMul) || 1;   // 갈림길 덤 '이 층 보물 값 ×1.3'(큰 덩이는 빼고)
     var full = ev.base * stage(run).valueMul * fv * (o.chunk ? 1 : (charOf(run).valueMul || 1));   // 측량사는 보물 값 ×0.9(큰 덩이는 빼고)                       // 시세(도장 수)는 주머니에 들어가는 값 전부에 붙는다
@@ -1645,6 +1674,7 @@ var Core = (function () {
     curFloorRec(run).value += total;
     fx(run, { t: 'gain', x: x, y: y, base: Math.round(b), full: Math.round(full), mult: mult, bonus: ev.bonus, total: total, tier: o.tier || 1, scorch: !!o.scorch, chunk: !!o.chunk, w: o.w, h: o.h, label: o.label || '' });
     d.stats.treasures++; run.stats.treasures++;
+    if (o.tier === 3 && !o.chunk && !o.tool) run.stats.goblets = (run.stats.goblets || 0) + 1;   // 금잔(세공사 열기)
     if (!d.stats.firstTreasureHit) d.stats.firstTreasureHit = d.stats.hits || 1;
     if (!o.scorch && !o.noStreak) streakUp(run, 1 + (o.extraStep || 0) + ev.streakStep);   // 그을린 보물은 콤보를 올리지 않는다(01 6장)
     return total;
@@ -1656,18 +1686,20 @@ var Core = (function () {
     var d = run.d, f = d.floor;
     var content = c.haz || (c.stair ? 'stair' : 'empty');
     var mev = emit(run, 'on_mark_hit', { mark: how.mark, content: content, streakStep: 0, extraDamage: 0 });
-    if (how.direct && content === 'mine') mev.extraDamage += charOf(run).digMineExtra || 0;   // 폭파공: 곡괭이로 지뢰를 치면 피해 +1
-    openRaw(run, c, 0);
+    if (how.direct && content === 'mine') mev.extraDamage += (charOf(run).digMineExtra || 0) + (how.extraDamage || 0);   // 폭파공: 곡괭이로 지뢰를 치면 피해 +1. 광맥꾼 이어 캐기도 +1
+    openRaw(run, c, how.ring || 0);
     if (c.haz) {
       c.removed = true;
-      if (c.haz === 'mine') {
+      if (c.haz === 'mine' && how.crew) {   // 갱 반장: 일꾼이 지뢰를 치워요. 터지지 않고 체력·콤보는 그대로, 치료비만
+        crewMine(run, c);
+      } else if (c.haz === 'mine') {
         c.scorch = true;
         if (how.mark === 2) orderFail(run, 'chalkO');   // O 칸에서 지뢰가 나오면 실패
         explodeMine(run, c, mev.extraDamage, how.ember, how.judge);
       } else if (c.haz === 'treasure') {
         var bigN = neighbors(f, c.x, c.y).some(function (n) { return n.cover === 'open' && !n.removed && !n.haz && (numAt(f, n) + 1) >= 4; });
         if (bigN) { d.stats.bigNumT++; orderEvent(run, 'bigNum'); }
-        if (how.mark === 2) { d.stats.oT++; orderEvent(run, 'chalkO'); }
+        if (how.mark === 2) { d.stats.oT++; orderEvent(run, 'chalkO'); f.oHit = (f.oHit || 0) + 1; run.stats.oFloorMax = Math.max(run.stats.oFloorMax || 0, f.oHit); }   // 한 층에서 맞힌 O(광맥꾼 열기)
         if (how.ember) { d.stats.emberT++; orderEvent(run, 'emberT'); }
         if (c.tier === 2 && !c.box) { d.stats.gems++; orderEvent(run, 'gem'); }
         d.stats.floorT++; d.stats.dugT++; orderEvent(run, 'floorT');
@@ -1675,8 +1707,8 @@ var Core = (function () {
         f.treasuresDug++;
         var m0 = streakMult(run);
         var fz = c.fizzle && CONFIG.fizzle !== 'keep';
-        if (c.box) { gainBox(run, c, { extraStep: mev.streakStep, scorch: fz }); hazardRemoved(run, c); if (numAt(f, c) === 0) chainFrom(run, c); emit(run, 'on_break', { x: c.x, y: c.y, content: content, direct: !!how.direct }); return; }
-        var got = gainTreasure(run, c.x, c.y, CONFIG.treasureValue[c.tier], { tier: c.tier, extraStep: mev.streakStep, scorch: fz });
+        if (c.box) { gainBox(run, c, { extraStep: mev.streakStep, scorch: fz, noStreak: !!how.crew }); hazardRemoved(run, c); if (numAt(f, c) === 0) chainFrom(run, c); emit(run, 'on_break', { x: c.x, y: c.y, content: content, direct: !!how.direct }); return; }
+        var got = gainTreasure(run, c.x, c.y, CONFIG.treasureValue[c.tier], { tier: c.tier, extraStep: mev.streakStep, scorch: fz, noStreak: !!how.crew, bonus: how.bonus || 0 });
         var tb = Math.round(CONFIG.treasureValue[c.tier] * stage(run).valueMul * (fz ? CONFIG.scorchMul : 1));
         var plain0 = Math.round(tb * m0);
         log(run, TREASURE_NAMES[c.tier] + ' ' + fmt(tb) + (fz ? '(그을림)' : '') + (m0 > 1 ? ' ×' + m0 : '') + (got !== plain0 ? ' +' + Math.round((got / plain0 - 1) * 100) + '%' : '') + (got !== tb ? ' = ' + fmt(got) : '') + '. 다음 보물 ×' + streakMult(run) + '.', 'good');
@@ -1688,7 +1720,7 @@ var Core = (function () {
     } else {
       run.act.gravel += cellRes(c);
     }
-    if (numAt(f, c) === 0) chainFrom(run, c);
+    if (numAt(f, c) === 0 && !(how.crew && content === 'mine')) chainFrom(run, c);   // 일꾼이 치운 지뢰 자리는 둘레를 열지 않아요
     emit(run, 'on_break', { x: c.x, y: c.y, content: content, direct: !!how.direct });
   }
   function explodeMine(run, c, extraDamage, ember, judge) {
@@ -1791,6 +1823,7 @@ var Core = (function () {
     return 'unknown';
   }
   function hitCost(run) { return run.d.floor.awake ? CONFIG.awakeHitCost : CONFIG.hitCost; }
+  function oCost(run) { var ch = charOf(run); return ch.oSkill === 'crew' ? 0 : (run.d && run.d.floor ? hitCost(run) : CONFIG.hitCost) + (ch.oSkill === 'gentle' ? ch.oExtra || 0 : 0); }   // O 칸을 누를 때 드는 촛불(갱 반장 0, 세공사 +2)
   function hit(run, x, y) {
     if (!canAct(run)) return { ok: false };
     var d = run.d, f = d.floor, c = cellAt(f, x, y);
@@ -1813,19 +1846,74 @@ var Core = (function () {
       }
       log(run, '청진: 둔탁합니다. 지뢰가 아니라서 캡니다. 오늘 청진 ' + d.survey + '번 남았습니다.');
     }
+    var ch = charOf(run), osk = c.mark === 2 && !ember ? ch.oSkill : null;   // 새 캐릭터의 O 칸 스킬(01 15.6)
+    if (osk === 'crew') return crewDig(run, c);
+    if (osk === 'vein') return veinDig(run, c);
+    var hc = hitCost(run) + (osk === 'gentle' ? ch.oExtra || 0 : 0);   // 세공사 살살 캐기: 촛불 2 더
+    if (osk === 'gentle' && d.candle < hc) { log(run, TEXT.skill.gentleShort.replace('{n}', hc)); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
     var cls = (run.record || (c.haz === 'mine' && !ember)) ? classify(run, c) : null;   // 지뢰 판정 한 줄은 지뢰일 때만 계산해요
     if (run.record && cls) d.rec[cls]++;
     beginAct(run, x, y);
     if (ember) { d.embers--; fx(run, { t: 'ember', left: d.embers }); if (d.embers === 1) log(run, TEXT.ember.last); }
-    else spendCandle(run, hitCost(run));
+    else spendCandle(run, hc);
     d.stats.hits++; d.stats.breaks++;
     if (c.haz) d.stats.hazDigs++; else d.stats.safeDigs++;
     var mark = c.mark;
     run.act.stop = CONFIG.fx.breakStop;
     fx(run, { t: 'break', x: x, y: y });
-    resolveBreak(run, c, { direct: true, mark: mark, ember: ember, judge: cls });
+    resolveBreak(run, c, { direct: true, mark: mark, ember: ember, judge: cls, bonus: osk === 'gentle' && !c.chunk ? ch.oBonus || 0 : 0 });   // 큰 덩이 칸은 살살 캐도 값이 그대로예요
     endAct(run);
     return { ok: true, broke: true, judge: cls, content: c.haz || (c.stair ? 'stair' : 'empty') };
+  }
+  // 갱 반장 맡기기: 일꾼이 O 칸을 대신 캐요. 촛불 없음, 보물이면 값은 받고 콤보는 그대로, 지뢰면 치료비(오늘 주머니의 10%)
+  function crewDig(run, c) {
+    var d = run.d, content = c.haz || (c.stair ? 'stair' : 'empty');
+    if (run.record) d.rec[classify(run, c)]++;
+    beginAct(run, c.x, c.y);
+    d.stats.hits++; d.stats.breaks++;
+    if (c.haz) d.stats.hazDigs++; else d.stats.safeDigs++;
+    run.act.stop = CONFIG.fx.breakStop;
+    fx(run, { t: 'break', x: c.x, y: c.y });
+    resolveBreak(run, c, { direct: true, mark: 2, crew: true });
+    if (content === 'treasure') log(run, TEXT.skill.crewT);
+    endAct(run);
+    return { ok: true, broke: true, crew: true, content: content };
+  }
+  function crewMine(run, c) {
+    var d = run.d, fee = Math.floor(d.pocket * (charOf(run).crewFee || 0) + 1e-6);
+    fx(run, { t: 'boom', x: c.x, y: c.y, blast: true });   // 먼지만 일어요(터지지 않아요)
+    if (fee > 0) {
+      d.pocket -= fee; d.pocketLines.fee = (d.pocketLines.fee || 0) + fee; curFloorRec(run).value -= fee;
+      fx(run, { t: 'fee', x: c.x, y: c.y, total: fee });
+      log(run, TEXT.skill.crewMine.replace('{n}', fmt(fee)), 'bad');
+    } else log(run, TEXT.skill.crewMine0);
+    run.act.stop = Math.max(run.act.stop, CONFIG.fx.mineStop);
+  }
+  // 광맥꾼 이어 캐기: 누른 O 칸과 8칸으로 이어진 덮인 O 칸을 가까운 것부터 잇달아 캐요. 촛불은 첫 칸만. 지뢰에서 멈추고 그 지뢰는 피해 +1
+  function veinDig(run, c) {
+    var d = run.d, f = d.floor, extra = charOf(run).veinMineExtra || 0;
+    var list = [c], seen = {}; seen[idx(c)] = 1;
+    for (var i = 0; i < list.length; i++) neighbors(f, list[i].x, list[i].y).forEach(function (n) { if (!seen[idx(n)] && covered(n) && n.mark === 2) { seen[idx(n)] = 1; list.push(n); } });
+    beginAct(run, c.x, c.y);
+    spendCandle(run, hitCost(run));
+    d.stats.hits++;
+    run.act.stop = CONFIG.fx.breakStop;
+    var n = 0, boom = false;
+    for (var k = 0; k < list.length; k++) {
+      var q = list[k]; if (!covered(q)) continue;   // 앞 칸의 와르르로 이미 열린 칸
+      var cls = (run.record || q.haz === 'mine') ? classify(run, q) : null;
+      if (run.record && cls) d.rec[cls]++;
+      d.stats.breaks++; if (q.haz) d.stats.hazDigs++; else d.stats.safeDigs++;
+      fx(run, { t: 'break', x: q.x, y: q.y });
+      boom = q.haz === 'mine';
+      resolveBreak(run, q, { direct: true, mark: 2, judge: cls, extraDamage: extra, ring: n });
+      n++;
+      if (boom || d.hp <= 0 || run.boxOffer) break;   // 지뢰에서 멈춰요. 옛 연장함을 캐면 고르는 창부터
+    }
+    if (n > 1) log(run, TEXT.skill.vein.replace('{n}', n), 'good');
+    if (boom && k < list.length - 1) log(run, TEXT.skill.veinStop, 'bad');
+    endAct(run);
+    return { ok: true, broke: true, vein: n, content: boom ? 'mine' : (c.haz || (c.stair ? 'stair' : 'empty')) };
   }
   // 둘레 한꺼번에 열기(재미 보고서 4.1): 서 있는 숫자 칸의 둘레에 그은 X·O 수가 숫자와 같으면, 나머지 덮인 칸을 촛불 한 번에 연다. 표시가 틀렸으면 지뢰가 터진다
   function chordInfo(run, x, y) {
@@ -1898,16 +1986,18 @@ var Core = (function () {
     return { ok: true, result: c.probe };
   }
   // 발파(R10): X 칸에 점화. 지뢰면 피해 없이 터져 둘레 8칸이 열리고 범위 안 지뢰도 이어 터진다
-  function igniteCost(run) { return CONFIG.igniteCost - (gang(run, 'dry') ? 1 : 0) + (charOf(run).igniteDelta || 0); }   // 마른 갱: 1 덜 든다
+  function igniteCost(run) { var ch = charOf(run); if (ch.xCost != null) return ch.xCost; return CONFIG.igniteCost - (gang(run, 'dry') ? 1 : 0) + (ch.igniteDelta || 0); }   // 마른 갱: 1 덜 든다. 목수·화약 장수는 X 칸 스킬 값
   function ignite(run, x, y, free) {
     var d = run.d;
     if (!canAct(run) || d.embersOn) { if (d && d.embersOn) log(run, TEXT.ember.noFire); return { ok: false }; }
     var f = d.floor, c = cellAt(f, x, y);
     if (!c || cheb(d.px, d.py, x, y) !== 1 || !covered(c)) { log(run, TEXT.ops.noPath); return { ok: false }; }
     if (c.mark !== 1) { log(run, TEXT.ops.needX); return { ok: false, noX: true }; }
+    var xsk = !free && charOf(run).xSkill;   // 목수 버팀목, 화약 장수 화약 캐기(01 15.6). 화약 소모품은 그대로 발파
     var cost = free || d.freeX ? 0 : igniteCost(run);   // d.freeX: 성냥(소모품)을 켜 둔 X 칸 동작은 촛불이 안 들어요
-    if (d.candle < cost) { log(run, '촛불이 모자랍니다. 발파는 촛불 ' + cost); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
+    if (d.candle < cost) { log(run, '촛불이 모자랍니다. ' + (xsk ? josa(charOf(run).x.name, '은', '는') : '발파는') + ' 촛불 ' + cost); fx(run, { t: 'locked', x: x, y: y }); return { ok: false, short: true }; }
     d.face = { dx: sgn(x - d.px), dy: sgn(y - d.py) };
+    if (xsk) { d.freeX = null; return xSkill(run, c, cost, xsk); }   // 성냥은 캐릭터의 X 칸 동작에도 한 번 타요
     if (run.record) { if (classify(run, c) === 'knownM') d.rec.blastSure++; else d.rec.blastBet++; }
     d.freeX = null;   // 성냥은 이 한 번에 다 탔어요(useConsumable이 비었는지 보고 성냥을 줄여요)
     beginAct(run, x, y);
@@ -1984,6 +2074,7 @@ var Core = (function () {
       }
     });
     boom.forEach(function (e) { d.stats.blastMines++; emit(run, 'on_blast_mine', { x: e.c.x, y: e.c.y, n: boom.length }); orderEvent(run, 'blastMine'); });
+    run.stats.blastMines = (run.stats.blastMines || 0) + boom.length;   // 발파로 터뜨린 지뢰(목수 열기, 판을 넘어 모아요)
     if (boom.length >= 3) orderEvent(run, 'blastChain');
     if (!scorched) orderEvent(run, 'cleanBlast');   // 그을린 발파는 세지 않을 뿐 실패는 아니다
     // 열린 칸과 지뢰 둘레 숫자로 와르르
@@ -1993,6 +2084,57 @@ var Core = (function () {
     run.act.stop = CONFIG.fx.mineStop;
     endAct(run);
     return { ok: true, mines: boom.length, scorched: scorched };
+  }
+  // 목수 버팀목(prop)과 화약 장수 화약 캐기(powder): X 칸 하나만 다뤄요. 지뢰면 터지지 않고 숫자에서 빠지며 둘레는 열지 않아요(01 15.6)
+  function xSkill(run, c, cost, kind) {
+    var d = run.d, f = d.floor, ch = charOf(run);
+    if (run.record) { if (classify(run, c) === 'knownM') d.rec.blastSure++; else d.rec.blastBet++; }
+    beginAct(run, c.x, c.y);
+    spendCandle(run, cost);
+    d.stats.hits++;
+    run.act.stop = CONFIG.fx.breakStop;
+    fx(run, { t: 'break', x: c.x, y: c.y });
+    if (c.haz === 'mine' && !c.removed) {
+      f.xOk = (f.xOk || 0) + 1;
+      openRaw(run, c, 0);   // 맞은 X로 채점돼요
+      c.removed = true;
+      hazardRemoved(run, c);   // 숫자만 줄어요
+      if (kind === 'powder') {
+        log(run, TEXT.skill.powder, 'good');
+        gainTreasure(run, c.x, c.y, ch.powderValue || 10, { powder: true, tier: 1, label: '화약' });   // 시세·콤보는 보물처럼 붙고, 콤보도 올라요
+        run.act.stop = Math.max(run.act.stop, CONFIG.fx.treasureStop);
+      } else log(run, TEXT.skill.prop, 'good');
+      endAct(run);
+      return { ok: true, mines: 1, skill: kind };
+    }
+    f.xBad = (f.xBad || 0) + 1;
+    if (kind === 'powder') {   // 화약을 잘못 다뤄 다쳐요(터지지는 않아요). 콤보는 그대로
+      d.hp = Math.max(0, d.hp - 1);
+      fx(run, { t: 'hurt', x: c.x, y: c.y });
+      log(run, TEXT.skill.powderMiss, 'bad');
+    }
+    if (c.haz === 'chunk') {   // 큰 덩이 칸은 단단해서 그대로예요. X만 지워요
+      judgeX(run, c); c.mark = 0;
+      if (kind === 'prop') log(run, TEXT.skill.propChunk);
+      endAct(run);
+      return { ok: true, mines: 0, skill: kind };
+    }
+    var t = c.haz === 'treasure' && !c.removed;
+    openRaw(run, c, 0);   // 틀린 X로 채점돼요. 칸은 열려요
+    if (t) {   // 그 칸의 보물은 묻히거나(목수) 녹아요(화약 장수)
+      c.removed = true; c.melted = true; d.stats.melted = (d.stats.melted || 0) + 1;
+      var nm = c.box ? '옛 연장함' : TREASURE_NAMES[c.tier];
+      if (c.box) f.box.state = 'melted';
+      fx(run, { t: c.box ? 'boxMelt' : 'fizzle', x: c.x, y: c.y });
+      log(run, (kind === 'prop' ? TEXT.skill.propBury : TEXT.skill.powderMelt).replace('{name}', nm), 'bad');
+      hazardRemoved(run, c);
+    } else {
+      run.act.gravel += cellRes(c);
+      if (kind === 'prop') log(run, TEXT.skill.propEmpty);
+    }
+    if (numAt(f, c) === 0) chainFrom(run, c);
+    endAct(run);
+    return { ok: true, mines: 0, skill: kind };
   }
   function useCons(run, slot, tx, ty) {
     var d = run.d;
@@ -2145,9 +2287,14 @@ var Core = (function () {
     if (c.mark !== 1 || c.givenX || !run.d) return;
     var ok = c.haz === 'mine';
     if (ok) run.d.xOk++; else run.d.xBad++;
+    var f = run.d.floor; if (f) { if (ok) f.xjOk = (f.xjOk || 0) + 1; else f.xjBad = (f.xjBad || 0) + 1; }   // 층마다 채점한 X(화약 장수 열기)
     orderEvent(run, 'xJudge', ok ? { ok: 1 } : { bad: 1 });
   }
-  function judgeFloorX(run) { var f = run.d && run.d.floor; if (!f) return; f.cells.forEach(function (c) { if (c.cover !== 'open' && c.mark === 1) { judgeX(run, c); c.givenX = true; } }); }
+  function judgeFloorX(run) {
+    var f = run.d && run.d.floor; if (!f) return;
+    f.cells.forEach(function (c) { if (c.cover !== 'open' && c.mark === 1) { judgeX(run, c); c.givenX = true; } });
+    if (!f.xjDone && (f.xjOk || 0) >= 10 && !f.xjBad) { f.xjDone = true; run.stats.xFloor10 = (run.stats.xFloor10 || 0) + 1; }   // 한 층에서 X 열 번을 모두 맞힘
+  }
   function completeOrder(run) {
     var o = run.order, def = ORDER_BY_ID[o.id], R = def.reward, d = run.d;
     o.done = true; o.prog = def.goal;
@@ -2437,7 +2584,7 @@ var Core = (function () {
     if (f.box) f.box.state = 'dug';
     run.stats.boxes++; d.stats.boxes = (d.stats.boxes || 0) + 1;
     curFloorRec(run).box = true;
-    if (!o.scorch) streakUp(run, 1 + (o.extraStep || 0));   // 보물처럼 콤보가 올라요(그을리면 안 올라요). 돈은 없어요
+    if (!o.scorch && !o.noStreak) streakUp(run, 1 + (o.extraStep || 0));   // 보물처럼 콤보가 올라요(그을리면 안 올라요). 돈은 없어요
     var rng = rngFrom(hashSeed(run.seed, run.day, f.depth, 0x4f505453));
     var kAvail = KEEPSAKES.filter(function (k) { return (run.keeps || []).indexOf(k.id) < 0; });
     if (feat('keepsake') && !o.scorch && kAvail.length && rng() < CONFIG.keepsake.share) {   // 가끔은 도구 대신 유물 하나
@@ -2660,7 +2807,7 @@ var Core = (function () {
     nextDay: nextDay, priceOf: priceOf, rerollPrice: rerollPrice, servicePrice: servicePrice, stage: stage, orderPocket: orderPocket, goalInfo: goalInfo, nextPayment: nextPayment, paymentFor: paymentFor,
     deduce: deduce, numAt: numAt, cellAt: cellAt, neighbors: neighbors, orthN: orthN, cheb: cheb, liveHaz: liveHaz, idx: idx,
     genFloor: genFloor, usefulCount: usefulCount, checkRule: checkRule, checkFloor: checkFloor, isSolvable: isSolvable, startChainSize: startChainSize, tallyRow: tallyRow, remaining: remaining, shownStair: shownStair, forkOptions: forkOptions,
-    gradePen: gradePen, hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, igniteCost: igniteCost,
+    gradePen: gradePen, hashSeed: hashSeed, rngFrom: rngFrom, fmt: fmt, josa: josa, streakMult: streakMult, streakCapIdx: streakCapIdx, hitCost: hitCost, oCost: oCost, igniteCost: igniteCost,
     isBorder: isBorder, owns: owns, mut: mut, gang: gang, canAct: canAct,
     propagated: propagated, toGift: toGift, chooseGift: chooseGift, floorEstimate: floorEstimate, placeGraffiti: placeGraffiti, floorFromMap: floorFromMap, tutorialFloor: tutorialFloor, walkable: walkable, TUT_TEST: TUT_TEST, planRun: planRun,
     TOOL_BY_ID: TOOL_BY_ID, KEEP_BY_ID: KEEP_BY_ID, seedCode: seedCode, parseSeed: parseSeed, randomSeed: randomSeed, continueEndless: continueEndless, endlessMines: endlessMines, KEEPSAKES: KEEPSAKES, keepSum: keepSum, ORDER_BY_ID: ORDER_BY_ID, CHAR_BY_ID: CHAR_BY_ID, charOf: charOf, innate: innate, debugFillCandle: debugFillCandle, debugEndDay: debugEndDay, debugSkipDay: debugSkipDay

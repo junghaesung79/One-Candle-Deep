@@ -145,8 +145,14 @@ class Bot {
     if (!chunkFloor) for (const c of mines) if (c.mark !== 1) Core.mark(run, c.x, c.y, 1);
     const cost = Core.hitCost(run);
     const nextCost = Core.travelCost(run, f.depth + 1);
-    // 1) 아는 보물
-    if (tre.length && d.candle >= cost) return this.dig(run, this.nearest(run, tre), 'ruleDigs');
+    // 1) 아는 보물. 새 캐릭터: 광맥꾼은 아는 보물에 O를 다 그어 이어 캐고, 세공사는 촛불이 넉넉하면 O를 그어 살살 캐요
+    const osk = Core.charOf(run).oSkill;
+    if (tre.length && osk === 'vein') for (const c of tre) if (!c.mark) Core.mark(run, c.x, c.y, 2);
+    if (tre.length && d.candle >= cost) {
+      const t = this.nearest(run, tre);
+      if (osk === 'gentle' && !t.mark && d.candle >= Core.oCost(run) + nextCost) Core.mark(run, t.x, t.y, 2);
+      return this.dig(run, t, 'ruleDigs');
+    }
     // 덩이
     if (chunkHere && d.candle > 4) {
       const t = this.chunkTarget(run, D);
@@ -161,7 +167,7 @@ class Bot {
       const b = bestUnk();
       if (!b.c || b.p < thr) return null;
       if (Core.owns(run, 'betchalk') && b.p >= (o.betO || 0.8) && b.c.mark !== 2) Core.mark(run, b.c.x, b.c.y, 2);
-      else if (d.survey > 0 && !b.c.mark) Core.mark(run, b.c.x, b.c.y, 2);   // 측량사: 거는 칸에 O를 그어 청진으로 캔다
+      else if ((d.survey > 0 || osk === 'crew') && !b.c.mark) Core.mark(run, b.c.x, b.c.y, 2);   // 측량사: 거는 칸에 O를 그어 청진으로 캔다. 갱 반장: 일꾼에게 맡긴다
       return b.c;
     };
     // 실수(처음 하는 사람): 가끔 확인 안 한 위험 칸을 친다

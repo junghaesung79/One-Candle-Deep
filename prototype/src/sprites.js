@@ -56,6 +56,11 @@ function iconHtml(name, size, cls) {
     gambler: ["................", "..........oo....", "....oooooowwo...", "...occcccowpwo..", "..occccccccccco.", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrwwrrroo..", ".orrorrwwrrorro.", ".offorrwwrroffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
     surveyor: ["...............w", "......oooo.....s", ".....occcco....w", "....occccccco..s", ".oooooooooooooow", "...offffffffo..s", "...owewffwewo..w", "...offffffffo..s", "....oFFFFFFo...w", "..oorrrrrrrroo.s", ".orroddddddorrow", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
     blaster: ["................", "................", "....oooooooo....", "...ohhhhhhhho...", "...oRRRRRRRRoRR.", "...offffffffoR..", "...ofeffffefo...", ".y.offkfffkfo...", "DD..oFFFFFFo....", "DDoorrrrrrrroo..", "DDrroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    jeweler: ["................", "................", "......oooo......", "....occccccoo...", "...oooooooooooo.", "...offffffffo...", "...ofefffoGGo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorro.", ".offoddddddotto.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    veiner: ["......oooo......", "....oocllcoo....", "...occcllccco...", "...occcccccco...", "..oCCCCCCCCCCo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oowwrrrrrroo..", ".orrowwdddddrro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    foreman: ["................", "......oooo......", "....owwwwwwo....", "...owRRRRRRwo...", "..owwwwwwwwwwo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrryrrrroo..", ".orrordyddddrro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    carpenter: ["............bb..", "...........bb...", "....oooooobb....", "...offffffbbo...", "...ohhhhhbhhho..", "...ofefffbfefo..", "...offffbfffo...", "....oFFbFFFo....", "..oorrbrrrrroo..", ".orrobddddddorro", ".orroddddddorro.", ".offoddddddoffo.", "..oooddddddooo..", "....oddo.oddo...", "....oooo.oooo...", "................"],
+    powderman: ["................", "................", ".....oooooo.....", "....ohhhhhho....", "..oooooooooooo..", "...offffffffo...", "...ofeffffefo...", "...offffffffo...", "....oFFFFFFo....", "..oorrrrrrrroo..", ".orroddddddorrD.", ".offoddddddoffD.", "..oooddddddoooDy", "....oddo.oddo...", "....oooo.oooo...", "................"],
   };
   var MINER_PAL = {
     miner: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', y: '#f2c14e', Y: '#b8862a', l: '#fff4c2', r: '#c4432b', d: '#3e5f8a', p: '#8a8fa0', w: '#8a5a3a' },
@@ -63,6 +68,11 @@ function iconHtml(name, size, cls) {
     gambler: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', c: '#5a2f6a', w: '#efe7d6', p: '#c4432b', r: '#8e4fa8', d: '#2a2633' },
     surveyor: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', c: '#2a5a5a', w: '#efe7d6', s: '#c4432b', r: '#3e8a8a', d: '#5a4a3a' },
     blaster: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', h: '#3a2a20', R: '#c4432b', k: '#6a6070', D: '#e5484d', y: '#ffd25a', r: '#e0782b', d: '#4a3a2a' },
+    jeweler: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', d: '#5a4a3a', c: '#c9a227', r: '#c9a227', G: '#9fd8e0', t: '#5fe0e8' },
+    veiner: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', d: '#3e5f8a', c: '#b84f7a', C: '#8a3358', l: '#fff4c2', r: '#b84f7a', w: '#c9a46a' },
+    foreman: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', d: '#2a2633', w: '#efe7d6', R: '#c4432b', r: '#3d6fb8', y: '#ffd25a' },
+    carpenter: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', d: '#4a3a2a', h: '#6b4a2a', b: '#c9894a', r: '#9a6532' },
+    powderman: { o: '#1a1420', f: '#f0c39a', F: '#c9936a', e: '#1a1420', d: '#3a3542', h: '#5d6270', r: '#6a7080', D: '#e5484d', y: '#ffd25a' },
   };
   SPR.minerBy = {}; CHARACTERS.forEach(function (c) { SPR.minerBy[c.id] = MINER_BY[c.id] ? mkSprite(MINER_BY[c.id], MINER_PAL[c.id]) : mkSprite(MINER, Object.assign({}, MIP, { r: c.color })); });
   var CHALK = ["................", "................", "................", "...ww......ww...", "....ww....ww....", ".....ww..ww.....", "......wwww......", ".......ww.......", "......wwww......", ".....ww..ww.....", "....ww....ww....", "...ww......ww...", "..ww........ww..", "................", "................", "................"];

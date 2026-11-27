@@ -79,6 +79,9 @@ function countRun(won) {
   var S = settings.stats || (settings.stats = { plays: 0, clears: 0, streak: 0, bestStreak: 0 });
   var before = openChars();
   S.plays++; S.maxStamps = Math.max(S.maxStamps || 0, run.stamps || 0);
+  var R = run.stats || {};   // 새 캐릭터 열기에 쓰는 기록(판을 넘어 모아요)
+  S.goblets = (S.goblets || 0) + (R.goblets || 0); S.oFloorMax = Math.max(S.oFloorMax || 0, R.oFloorMax || 0); S.collapses = (S.collapses || 0) + (R.collapses || 0);
+  S.blastMines = (S.blastMines || 0) + (R.blastMines || 0); S.xFloor10 = (S.xFloor10 || 0) + (R.xFloor10 || 0);
   if (won) { S.clears++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); } else S.streak = 0;
   saveSettings();
   run.newChars = openChars().filter(function (id) { return before.indexOf(id) < 0; });   // 판 끝 화면 '이번 판에 열린 것'
@@ -91,6 +94,11 @@ function charOpen(id) {
   if (id === 'defuser') return (S.clears || 0) >= 1;
   if (id === 'gambler') return (S.maxStamps || 0) >= 3;
   if (id === 'blaster') return (B['grade:2'] || 0) > 0 || (settings.gradeOpen || 1) >= 3;
+  if (id === 'jeweler') return (S.goblets || 0) >= 1;
+  if (id === 'veiner') return (S.oFloorMax || 0) >= 5;
+  if (id === 'foreman') return (S.collapses || 0) >= 1;
+  if (id === 'carpenter') return (S.blastMines || 0) >= 100;
+  if (id === 'powderman') return (S.xFloor10 || 0) >= 1;
   return true;
 }
 function openChars() { return CHARACTERS.filter(function (c) { return charOpen(c.id); }).map(function (c) { return c.id; }); }
@@ -249,14 +257,15 @@ function drainFx() {
         var q = stageXY(e.x, e.y), d0 = gainIdx * 120; gainIdx++; hadGain = true;
         ui.pocketPending += e.total;
         var base = e.scorch ? fmt(e.full || e.base * 2) + ' 반값' : '' + fmt(e.base);   // 01 7.2 "20 반값 ×2 = 20"
-        var plainT = !e.order && !e.chunk && !e.scorch && e.label !== '정제기';   // 바로 캔 보물: 무엇을 캤는지 크게 보여 준다
-        var ic = e.order ? '' : iconHtml(e.chunk ? 'chunk' : e.label === '정제기' ? 'nugget' : 'tier.' + (e.tier || 1), e.chunk ? 40 : plainT ? 44 : 24);
+        var small = e.scorch || e.label === '정제기' || e.label === '화약';   // 화약 장수가 지뢰에서 캔 화약도 작게
+        var plainT = !e.order && !e.chunk && !small;   // 바로 캔 보물: 무엇을 캤는지 크게 보여 준다
+        var ic = e.order ? '' : iconHtml(e.chunk ? 'chunk' : e.label === '정제기' ? 'nugget' : e.label === '화약' ? 'icons.powder' : 'tier.' + (e.tier || 1), e.chunk ? 40 : plainT ? 44 : 24);
         if (plainT) anim.pops.push({ x: e.x, y: e.y, t0: now + gainIdx * 120 - 120, kind: 'lift', tier: e.tier || 1 });
         var s1 = ic + (plainT ? '<span class="tname t' + (e.tier || 1) + '">' + TREASURE_NAMES[e.tier || 1] + '</span> ' : '') + base, s2 = s1 + (e.mult > 1 ? ' ' + multTxt(e.mult) : '') + (e.bonus ? ' +' + Math.round(e.bonus * 100) + '%' : '');
         var s3 = s2 + ((e.mult > 1 || e.bonus || e.scorch) ? ' = ' + fmt(e.total) : '');
         if (e.order) { s1 = s2 = s3 = '주문 +' + fmt(e.total); }
         var gi = gainIdx - 1;
-        if (e.scorch || e.label === '정제기') {   // 발파로 얻은 값: 그 칸 위에 작게, 바로 주머니로(판을 오래 가리지 않게. 03 6.0)
+        if (small) {   // 발파로 얻은 값: 그 칸 위에 작게, 바로 주머니로(판을 오래 가리지 않게. 03 6.0)
           addFly({ x: Math.max(80, Math.min(730, q.x)), y: q.y - 6, showAt: 200 + gi * 60, flyAt: 650 + gi * 60, flyDur: 300, size: 13, pocket: e.total, rise: 10,
                    steps: [{ t: 200 + gi * 60, h: s3 }] });
           break;
@@ -289,6 +298,15 @@ function drainFx() {
         ui.seenMine = true;
         if (run.tutorial) after(600, function () { bubble('mine', TEXT.bubbles.mine, { cell: { x: e.x, y: e.y } }); });
         break;
+      case 'hurt':   // 화약 장수가 틀린 X에서 다침(터지지 않아요)
+        addShake(4, 220, true); anim.hurtT = now + 60;
+        anim.pops.push({ x: e.x, y: e.y, t0: now + 60, kind: 'fizzle' });
+        break;
+      case 'fee': {   // 갱 반장 일꾼 치료비: 주머니에서 빠져요
+        var fq = stageXY(e.x, e.y);
+        addFly({ x: Math.max(80, Math.min(730, fq.x)), y: fq.y - 6, showAt: 150, flyAt: null, fadeAt: 1300, size: 14, rise: 10, color: '#ff9a4d', steps: [{ t: 150, h: '치료비 −' + fmt(e.total) }] });
+        break;
+      }
       case 'blame': anim.blame = { cells: e.cells, t0: now + 200 }; break;
       case 'judge': {   // 지뢰 판정 한 줄(재미 보고서 1주차): 숫자를 가리지 않게 판 아래 범례 자리에 4초
         var jk = { text: e.text, kind: e.kind };
@@ -874,7 +892,7 @@ function updateHUD() {
   if ($('charBox')._k !== ckey) {
     $('charBox')._k = ckey;
     var xExtra = '촛불 ' + (d ? Core.igniteCost(run) : CONFIG.igniteCost + (chc.igniteDelta || 0));
-    var oExtra = chc.id === 'surveyor' ? (d ? '오늘 ' + d.survey + '/' + d.surveyMax + '번' : '하루 ' + chc.surveyPerDay + '번') : '';
+    var oExtra = chc.id === 'surveyor' ? (d ? '오늘 ' + d.survey + '/' + d.surveyMax + '번' : '하루 ' + chc.surveyPerDay + '번') : chc.oSkill === 'gentle' || chc.oSkill === 'crew' ? '촛불 ' + (d ? Core.oCost(run) : chc.oSkill === 'crew' ? 0 : CONFIG.hitCost + chc.oExtra) : '';
     var plainO = chc.o.name === '캐기';   // O가 그냥 캐기면 보일 것이 없어요
     $('charBox').innerHTML = '<div class="prow" title="' + esc(chc.weak ? '약점: ' + chc.weak : chc.perk || '') + '">' + iconHtml('minerBy.' + chc.id, 32) + '<b style="font-size:15px">' + esc(chc.name) + '</b>' +
       '<span class="prow" style="gap:14px;margin-left:auto"><span data-skill="x">' + skillRow('x', chc.x, xExtra) + '</span>' + (plainO ? '' : '<span data-skill="o">' + skillRow('o', chc.o, oExtra) + '</span>') + '</span></div>';
@@ -966,13 +984,16 @@ function hintText() {
   if (ui.mode && ui.mode.kind === 'cuse') { var hc = ui.hover && Core.cellAt(d.floor, ui.hover.x, ui.hover.y); return esc(hc && hc.cover !== 'open' && hc.mark === 1 ? TEXT.cons.xHint : TEXT.cons.cancel); }
   if (ui.mode) return '오른쪽 클릭이나 버튼을 다시 누르면 그만둡니다';
   var h = ui.hover;
-  var aimTxt = function (q) { ui.preCost = q.mark === 1 ? Core.igniteCost(run) : Core.hitCost(run); return q.mark === 1 ? '한 번 더 누르면 터뜨립니다 · 촛불 −' + Core.igniteCost(run) : TEXT.ops.aimed.replace('{n}', Core.hitCost(run)); };
+  var X_VERB = { defuser: '해체합니다', blaster: '크게 터뜨립니다', carpenter: '버팀목을 댑니다', powderman: '화약을 캐냅니다' };
+  var O_VERB = { gambler: '걸고 캡니다', jeweler: '살살 캡니다', veiner: '이어 캡니다', foreman: '일꾼에게 맡깁니다' };
+  var oc = function (q) { return q.mark === 2 && !d.embersOn ? Core.oCost(run) : Core.hitCost(run); };   // 갱 반장 0, 세공사 +2
+  var aimTxt = function (q) { ui.preCost = q.mark === 1 ? Core.igniteCost(run) : oc(q); return q.mark === 1 ? '한 번 더 누르면 ' + (X_VERB[Core.charOf(run).id] || '터뜨립니다') + ' · 촛불 −' + Core.igniteCost(run) : TEXT.ops.aimed.replace('{n}', oc(q)); };
   if (!h) { var ac0 = ui.aim && Core.cellAt(d.floor, ui.aim.x, ui.aim.y); return ac0 ? esc(aimTxt(ac0)) : ''; }
   var c = Core.cellAt(d.floor, h.x, h.y);
   if (c.cover !== 'open') {
     var ch = Core.charOf(run), isX = c.mark === 1, survey = c.mark === 2 && d.survey > 0;
-    var verb = isX ? (ch.id === 'defuser' ? '해체합니다' : ch.id === 'blaster' ? '크게 터뜨립니다' : '터뜨립니다') : survey ? '청진하고 캡니다' : (c.mark === 2 && ch.id === 'gambler') ? '걸고 캡니다' : '캡니다';
-    var cost = isX ? Core.igniteCost(run) : Core.hitCost(run) + (survey ? CONFIG.probeCost : 0);
+    var verb = isX ? (X_VERB[ch.id] || '터뜨립니다') : survey ? '청진하고 캡니다' : (c.mark === 2 && O_VERB[ch.id]) || '캡니다';
+    var cost = isX ? Core.igniteCost(run) : survey ? Core.hitCost(run) + CONFIG.probeCost : oc(c);
     if (!settings.aim) ui.preCost = cost;
     if (ui.aim && ui.aim.x === h.x && ui.aim.y === h.y) return esc(aimTxt(c));
     if (!settings.aim) return (Core.cheb(d.px, d.py, h.x, h.y) === 1 ? '누르면 ' : '누르면 걸어가서 ') + verb + ' · 촛불 −' + cost;
@@ -1248,6 +1269,7 @@ function settleHtml() {
   });
   if (S.lines.gravel) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 자갈' + (CONFIG.features.gravel === 'chain' ? '(큰 와르르)' : '') + '</span><span>' + fmt(S.lines.gravel) + '</span></div>'; delay += 120; }
   if (S.lines.sold) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 곽 씨에게 넘긴 도구</span><span>' + fmt(S.lines.sold) + '</span></div>'; delay += 120; }
+  if (S.lines.fee) { h += '<div class="row fadein muted" style="animation-delay:' + delay + 'ms;font-size:14px"><span>그중 일꾼 치료비</span><span>−' + fmt(S.lines.fee) + '</span></div>'; delay += 120; }
   if (S.lines.drip) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>촛농 받이(남은 촛불)</span><span>' + fmt(S.lines.drip) + '</span></div>'; delay += 120; }
   if (S.lines.order) { h += '<div class="row fadein" style="animation-delay:' + delay + 'ms"><span>주문 보수</span><span>' + fmt(S.lines.order) + '</span></div>'; delay += 120; }
   ui.settleT0 = performance.now(); ui.settleDur = delay + 1100;
